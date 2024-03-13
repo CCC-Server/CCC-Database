@@ -1,7 +1,7 @@
 --아르카나 포스 V-더 히에로펀트
 local s,id=GetID()
 function s.initial_effect(c)
-	--special summon
+	--Special Summon
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD)
@@ -53,28 +53,28 @@ function s.coinop(e,tp,eg,ep,ev,re,r,rp)
 	s.arcanareg(c,Arcana.TossCoin(c,tp))
 end
 function s.arcanareg(c,coin)
-	--Heads: Halve all Battle Damage you take
+	--Heads: Draw 2 cards during the Draw Phase
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_DRAW_COUNT)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetTargetRange(1,0)
+	e1:SetValue(2)
+    e1:SetCondition(s.rdcon1)
+    e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	c:RegisterEffect(e1)
+	--Tails: Cannot Special Summon except Level 5 or above monsters
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_DRAW_COUNT)
+	e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
 	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetTargetRange(1,0)
-	e2:SetValue(2)
-    e2:SetCondition(s.rdcon1)
+	e2:SetCondition(s.rdcon2)
+	e2:SetTarget(s.splimit)
     e2:SetReset(RESET_EVENT+RESETS_STANDARD)
 	c:RegisterEffect(e2)
-	--special summon limit
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetTargetRange(1,0)
-	e3:SetCondition(s.rdcon2)
-	e3:SetTarget(s.splimit)
-    e3:SetReset(RESET_EVENT+RESETS_STANDARD)
-	c:RegisterEffect(e3)
 	Arcana.RegisterCoinResult(c,coin)
 end
 function s.rdcon1(e,tp,eg,ep,ev,re,r,rp)
