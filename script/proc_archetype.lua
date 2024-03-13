@@ -1,6 +1,6 @@
---Declare Arch
-if not Arch then
-	Arch = {}
+--Declare Archetype
+if not Archetype then
+	Archetype = {}
 end
 --Custom Archetype table
 local archtable = {}
@@ -72,10 +72,10 @@ local setcodes_merge = function(base_table,new_table)
 	end
 	return res_table,result
 end
-local GetSetcodes = function(setcode)
+local getSetcodesFromArchetype = function(archetype)
 	local chkt = {} --to avoid loop
 	local rest = {}
-	local newt = {setcode}
+	local newt = {archetype}
 	while #newt > 0 do
 		local gott = {} --next newt
 		for _,v in pairs(newt) do
@@ -86,7 +86,7 @@ local GetSetcodes = function(setcode)
 				for i = 0,highbit do
 					local tempnum = (i << 12) | lowbit
 					if i & highbit == i and archtable[tempnum] then
-						local tempt = archtable[tempnum]["setcodes"]
+						local tempt = archtable[tempnum].setcodes
 						if tempt and #tempt>0 then
 							for k2,v2 in pairs(tempt) do
 								table.insert(gott,v2)
@@ -101,8 +101,8 @@ local GetSetcodes = function(setcode)
 	end
 	return rest
 end
-local GetCodes = function(setcode)
-	local setcodes = GetSetcodes(setcode)
+local getCodesFromArchetype = function(archetype)
+	local setcodes = getSetcodesFromArchetype(archetype)
 	local rest = {}
 	for _,v in pairs(setcodes) do
 		local lowbit = v % 0x1000
@@ -110,7 +110,7 @@ local GetCodes = function(setcode)
 		for i = highbit,15 do
 			local tempnum = (i << 12) | lowbit
 			if i | highbit == i and archtable[tempnum] then
-				rest = codes_merge(rest,archtable[tempnum]["codes"])
+				rest = codes_merge(rest,archtable[tempnum].codes)
 			end
 		end
 	end
@@ -118,79 +118,79 @@ local GetCodes = function(setcode)
 end
 --Functions like c420.lua
 --[[
-Arch.GetOriginalSetCard=function(c)
-	
+Card.GetOriginalArchetype=function(c)
+	--to do
 end
-Arch.GetPreviousSetCard=function(c)
-	
+Card.GetPreviousArchetype=function(c)
+	--to do
 end
-Arch.GetSetCard=function(c)
+Card.GetArchetype=function(c)
 	--to do
 end
 --]]
-Arch.IsSetCard=function(c,setcode,scard,sumtype,playerid)
+Card.IsArchetype=function(c,archetype,scard,sumtype,playerid)
 	sumtype=sumtype or 0
 	playerid=playerid or PLAYER_NONE
-	for _,sc in pairs(GetSetcodes(setcode)) do
+	for _,sc in pairs(getSetcodesFromArchetype(archetype)) do
 		if c:IsSetCard(sc,scard,sumtype,playerid) then return true end
 	end
-	for _,cd in pairs(GetCodes(setcode)) do
+	for _,cd in pairs(getCodesFromArchetype(archetype)) do
 		if c:IsSummonCode(scard,sumtype,playerid,cd) then return true end
 	end
 	return false
 end
-Arch.IsLinkSetCard=function(c,setcode)
-	for _,sc in pairs(GetSetcodes(setcode)) do
+Card.IsLinkArchetype=function(c,archetype)
+	for _,sc in pairs(getSetcodesFromArchetype(archetype)) do
 		if c:IsLinkSetCard(sc) then return true end
 	end
-	for _,cd in pairs(GetCodes(setcode)) do
+	for _,cd in pairs(getCodesFromArchetype(archetype)) do
 		if c:IsLinkCode(cd) then return true end
 	end
 	return false
 end
-Arch.IsOriginalSetCard=function(c,setcode)
-	for _,sc in pairs(GetSetcodes(setcode)) do
+Card.IsOriginalArchetype=function(c,archetype)
+	for _,sc in pairs(getSetcodesFromArchetype(archetype)) do
 		if c:IsOriginalSetCard(sc) then return true end
 	end
-	for _,cd in pairs(GetCodes(setcode)) do
+	for _,cd in pairs(getCodesFromArchetype(archetype)) do
 		if c:IsOriginalCodeRule(cd) then return true end
 	end
 	return false
 end
-Arch.IsPreviousSetCard=function(c,setcode)
-	for _,sc in pairs(GetSetcodes(setcode)) do
+Card.IsPreviousArchetype=function(c,archetype)
+	for _,sc in pairs(getSetcodesFromArchetype(archetype)) do
 		if c:IsPreviousSetCard(sc) then return true end
 	end
-	for _,cd in pairs(GetCodes(setcode)) do
+	for _,cd in pairs(getCodesFromArchetype(archetype)) do
 		if c:IsPreviousCodeOnField(cd) then return true end
 	end
 	return false
 end
 --Register Archetype
-Arch.MakeCheck = function(setcode,codes,setcodes)
-	if not setcode or setcode % 0x1000 == 0 then return false end
+Archetype.MakeCheck = function(archetype,codes,setcodes)
+	if not archetype or archetype % 0x1000 == 0 then return false end
 	if not checkmax(codes,0x7fffffff) or not checkmax(setcodes,0xffff) then return false end
 	local result=false
-	if not archtable[setcode] then
+	if not archtable[archetype] then
 		
-		archtable[setcode] = {
+		archtable[archetype] = {
 			["codes"] = codes,
 			["setcodes"] = setcodes
 		}
 		result=true
 	else
 		if codes then
-			local newt1, res1 = codes_merge(archtable[setcode]["codes"], codes)
+			local newt1, res1 = codes_merge(archtable[archetype].codes,codes)
 			if res1 then
 				result = true
-				archtable[setcode]["codes"] = newt1
+				archtable[archetype].codes = newt1
 			end
 		end
 		if setcodes then
-			local newt2, res2 = setcodes_merge(archtable[setcode]["setcodes"], setcodes)
+			local newt2, res2 = setcodes_merge(archtable[archetype].setcodes,setcodes)
 			if res2 then
 				result = true
-				archtable[setcode]["setcodes"] = newt2
+				archtable[archetype].setcodes = newt2
 			end
 		end
 	end

@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	Ritual.AddProc({
 		handler=c,
 		lvtype=RITPROC_EQUAL,
-		filter=aux.FilterBoolFunction(Card.IsSetCard,0x10cf),
+		filter=aux.FilterBoolFunction(Card.IsSetCard,SET_BLACK_LUSTER_SOLDIER),
 		extrafil=s.extragroup,
 		extraop=s.extraop,
 		location=LOCATION_HAND|LOCATION_GRAVE,
@@ -26,13 +26,14 @@ function s.initial_effect(c)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
 end
-s.listed_series={0xbd,0x10cf,0xf00}
+s.listed_names={CARD_BLACK_LUSTER_SOLDIER}
+s.listed_series={SET_GAIA_THE_FIERCE_KNIGHT,SET_BLACK_LUSTER_SOLDIER,ARCHETYPE_SUPER_SOLDIER}
 --Activate
 function s.extragroup(e,tp,eg,ep,ev,re,r,rp,chk)
 	return Duel.GetMatchingGroup(s.matfilter1,tp,LOCATION_DECK,0,nil)
 end
 function s.matfilter1(c)
-	return (c:IsSetCard(0xbd) or Arch.IsSetCard(c,0xf00)) and c:IsAbleToGrave() and c:IsLevelAbove(1)
+	return (c:IsSetCard(SET_GAIA_THE_FIERCE_KNIGHT) or c:IsArchetype(ARCHETYPE_SUPER_SOLDIER)) and c:IsAbleToGrave() and c:IsLevelAbove(1)
 end
 function s.extraop(mat,e,tp,eg,ep,ev,re,r,rp,tc)
 	local mat2=mat:Filter(Card.IsLocation,nil,LOCATION_DECK)
@@ -49,10 +50,10 @@ function s.ritcheck(e,tp,g,sc)
 end
 --Search
 function s.thfilter1(c)
-	return Arch.IsSetCard(c,0xf00) and c:IsRitualSpell() and c:IsAbleToHand()
+	return c:IsArchetype(ARCHETYPE_SUPER_SOLDIER) and c:IsRitualSpell() and c:IsAbleToHand()
 end
 function s.thfilter2(c)
-	return c:IsSetCard(0x10cf) and c:IsRitualMonster() and c:IsAbleToHand()
+	return c:IsSetCard(SET_BLACK_LUSTER_SOLDIER) and c:IsRitualMonster() and c:IsAbleToHand()
 end
 function s.thfilter(c)
 	return s.thfilter1(c) or s.thfilter2(c)
