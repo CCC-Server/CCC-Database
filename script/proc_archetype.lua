@@ -1,25 +1,13 @@
---Declare Custom
-if not aux.CustomProcedure then
-	aux.CustomProcedure = {}
-	Custom = aux.CustomProcedure
-end
-if not Custom then
-	Custom = aux.CustomProcedure
-end
---Declare Archetype
-if not Custom.archetype then
-	Custom.archetype = {}
-	Arch = Custom.archetype
-end
-if not Archetype then
-	Arch = Custom.archetype
+--Declare Arch
+if not Arch then
+	Arch = {}
 end
 --Custom Archetype table
 local archtable = {}
 local checkmax = function(t,limit)
-	if not t then return true end
+	if not t or not limit then return true end
 	if type(t)~="table" then return false end
-	for k,v in pairs(t) do
+	for _,v in pairs(t) do
 		--여기다 비정수 상수 같은 걸 집어넣으시는 분은, 디버그 용도 외에는 없길 바랍니다
 		if v > limit then return false end
 	end
@@ -79,38 +67,10 @@ local setcodes_merge = function(base_table,new_table)
 	end
 	if not result then return base_table,false end
 	local res_table = {}
-	for v,_ in pairs(ct) do
+	for v,_ in pairs(st) do
 		table.insert(res_table,v)
 	end
 	return res_table,result
-end
-Arch.MakeCheck = function(setcode,codes,setcodes)
-	if not setcode or setcode % 0x1000 == 0 then return false end
-	if not checkmax(codes,0x7fffffff) or checkmax(setcodes,0xffff) then return false end
-	local result=false
-	if not archtable[setcode] then
-		archtable[setcode] = {
-			["codes"] = codes,
-			["setcodes"] = setcodes
-		}
-		result=true
-	else
-		if codes then
-			local newt1, res1 = setcodes_merge(archtable[setcode].codes, codes)
-			if res1 then
-				result = true
-				archtable[setcode].codes = newt1
-			end
-		end
-		if setcodes then
-			local newt2, res2 = setcodes_merge(archtable[setcode].setcodes, setcodes)
-			if res2 then
-				result = true
-				archtable[setcode].setcodes = newt2
-			end
-		end
-	end
-	return result
 end
 local GetSetcodes = function(setcode)
 	local chkt = {} --to avoid loop
@@ -118,23 +78,25 @@ local GetSetcodes = function(setcode)
 	local newt = {setcode}
 	while #newt > 0 do
 		local gott = {} --next newt
-		for k,v in ipairs(newt) do
+		for _,v in pairs(newt) do
 			if not chkt[v] then
 				chkt[v] = true
 				local lowbit = v % 0x1000
 				local highbit = v >> 12
 				for i = 0,highbit do
 					local tempnum = (i << 12) | lowbit
-					local tempt = archtable[tempnum] and archtable[tempnum].setcodes or nil
-					if i & highbit == i and tempt and #tempt>0 then
-						for k2,v2 in pairs(tempt) do
-							table.insert(gott,v2)
+					if i & highbit == i and archtable[tempnum] then
+						local tempt = archtable[tempnum]["setcodes"]
+						if tempt and #tempt>0 then
+							for k2,v2 in pairs(tempt) do
+								table.insert(gott,v2)
+							end
 						end
 					end
 				end
 			end
 		end
-		rest = setcodes_merge(rest,gott)
+		rest = setcodes_merge(rest,newt)
 		newt = gott
 	end
 	return rest
@@ -142,13 +104,13 @@ end
 local GetCodes = function(setcode)
 	local setcodes = GetSetcodes(setcode)
 	local rest = {}
-	for _,v in ipairs(setcodes) do
+	for _,v in pairs(setcodes) do
 		local lowbit = v % 0x1000
 		local highbit = v >> 12
 		for i = highbit,15 do
 			local tempnum = (i << 12) | lowbit
-			if i | highbit == i and archtable[tempnum].codes then
-				rest = codes_merge(rest,archtable[tempnum].codes)
+			if i | highbit == i and archtable[tempnum] then
+				rest = codes_merge(rest,archtable[tempnum]["codes"])
 			end
 		end
 	end
@@ -170,23 +132,25 @@ Arch.IsSetCard=function(c,setcode,scard,sumtype,playerid)
 	sumtype=sumtype or 0
 	playerid=playerid or PLAYER_NONE
 	for _,sc in pairs(GetSetcodes(setcode)) do
-		if Card.IsSetCard(setcode,scard,sumtype,playerid) then return true end
+		if c:IsSetCard(sc,scard,sumtype,playerid) then return true end
 	end
-	local codet=GetCodes(setcode)
-	if #codet>0 and c:IsSummonCode(scard,sumtype,playerid,table.unpack(codet)) then return true end
+	for _,cd in pairs(GetCodes(setcode)) do
+		if c:IsSummonCode(scard,sumtype,playerid,cd) then return true end
+	end
 	return false
 end
 Arch.IsLinkSetCard=function(c,setcode)
 	for _,sc in pairs(GetSetcodes(setcode)) do
-		if Card.IsLinkSetCard(setcode) then return true end
+		if c:IsLinkSetCard(sc) then return true end
 	end
-	local codet=GetCodes(setcode)
-	if #codet>0 and c:IsLinkCode(table.unpack(codet)) then return true end
+	for _,cd in pairs(GetCodes(setcode)) do
+		if c:IsLinkCode(cd) then return true end
+	end
 	return false
 end
 Arch.IsOriginalSetCard=function(c,setcode)
 	for _,sc in pairs(GetSetcodes(setcode)) do
-		if Card.IsOriginalSetCard(setcode) then return true end
+		if c:IsOriginalSetCard(sc) then return true end
 	end
 	for _,cd in pairs(GetCodes(setcode)) do
 		if c:IsOriginalCodeRule(cd) then return true end
@@ -195,10 +159,40 @@ Arch.IsOriginalSetCard=function(c,setcode)
 end
 Arch.IsPreviousSetCard=function(c,setcode)
 	for _,sc in pairs(GetSetcodes(setcode)) do
-		if Card.IsPreviousSetCard(setcode) then return true end
+		if c:IsPreviousSetCard(sc) then return true end
 	end
 	for _,cd in pairs(GetCodes(setcode)) do
 		if c:IsPreviousCodeOnField(cd) then return true end
 	end
 	return false
+end
+--Register Archetype
+Arch.MakeCheck = function(setcode,codes,setcodes)
+	if not setcode or setcode % 0x1000 == 0 then return false end
+	if not checkmax(codes,0x7fffffff) or not checkmax(setcodes,0xffff) then return false end
+	local result=false
+	if not archtable[setcode] then
+		
+		archtable[setcode] = {
+			["codes"] = codes,
+			["setcodes"] = setcodes
+		}
+		result=true
+	else
+		if codes then
+			local newt1, res1 = codes_merge(archtable[setcode]["codes"], codes)
+			if res1 then
+				result = true
+				archtable[setcode]["codes"] = newt1
+			end
+		end
+		if setcodes then
+			local newt2, res2 = setcodes_merge(archtable[setcode]["setcodes"], setcodes)
+			if res2 then
+				result = true
+				archtable[setcode]["setcodes"] = newt2
+			end
+		end
+	end
+	return result
 end

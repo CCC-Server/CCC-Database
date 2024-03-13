@@ -1,4 +1,4 @@
-Duel.LoadScript("custom_procs/proc_archetype.lua")
+Duel.LoadScript("proc_archetype.lua")
 --초전사
 Arch.MakeCheck(0xf00,{
 	["초전사의 혼"]=79234734,
@@ -7,4 +7,4 @@ Arch.MakeCheck(0xf00,{
 	["전생의 초전사"]=73694478,
 	["초전사의 방패"]=799183,
 	["초전사의 맹아"]=45948430
-})
+},nil)
