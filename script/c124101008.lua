@@ -74,7 +74,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ConfirmCards(1-tp,thg)
 		local hg=thg:Filter(Card.IsLocation,nil,LOCATION_HAND)
 		if #hg>0 then Duel.ShuffleDeck(tp) end
-		if hg:FilterCount(Card.IsCode,nil,5405694)
+		if hg:FilterCount(Card.IsCode,nil,CARD_BLACK_LUSTER_SOLDIER)>0
 			and Duel.IsPlayerCanDraw(tp,1) then
 				Duel.BreakEffect()
 				Duel.Draw(tp,1,REASON_EFFECT)

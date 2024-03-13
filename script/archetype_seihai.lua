@@ -1,5 +1,6 @@
 Duel.LoadScript("proc_archetype.lua")
 --초전사
+CARD_BLACK_LUSTER_SOLDIER = CARD_BLACK_LUSTER_SOLDIER or 5405694
 Arch.MakeCheck(0xf00,{
 	["초전사의 혼"]=79234734,
 	["초전사 카오스 솔저"]=54484652,
