@@ -7,6 +7,7 @@ function s.initial_effect(c)
 		handler=c,
 		lvtype=RITPROC_EQUAL,
 		filter=aux.FilterBoolFunction(Card.IsSetCard,SET_BLACK_LUSTER_SOLDIER),
+		desc=aux.Stringid(id,0),
 		extrafil=s.extragroup,
 		extraop=s.extraop,
 		location=LOCATION_HAND|LOCATION_GRAVE,
