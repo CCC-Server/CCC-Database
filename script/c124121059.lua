@@ -1,4 +1,4 @@
--- 
+-- 골디네이드 Call-In
 local s,id=GetID()
 function s.initial_effect(c)
 		--destroy
