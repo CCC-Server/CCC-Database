@@ -29,7 +29,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 s.listed_names={id+1}
-s.listed_series={SET_GAIA_THE_FIERCE_KNIGHT,ARCHETYPE_SUPER_SOLDIER}
+s.listed_series={SET_GAIA_THE_FIERCE_KNIGHT,SET_BLACK_LUSTER_SOLDIER,ARCHETYPE_SUPER_SOLDIER}
 --Special summon procedure
 function s.spcon(e,c)
 	if c==nil then return true end
@@ -73,5 +73,5 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.actfilter(re)
 	local rc=re:GetHandler()
-	return not (re:IsMonsterEffect() and not rc:IsRitualMonster() and not rc:IsSummonableCard())
+	return not (re:IsMonsterEffect() and not rc:IsSetCard(SET_BLACK_LUSTER_SOLDIER) and not rc:IsSummonableCard())
 end
