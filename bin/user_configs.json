@@ -1,0 +1,70 @@
+﻿{
+	"repos": [
+		{
+			"url": "https://github.com/JSY1728/EDOPRO-Korean-CDB-TEST",
+			"repo_name": "한국어 패치 (팀 ALL YGOPRO)",
+			"repo_path": "./repositories/languages/한국어",
+			"is_language": true,
+			"language": "한국어",
+			"should_update": true,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/Orikka-CS/EMP-TY",
+			"repo_name": "추가 한국어 패치",
+			"repo_path": "./repositories/languages/한국어-2",
+			"is_language": true,
+			"language": "한국어",
+			"should_update": false,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/oricaptive/Oricaptive",
+			"repo_name": "Oricap Server",
+			"repo_path": "./repositories/OriCap",
+			"data_path": "database",
+			"script_path": "script",
+			"lflist_path": "lflists",
+			"should_update": true,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/oricaptive/Oricapics",
+			"repo_name": "OriCap Server Pics",
+			"repo_path": "./repositories/OriCap-pics",
+			"pics_path": "pics",
+			"should_update": true,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/Orikka-CS/EMP-TY",
+			"repo_name": "Custom expansions",
+			"repo_path": "./repositories/expansions-2",
+			"data_path": "",
+			"pics_path": "pics",
+			"script_path": "script",
+			"should_update": false,
+			"should_read": true
+		}
+	],
+	"urls": [
+		{
+			"url": "https://raw.githubusercontent.com/oricaptive/Oricapics/main/field/{}.jpg",
+			"type": "field"
+		},
+		{
+			"url": "https://raw.githubusercontent.com/Orikka-CS/EMP-TY/main/pics/field/{}.png",
+			"type": "field"
+		}
+	],
+	"servers": [
+		{
+			"name": "오리캡 서버",
+			"address": "one.for-o.n-e.kr",
+			"duelport": 11553,
+			"roomaddress": "one.for-o.n-e.kr",
+			"roomlistprotocol": "http",
+			"roomlistport": 11554
+		}
+	]
+}
