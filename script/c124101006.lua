@@ -35,6 +35,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 s.listed_names={124101008,14094090}
+s.listed_series={SET_BLACK_LUSTER_SOLDIER,ARCHETYPE_SUPER_SOLDIER}
 --Indestructible
 function s.indescon(e,tp,eg,ep,ev,re,r,rp)
 	if not re then return false end
