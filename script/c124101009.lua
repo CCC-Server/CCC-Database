@@ -15,7 +15,7 @@ function s.initial_effect(c)
 	e2:SetValue(s.efilter)
 	c:RegisterEffect(e2)
 	--Cannot negate the activated effect
-	local e3=e2:Clone
+	local e3=e2:Clone()
 	e3:SetCode(EFFECT_CANNOT_DISEFFECT)
 	c:RegisterEffect(e3)
 	--Reveal a card and search an appropriate card
