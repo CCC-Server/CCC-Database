@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	e3:SetCode(EFFECT_UPDATE_ATTACK)
 	e3:SetRange(LOCATION_FZONE)
 	e3:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
-	e3:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,0xe00))
+	e3:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,0x831))
 	e3:SetValue(1000)
 	c:RegisterEffect(e3)
 	local e4=e3:Clone()
@@ -47,13 +47,13 @@ function s.initial_effect(c)
 	c:RegisterEffect(e6)
 end
 s.listed_names={124131015}
-s.listed_series={0xe00}
+s.listed_series={0x831}
 --Spsummon
 function s.splimit(e,c)
-	return not c:IsSetCard(0xe00)
+	return not c:IsSetCard(0x831)
 end
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xe00) and not c:IsCode(124131015) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsSetCard(0x831) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
