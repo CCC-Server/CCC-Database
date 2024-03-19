@@ -49,7 +49,7 @@ function s.settgop(e,tp,eg,ep,ev,re,r,rp)
 	local c = e:GetHandler()
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
 	local g=Duel.SelectMatchingCard(tp,s.settgfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	if #g>0 and Duel.SSet(tp,g) and c:IsLocation(LOCATION_REMOVE)
+	if #g>0 and Duel.SSet(tp,g) and c:IsLocation(LOCATION_REMOVED)
 		and c:IsRelateToEffect(e) then
 		Duel.SendtoGrave(c,REASON_EFFECT+REASON_RETURN)
 	end
