@@ -19,11 +19,13 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_REMOVE)
-	e2:SetCountLimit(1,id)
+	e2:SetCountLimit(1,{id,1})
 	e2:SetTarget(s.settgtg)
 	e2:SetOperation(s.settgop)
 	c:RegisterEffect(e2)
 end
+s.listed_names={id}
+s.listed_series={0xf60}
 function s.thfilter(c)
 	return c:IsSetCard(0xf60) and c:IsSpell() and c:IsAbleToHand()
 end

@@ -24,6 +24,8 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 end
+s.listed_names={id}
+s.listed_series={0xf60}
 function s.rmcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return c:IsDiscardable() end
@@ -48,15 +50,13 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_REMOVED) and chkc:IsAbleToGrave() and chkc~=c end
 	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToGrave,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,c) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectTarget(tp,Card.IsAbleToGrave,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,1,c,tp)
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,g,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,c,1,0,0)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
 	local c=e:GetHandler()
-	if tc and tc:IsRelateToEffect(e) and Duel.SendtoGrave(tc,REASON_EFFECT|REASON_RETURN)
-		and tc:IsLocation(LOCATION_GRAVE) and c:IsRelateToEffect(e) then
+	local tc=Duel.SelectTarget(tp,Card.IsAbleToGrave,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,1,c,tp)
+	if tc and Duel.SendtoGrave(tc,REASON_EFFECT|REASON_RETURN) and c:IsRelateToEffect(e) then
 		Duel.SendtoHand(c,nil,REASON_EFFECT)
 	end
 end
