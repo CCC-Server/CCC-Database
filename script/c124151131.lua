@@ -47,15 +47,11 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.regop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetCurrentPhase()==PHASE_STANDBY then
-		e:GetHandler():RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD|RESET_PHASE|PHASE_END,0,2,Duel.GetTurnCount())
-	else
-		e:GetHandler():RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD|RESET_PHASE|PHASE_END,0,1,0)
-	end
+	e:GetHandler():RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD|RESET_PHASE|PHASE_END,0,1,0)
 end
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	return re:GetHandler():IsOnField() and re:IsActiveType(TYPE_MONSTER) and ep==1-tp
-		and Duel.HasFlagEffect(0,id)
+		and e:GetHandeler():HasFlagEffect(0,id)
 end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local rc=re:GetHandler()
