@@ -47,7 +47,7 @@ function s.settgtg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.settgop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-	local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.settgfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g>0 and Duel.SSet(tp,g) and c:IsLocation(LOCATION_REMOVE)
 		and c:IsRelateToEffect(e) then
 		Duel.SendtoGrave(c,REASON_EFFECT+REASON_RETURN)
