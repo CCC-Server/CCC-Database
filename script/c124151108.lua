@@ -27,6 +27,7 @@ function s.initial_effect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_TOGRAVE)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetCode(EVENT_CHAINING)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,1})
 	e3:SetCondition(function(e,tp,eg,ep) return ep==1-tp end)
@@ -53,37 +54,23 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.tgtg(e,c)
-	return c~=e:GetHandler() and c:IsSetCard(0xf60)
+	return c~=e:GetHandler() and c:IsFaceup() and c:IsSetCard(0xf60)
 end
 function s.cpfilter(c)
-	return c:IsSetCard(0xf60) and c:GetType()==TYPE_SPELL|TYPE_NORMAL
-		and c:IsAbleToGrave() and c:CheckActivateEffect(true,true,false)~=nil
+	return c:IsSetCard(0xf60) and c:GetType()==TYPE_SPELL
+		and c:IsAbleToGrave() and c:CheckActivateEffect(false,true,false)~=nil
 end
 function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_REMOVED) and chkc:IsControler(tp) and s.cpfilter(chkc) end
-	if chk==0 then return Duel.IsExistingTarget(s.cpfilter,tp,LOCATION_REMOVED,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,1,0,0)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_REMOVED,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,0,0)
 end
 function s.cpop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local tc=Duel.SelectTarget(tp,s.cpfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
-	if not (tc and Duel.SendtoGrave(tc,nil,2,REASON_EFFECT|REASON_RETURN)) then return end
-	local te,ceg,cep,cev,cre,cr,crp=tc:CheckActivateEffect(false,true,true)
+	local tc=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
+	if not (tc and Duel.SendtoGrave(tc,REASON_EFFECT|REASON_RETURN)) then return end
+	local te=tc:CheckActivateEffect(false,true,false)
 	if not te then return end
-	local tg=te:GetTarget()
 	local op=te:GetOperation()
-	if tg then tg(te,tp,Group.CreateGroup(),PLAYER_NONE,0,e,REASON_EFFECT,PLAYER_NONE,1) end
-	Duel.BreakEffect()
-	tc:CreateEffectRelation(te)
-	Duel.BreakEffect()
-	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
-	for etc in aux.Next(g) do
-		etc:CreateEffectRelation(te)
-	end
-	if op then op(te,tp,Group.CreateGroup(),PLAYER_NONE,0,e,REASON_EFFECT,PLAYER_NONE,1) end
-	tc:ReleaseEffectRelation(te)
-	for etc in aux.Next(g) do
-		etc:ReleaseEffectRelation(te)
-	end
-	Duel.BreakEffect()
+	if op then op(e,tp,eg,ep,ev,re,r,rp) end
 end
