@@ -58,5 +58,6 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.SelectTarget(tp,Card.IsAbleToGrave,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,1,c,tp)
 	if tc and Duel.SendtoGrave(tc,REASON_EFFECT|REASON_RETURN) and c:IsRelateToEffect(e) then
 		Duel.SendtoHand(c,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,c)
 	end
 end
