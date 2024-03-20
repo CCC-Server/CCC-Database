@@ -8,7 +8,6 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetRange(LOCATION_GRAVE)
-	e1:SetCountLimit(1,id)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -29,7 +28,6 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetCode(EVENT_CHAINING)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1,{id,1})
 	e3:SetCondition(function(e,tp,eg,ep) return ep==1-tp end)
 	e3:SetTarget(s.cptg)
 	e3:SetOperation(s.cpop)
@@ -61,9 +59,10 @@ function s.cpfilter(c)
 		and c:IsAbleToGrave() and c:CheckActivateEffect(false,true,false)~=nil
 end
 function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local c=e:GetHandler()
 	if chkc then return chkc:IsLocation(LOCATION_REMOVED) and chkc:IsControler(tp) and s.cpfilter(chkc) end
-	if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_REMOVED,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,0,0)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_REMOVED,0,1,nil) and c:GetFlagEffect(id)==0 end
+	c:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD|RESET_CHAIN,0,1)
 end
 function s.cpop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
