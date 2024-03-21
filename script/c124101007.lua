@@ -48,36 +48,30 @@ function s.tgcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():GetLinkedGroup():IsExists(s.tgfilter,1,nil)
 end
 --Copy 1 "Super Soldier" Spell/Trap
-function s.cpcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	e:SetLabel(1)
-	return true
-end
 function s.cpfilter(c)
-	return c:IsSpellTrap() and c:IsArchetype(ARCHETYPE_SUPER_SOLDIER) and c:IsAbleToGraveAsCost()
-		and c:CheckActivateEffect(false,true,true)~=nil
+	return c:IsRitualSpell() and c:IsAbleToGraveAsCost() and c:CheckActivateEffect(true,true,false)~=nil
+		and c:IsArchetype(ARCHETYPE_SUPER_SOLDIER)
 end
-function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		if e:GetLabel()==0 then return false end
-		e:SetLabel(0)
-		return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_DECK,0,1,nil)
+function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then
+		local te=e:GetLabelObject()
+		local tg=te:GetTarget()
+		return tg(e,tp,eg,ep,ev,re,r,rp,0,chkc)
 	end
-	e:SetLabel(0)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local tc=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
-	local te,ceg,cep,cev,cre,cr,crp=tc:CheckActivateEffect(false,true,true)
+	local te=tc:CheckActivateEffect(true,true,false)
+	e:SetLabelObject(te)
 	Duel.SendtoGrave(tc,REASON_COST)
 	e:SetProperty(te:GetProperty())
 	local tg=te:GetTarget()
-	if tg then tg(e,tp,ceg,cep,cev,cre,cr,crp,1) end
-	te:SetLabelObject(e:GetLabelObject())
-	e:SetLabelObject(te)
+	if tg then tg(e,tp,eg,ep,ev,re,r,rp,1) end
 	Duel.ClearOperationInfo(0)
 end
 function s.cpop(e,tp,eg,ep,ev,re,r,rp)
 	local te=e:GetLabelObject()
 	if not te then return end
-	e:SetLabelObject(te:GetLabelObject())
 	local op=te:GetOperation()
 	if op then op(e,tp,eg,ep,ev,re,r,rp) end
 end
