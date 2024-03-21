@@ -38,7 +38,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)
 end
 function s.tgfilter(c)
-	return c:IsSetCard(0xf60) and not c:IsCode(id) and c:IsAbleToGrave()
+	return c:IsSetCard(0xf60) and c:IsMonster() and c:IsAbleToGrave()
 end
 function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_HAND|LOCATION_DECK,0,1,nil) end
