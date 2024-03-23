@@ -15,8 +15,8 @@ function s.initial_effect(c)
 	e2:SetCode(EFFECT_SPSUMMON_PROC)
 	e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
 	e2:SetRange(LOCATION_HAND)
-	e2:SetCountLimit(1,8312294,EFFECT_COUNT_CODE_OATH)
-	e2:SetCondition(c8312294.spcon2)
+	e2:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e2:SetCondition(s.spcon2)
 	c:RegisterEffect(e2)
     --destroy
 	local e3=Effect.CreateEffect(c)
@@ -48,14 +48,14 @@ function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0x810)
 		and (se:IsHasType(EFFECT_TYPE_ACTIONS) or se:GetCode()==EFFECT_SPSUMMON_PROC)
 end
-function c8312294.spfilter(c)
+function s.spfilter(c)
 	return c:IsFaceup() and c:IsLevelAbove(7)
 end
-function c8312294.spcon2(e,c)
+function s.spcon2(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
 	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(c8312294.spfilter,tp,LOCATION_MZONE,0,1,nil)
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_MZONE,0,1,nil)
 end
 function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsDiscardable,tp,LOCATION_HAND,0,1,nil) end
