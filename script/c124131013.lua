@@ -10,17 +10,15 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
 	e1:SetValue(s.splimit)
 	c:RegisterEffect(e1)
-	--atkup
+    --atkup
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetCode(EFFECT_UPDATE_ATTACK)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCode(EFFECT_UPDATE_ATTACK)
-	e2:SetValue(s.val)
+	e2:SetCondition(s.atkcon)
+	e2:SetValue(s.atkval)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EFFECT_UPDATE_DEFENSE)
-	c:RegisterEffect(e3)
 	--indes
 	local e3=Effect.CreateEffect(c)
 	e3:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
@@ -50,4 +48,15 @@ function s.val(e,c)
 end
 function s.accon(e)
 	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,124131004),0,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil)
+end
+function s.atkcon(e)
+	local ph=Duel.GetCurrentPhase()
+	local tp=Duel.GetTurnPlayer()
+	return tp==e:GetHandler():GetControler() and ph>=PHASE_BATTLE_START and ph<=PHASE_BATTLE
+end
+function s.atkfilter(c)
+	return c:IsFaceup() and c:IsSetCard(0x810)
+end
+function s.atkval(e,c)
+	return Duel.GetMatchingGroupCount(s.atkfilter,c:GetControler(),LOCATION_ONFIELD,0,nil)*500
 end
