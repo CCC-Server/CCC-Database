@@ -46,7 +46,7 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.DisableShuffleCheck()
 	Duel.Remove(g,POS_FACEDOWN,REASON_EFFECT)
 	if c:IsLocation(LOCATION_MZONE) then
-		c:RegisterFlagEffect(8312297,RESET_EVENT+0x680000,0,5)
+		c:RegisterFlagEffect(id,RESET_EVENT+0x680000,0,5)
 	end
 	e:SetLabelObject(g)
 end

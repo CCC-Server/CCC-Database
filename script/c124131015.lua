@@ -62,7 +62,7 @@ function s.spcon2(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
 	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(c8312298.spfilter,tp,LOCATION_MZONE,0,1,nil)
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_MZONE,0,1,nil)
 end
 function s.discon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_SPECIAL)
@@ -77,7 +77,7 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.DisableShuffleCheck()
 	Duel.Remove(g,POS_FACEDOWN,REASON_EFFECT)
 	if c:IsLocation(LOCATION_MZONE) then
-		c:RegisterFlagEffect(8312298,RESET_EVENT+0x680000,0,10)
+		c:RegisterFlagEffect(id,RESET_EVENT+0x680000,0,10)
 	end
 	e:SetLabelObject(g)
 end
