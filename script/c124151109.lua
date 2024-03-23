@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_HAND|LOCATION_GRAVE)
+	e1:SetRange(LOCATION_HAND)
 	e1:SetCountLimit(1,id)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
@@ -46,7 +46,6 @@ s.listed_names={id}
 s.listed_series={0xf60}
 function s.spfilter(c,tp)
 	return c:IsSetCard(0xf60) and c:IsAbleToRemove() and Duel.GetMZoneCount(tp,c)>0
-		and (not c:IsLocation(LOCATION_GRAVE) or aux.SpElimFilter(c,true,true))
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
