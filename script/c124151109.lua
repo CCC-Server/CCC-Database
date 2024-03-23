@@ -31,7 +31,19 @@ function s.initial_effect(c)
 	e3:SetTarget(s.destg)
 	e3:SetOperation(s.desop)
 	c:RegisterEffect(e3)
+	--되돌린 몬스터 등록
+	aux.GlobalCheck(s,function()
+		s.name_list={}
+		s.name_list[0]={}
+		s.name_list[1]={}
+		aux.AddValuesReset(function()
+			s.name_list[0]={}
+			s.name_list[1]={}
+		end)
+	end)
 end
+s.listed_names={id}
+s.listed_series={0xf60}
 function s.spfilter(c,tp)
 	return c:IsSetCard(0xf60) and c:IsAbleToRemove() and Duel.GetMZoneCount(tp,c)>0
 		and (not c:IsLocation(LOCATION_GRAVE) or aux.SpElimFilter(c,true,true))
@@ -56,7 +68,7 @@ function s.tdtg(e,c)
 		and c:IsReason(REASON_DESTROY) and c:IsReason(REASON_BATTLE+REASON_EFFECT)
 end
 function s.tgfilter(c,e,tp)
-	return c:IsSetCard(0xf60) and c:IsAbleToGrave()
+	return c:IsSetCard(0xf60) and c:IsAbleToGrave() and not s.name_list[tp][c:GetCode()]
 end
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_REMOVED,0,1,nil,e,tp)
@@ -65,8 +77,9 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local gg=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_REMOVED,0,1,1,nil)
-	if not Duel.SendtoGrave(gg,REASON_EFFECT|REASON_RETURN) then return end
+	local gc=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
+	if not Duel.SendtoGrave(gc,REASON_EFFECT|REASON_RETURN) then return end
+	s.name_list[tp][gc:GetCode()]=true
 	local dg=Duel.SelectMatchingCard(tp,nil,tp,0,LOCATION_ONFIELD,1,1,nil)
 	if #dg>0 then
 		Duel.HintSelection(dg,true)
