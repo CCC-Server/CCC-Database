@@ -56,7 +56,7 @@ function s.tgtg(e,c)
 	return c~=e:GetHandler() and c:IsFaceup() and c:IsSetCard(0xf60)
 end
 function s.cpfilter(c)
-	return c:IsSetCard(0xf60) and c:GetType()==TYPE_SPELL
+	return c:IsSetCard(0xf60) and c:GetType()==TYPE_SPELL and not c124151109.name_list[tp][c:GetCode()]
 		and c:IsAbleToGrave() and c:CheckActivateEffect(false,true,false)~=nil
 end
 function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -67,10 +67,11 @@ function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 end
 function s.cpop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local tc=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
-	if not (tc and Duel.SendtoGrave(tc,REASON_EFFECT|REASON_RETURN)) then return end
-	local te=tc:CheckActivateEffect(false,true,false)
+	local gc=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
+	if not (gc and Duel.SendtoGrave(gc,REASON_EFFECT|REASON_RETURN)) then return end
+	local te=gc:CheckActivateEffect(false,true,false)
 	if not te then return end
 	local op=te:GetOperation()
 	if op then op(e,tp,eg,ep,ev,re,r,rp) end
+	c124151109.name_list[tp][gc:GetCode()]=true
 end

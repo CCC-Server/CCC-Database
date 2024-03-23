@@ -22,6 +22,8 @@ function s.initial_effect(c)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 end
+s.listed_names={id}
+s.listed_series={0xf60}
 function s.rescon(sg,e,tp,mg)
 	return sg:IsExists(function(c,tp) return c:IsSetCard(0xf60) and c:IsControler(tp) end,1,nil,tp)
 end
