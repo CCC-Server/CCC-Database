@@ -55,19 +55,19 @@ end
 function s.tgtg(e,c)
 	return c~=e:GetHandler() and c:IsFaceup() and c:IsSetCard(0xf60)
 end
-function s.cpfilter(c)
+function s.cpfilter(c,tp)
 	return c:IsSetCard(0xf60) and c:GetType()==TYPE_SPELL and not c124151109.name_list[tp][c:GetCode()]
 		and c:IsAbleToGrave() and c:CheckActivateEffect(false,true,false)~=nil
 end
 function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local c=e:GetHandler()
 	if chkc then return chkc:IsLocation(LOCATION_REMOVED) and chkc:IsControler(tp) and s.cpfilter(chkc) end
-	if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_REMOVED,0,1,nil) and c:GetFlagEffect(id)==0 end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.cpfilter,tp,LOCATION_REMOVED,0,1,nil,tp) and c:GetFlagEffect(id)==0 end
 	c:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD|RESET_CHAIN,0,1)
 end
 function s.cpop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local gc=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
+	local gc=Duel.SelectMatchingCard(tp,s.cpfilter,tp,LOCATION_REMOVED,0,1,1,nil,tp):GetFirst()
 	if not (gc and Duel.SendtoGrave(gc,REASON_EFFECT|REASON_RETURN)) then return end
 	local te=gc:CheckActivateEffect(false,true,false)
 	if not te then return end

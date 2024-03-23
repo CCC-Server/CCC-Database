@@ -67,18 +67,18 @@ function s.tdtg(e,c)
 	return c:GetOwner()~=tp and Duel.IsPlayerCanSendtoDeck(tp,c)
 		and c:IsReason(REASON_DESTROY) and c:IsReason(REASON_BATTLE+REASON_EFFECT)
 end
-function s.tgfilter(c,e,tp)
+function s.tgfilter(c,tp)
 	return c:IsSetCard(0xf60) and c:IsAbleToGrave() and not s.name_list[tp][c:GetCode()]
 end
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_REMOVED,0,1,nil,e,tp)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_REMOVED,0,1,nil,tp)
 		and Duel.IsExistingMatchingCard(nil,tp,0,LOCATION_ONFIELD,1,nil) end
 	local g=Duel.GetMatchingGroup(nil,tp,0,LOCATION_ONFIELD,nil)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local gc=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
-	if not Duel.SendtoGrave(gc,REASON_EFFECT|REASON_RETURN) then return end
+	local gc=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_REMOVED,0,1,1,nil,tp):GetFirst()
+	if not gc or Duel.SendtoGrave(gc,REASON_EFFECT|REASON_RETURN)==0 then return end
 	s.name_list[tp][gc:GetCode()]=true
 	local dg=Duel.SelectMatchingCard(tp,nil,tp,0,LOCATION_ONFIELD,1,1,nil)
 	if #dg>0 then
