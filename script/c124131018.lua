@@ -3,7 +3,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
 	--Fusion material
-	Fusion.AddProcMixN(c,true,true,aux.FilterBoolFunctionEx(Card.IsRace,FIEND),10)
+	Fusion.AddProcMix(c,true,true,aux.FilterBoolFunctionEx(Card.IsRace,FIEND),10)
 	--lizard check
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
