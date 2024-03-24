@@ -63,7 +63,7 @@ end
 function s.adval(e,c)
 	local g=Duel.GetMatchingGroup(s.filter,0,LOCATION_MZONE,LOCATION_MZONE,nil)
 	if #g==0 then 
-		return 100
+		return 0
 	else
 		local tg,val=g:GetMaxGroup(Card.GetAttack)
 		if not tg:IsExists(aux.TRUE,1,e:GetHandler()) then
