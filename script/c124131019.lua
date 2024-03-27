@@ -33,7 +33,7 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetValue(s.atkval)
 		c:RegisterEffect(e1)
 	end
-    function s.atkval(e,c)
+    function s.atkval(c)
         return c:GetOverlayCount()*1000
     end
 end
