@@ -36,3 +36,4 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
     function s.atkval(e,c)
         return c:GetOverlayCount()*1000
     end
+end
