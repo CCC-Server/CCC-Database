@@ -30,10 +30,10 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		e1:SetCode(EFFECT_UPDATE_ATTACK)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
-		e1:SetValue(s.atkval)
+		e1:SetValue(s.atkval(c))
 		c:RegisterEffect(e1)
 	end
-    function s.atkval(c)
-        return c:GetOverlayCount()*1000
-    end
+end
+function s.atkval(c)
+    return c:GetOverlayCount()*1000
 end
