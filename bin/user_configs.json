@@ -49,6 +49,10 @@
 	],
 	"urls": [
 		{
+			"url": "https://raw.githubusercontent.com/oricaptive/Oricapics/main/field/{}.png",
+			"type": "field"
+		},
+		{
 			"url": "https://raw.githubusercontent.com/oricaptive/Oricapics/main/field/{}.jpg",
 			"type": "field"
 		},
