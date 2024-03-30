@@ -1,7 +1,6 @@
 --Declare Archetype
-if not Archetype then
-	Archetype = {}
-end
+if Archetype then return end
+Archetype = {}
 --Custom Archetype table
 local archtable = {}
 local checkmax = function(t,limit)
