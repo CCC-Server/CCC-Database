@@ -25,7 +25,7 @@ end
 
 --effect 1
 function s.con1(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsChainNegatable(ev)
+	return rp==1-tp and Duel.IsChainNegatable(ev)
 end
 
 function s.cst1filter(c,type)
