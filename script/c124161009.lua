@@ -63,6 +63,6 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 2
-function s.tg2(c)
+function s.tg2(e,c)
 	return c:IsSetCard(0xf20)
 end
