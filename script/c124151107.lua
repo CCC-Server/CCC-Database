@@ -71,7 +71,7 @@ function s.repval(e,c)
 	return s.repfilter(c,e:GetHandlerPlayer())
 end
 function s.tgfilter(c,e,tp)
-	return c:IsSetCard(0xf60) and c:IsAbleToGrave() and not c124151109.name_list[tp][c:GetCode()]
+	return c:IsAbleToGrave() and not c124151109.name_list[tp][c:GetCode()]
 		and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp,c)
 end
 function s.thfilter(c,e,tp,tgc)
