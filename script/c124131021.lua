@@ -10,9 +10,9 @@ function s.initial_effect(c)
 	e2:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
 	e2:SetValue(1)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	c:RegisterEffect(e3)
+	local e1=e2:Clone()
+	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	c:RegisterEffect(e1)
     --attack twice
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_SINGLE)
@@ -22,41 +22,32 @@ function s.initial_effect(c)
 	e4:SetValue(1)
 	c:RegisterEffect(e4)
 	--ATK
-	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,0))
-	e5:SetType(EFFECT_TYPE_TRIGGER_O+EFFECT_TYPE_SINGLE)
-	e5:SetCode(EVENT_DAMAGE_STEP_END)
-	e5:SetCondition(s.atkcon)
-	e5:SetTarget(s.atktg)
-	e5:SetOperation(s.atkop)
-	c:RegisterEffect(e5)
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,0))
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+	e3:SetCode(EVENT_DAMAGE_STEP_END)
+	e3:SetTarget(s.damtg)
+	e3:SetOperation(s.damop)
+	c:RegisterEffect(e3)
 end
 s.listed_names={124131020}
-function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():GetOverlayGroup():IsExists(Card.IsCode,1,nil,55727845)
+function s.damtg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.GetAttackTarget()~=nil end
+    local bc=e:GetHandler():GetBattleTarget()
+    Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,bc:GetAttack())
 end
-function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		local c=e:GetHandler()
-		local a=Duel.GetAttacker()
-		local at=Duel.GetAttackTarget()
-		return ((a==c and at and at:IsFaceup() and at:GetAttack()>0) or (at==c and a:GetAttack()>0))
-			and not e:GetHandler():IsStatus(STATUS_CHAINING)
-	end
-	Duel.SetTargetCard(e:GetHandler():GetBattleTarget())
-end
-function s.atkop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and c:IsFaceup() and tc:IsRelateToEffect(e) and tc:IsFaceup() and tc:GetAttack()>0 then
-		local atk=tc:GetBaseAttack()
-		local e2=Effect.CreateEffect(c)
-		e2:SetType(EFFECT_TYPE_SINGLE)
-		e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE+EFFECT_FLAG_CANNOT_DISABLE)
-		e2:SetRange(LOCATION_MZONE)
-		e2:SetCode(EFFECT_UPDATE_ATTACK)
-		e2:SetValue(atk)
-		e2:SetReset(RESET_EVENT+RESETS_STANDARD)
-		c:RegisterEffect(e2)
-	end
+function s.damop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    local bc=c:GetBattleTarget()
+    local atk=bc:GetAttack()
+    if c:IsFaceup() and c:IsRelateToEffect(e) and atk>0
+        and re:GetHandler():IsControler(1-tp) then
+        -- Update ATK
+        local e1=Effect.CreateEffect(c)
+        e1:SetType(EFFECT_TYPE_SINGLE)
+        e1:SetCode(EFFECT_UPDATE_ATTACK)
+        e1:SetValue(atk)
+        e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE+RESET_PHASE+PHASE_END)
+        c:RegisterEffect(e1)
+    end
 end
