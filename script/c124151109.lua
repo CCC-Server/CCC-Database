@@ -64,7 +64,7 @@ end
 function s.tdtg(e,c)
 	local tp=e:GetHandlerPlayer()
 	return c:GetOwner()~=tp and Duel.IsPlayerCanSendtoDeck(tp,c)
-		and c:IsReason(REASON_DESTROY) and c:IsReason(REASON_BATTLE+REASON_EFFECT)
+		and c:IsPreviousLocation(LOCATION_ONFIELD) and c:IsReason(REASON_DESTROY) and c:IsReason(REASON_BATTLE+REASON_EFFECT)
 end
 function s.tgfilter(c,tp)
 	return c:IsSetCard(0xf60) and c:IsAbleToGrave() and not s.name_list[tp][c:GetCode()]

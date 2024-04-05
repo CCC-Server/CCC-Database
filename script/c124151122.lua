@@ -27,8 +27,9 @@ function s.rmfilter(c)
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE|LOCATION_GRAVE) and s.rmfilter(chkc) end
-	if chk==0 then return Duel.IsExistingTarget(s.rmfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,LOCATION_MZONE|LOCATION_GRAVE,3,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,#g,0,0)
+	local g=Duel.GetMatchingGroup(s.rmfilter,tp,LOCATION_GRAVE,LOCATION_GRAVE,e:GetHandler())
+	if chk==0 then return #g>=3 end
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,3,0,0)
 end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetMatchingGroupCount(s.rmfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,LOCATION_MZONE|LOCATION_GRAVE,nil)<3 then return end
