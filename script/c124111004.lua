@@ -23,6 +23,18 @@ function s.initial_effect(c)
 	e3:SetValue(s.desval)
 	e3:SetOperation(s.desop)
 	c:RegisterEffect(e3)
+	--atk up
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,0))
+	e4:SetCategory(CATEGORY_ATKCHANGE)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e4:SetCode(EVENT_ATTACK_ANNOUNCE)
+	e4:SetRange(LOCATION_PZONE)
+	e4:SetCountLimit(1)
+	e4:SetCondition(s.atkcon)
+	e4:SetTarget(s.atktg)
+	e4:SetOperation(s.atkop)
+	c:RegisterEffect(e4)
 end
 function s.filter(c)
 	return c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
@@ -47,4 +59,26 @@ function s.desval(e,c)
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Destroy(e:GetHandler(),REASON_EFFECT+REASON_REPLACE)
+end
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+	local a=Duel.GetAttacker()
+	local at=Duel.GetAttackTarget()
+	return at and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
+end
+function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local tc=e:GetLabelObject()
+	if chk==0 then return tc:IsOnField() end
+	Duel.SetTargetCard(tc)
+end
+function s.atkop(e,tp,eg,ep,ev,re,r,rp)
+	if not e:GetHandler():IsRelateToEffect(e) then return end
+	local tc=Duel.GetFirstTarget()
+	if tc:IsRelateToEffect(e) and tc:IsFaceup() and tc:IsControler(tp) then
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_UPDATE_ATTACK)
+		e1:SetValue(1000)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_BATTLE)
+		tc:RegisterEffect(e1)
+	end
 end
