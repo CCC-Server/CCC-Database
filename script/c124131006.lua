@@ -83,8 +83,8 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,HINTMSG_DESTROY,g,1,0,0)
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local tg=Duel.GetTargetCards()
-	if #tg>0 then
-		Duel.Destroy(tg,REASON_EFFECT)
+	local tc=Duel.GetFirstTarget()
+	if tc:IsRelateToEffect(e) then
+		Duel.Destroy(tc,REASON_EFFECT)
 	end
 end
