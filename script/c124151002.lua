@@ -40,9 +40,10 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
     local sg=g:SelectWithSumEqual(tp,Card.GetLevel,e:GetLabel(),1,ft)
     if #sg>0 then
-        for tc in aux.Next(sg) do
+        for tc in sg:Iter() do
 			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
 		end
+		Duel.SpecialSummonComplete()
     end
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetDescription(aux.Stringid(id,1))
@@ -55,5 +56,5 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.RegisterEffect(e1,tp)
 end
 function s.splimit(e,c,tp,sumtype,sumpos)
-	return c:GetAttribute()~=ATTRIBUTE_WIND
+	return c:IsAttributeExcept(ATTRIBUTE_WIND)
 end
