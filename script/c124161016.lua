@@ -48,10 +48,6 @@ if chk==0 then return true end
 	end
 end
 
-function s.op1filter(c)
-	return c:IsSetCard(0xf20) and not c:IsPublic()
-end
-
 function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
 	if not Duel.NegateActivation(ev) or not rc:IsRelateToEffect(re) then return end
