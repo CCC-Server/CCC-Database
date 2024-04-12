@@ -120,6 +120,7 @@ function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
 	local a,at=Duel.GetAttacker(),Duel.GetAttackTarget()
 	if a:IsControler(1-tp) then a,at=at,a end
 	if at and at:IsRelateToBattle() and at:IsControler(1-tp) then
