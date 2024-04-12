@@ -11,6 +11,7 @@ function s.initial_effect(c)
 	e1:SetTarget(s.tg)
 	e1:SetOperation(s.op)
 	c:RegisterEffect(e1)
+	Duel.AddCustomActivityCounter(id,ACTIVITY_SPSUMMON,function(_c) return _c:IsSetCard(0xff0) end)
 end
 
 function s.sumlimitcost(e,tp,eg,ep,ev,re,r,rp,chk)

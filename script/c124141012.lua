@@ -33,11 +33,11 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.act1filter(c)
-	c:IsFaceup() and c:IsSetCard(0xff0) and c:IsRace(RACE_WARRIOR)
+	return c:IsFaceup() and c:IsSetCard(0xff0) and c:IsRace(RACE_WARRIOR)
 end
 
 function s.act2filter(c)
-	c:IsFaceup() and c:IsSetCard(0xff0) and c:IsRace(RACE_BEASTWARRIOR)
+	return c:IsFaceup() and c:IsSetCard(0xff0) and c:IsRace(RACE_BEASTWARRIOR)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
