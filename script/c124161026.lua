@@ -30,14 +30,13 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 	--effect 3
 	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetCode(EVENT_LEAVE_FIELD)
+	e4:SetType(EFFECT_TYPE_FIELD)
+	e4:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e4:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
 	e4:SetRange(LOCATION_FZONE)
-	e4:SetCountLimit(1,{id,1})
-	e4:SetCondition(s.con3)
+	e4:SetTargetRange(LOCATION_MZONE,0)
 	e4:SetTarget(s.tg3)
-	e4:SetOperation(s.op3)
+	e4:SetValue(s.val3)
 	c:RegisterEffect(e4)
 end
 
@@ -91,28 +90,10 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 3
-function s.con3filter(c,tp)
-	return c:IsPreviousPosition(POS_FACEUP) and c:IsType(TYPE_FUSION) and c:IsPreviousSetCard(0xf21) and c:IsPreviousControler(tp) and c:GetReasonPlayer()==1-tp
+function s.tg3(e,c)
+	return c:IsSetCard(0xf21) and c:IsType(TYPE_FUSION) and c:IsFaceup()
 end
 
-function s.con3(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.con3filter,1,nil,tp)
-end
-
-function s.tg3(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(1-tp,LOCATION_MZONE,PLAYER_NONE,0)+Duel.GetLocationCount(1-tp,LOCATION_SZONE,PLAYER_NONE,0)>1 end
-	local dis=Duel.SelectDisableField(tp,2,0,LOCATION_ONFIELD,0)
-	Duel.Hint(HINT_ZONE,tp,dis)
-	e:SetLabel(dis)
-end
-
-function s.op3(e,tp,eg,ep,ev,re,r,rp)
-	c=e:GetHandler()
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_DISABLE_FIELD)
-	e1:SetOperation(function(e) return e:GetLabel() end)
-	e1:SetReset(RESET_PHASE+PHASE_END,2)
-	e1:SetLabel(e:GetLabel())
-	Duel.RegisterEffect(e1,tp)
+function s.val3(e,re,rp)
+	return aux.tgoval(e,re,rp) and not (re:GetHandler():IsOnField() or re:IsHasType(EFFECT_TYPE_ACTIVATE))
 end
