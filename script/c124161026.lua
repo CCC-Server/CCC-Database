@@ -35,6 +35,7 @@ function s.initial_effect(c)
 	e4:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
 	e4:SetRange(LOCATION_FZONE)
 	e4:SetTargetRange(LOCATION_MZONE,0)
+	e4:SetCondition(s.con3)
 	e4:SetTarget(s.tg3)
 	e4:SetValue(s.val3)
 	c:RegisterEffect(e4)
@@ -90,10 +91,15 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 3
+function s.con3(e,c)
+	local tp=e:GetHandlerPlayer()
+	return 10-Duel.GetLocationCount(tp,LOCATION_MZONE)-Duel.GetFieldGroupCount(tp,LOCATION_MZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_EMZONE,0)-Duel.GetLocationCount(tp,LOCATION_SZONE)-Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_FZONE,0)>0
+end
+
 function s.tg3(e,c)
 	return c:IsSetCard(0xf21) and c:IsType(TYPE_FUSION) and c:IsFaceup()
 end
 
 function s.val3(e,re,rp)
-	return aux.tgoval(e,re,rp) and not (re:GetHandler():IsOnField() or re:IsHasType(EFFECT_TYPE_ACTIVATE))
+	return aux.tgoval(e,re,rp)
 end
