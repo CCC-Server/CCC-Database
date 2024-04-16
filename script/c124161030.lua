@@ -26,7 +26,6 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetCondition(function() return Duel.GetCurrentPhase()==PHASE_END end)
-	e2:SetCost(s.cst2)
 	e2:SetTarget(s.tg2)
 	e2:SetOperation(s.op2)
 	c:RegisterEffect(e2)
@@ -86,18 +85,6 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 2
-function s.cst2filter(c,tp)
-	return c:IsSetCard(0xf21) and c:IsAbleToDeckAsCost()
-end
-
-function s.cst2(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(s.cst1filter,tp,LOCATION_REMOVED,0,nil,e,tp)
-	if chk==0 then return #g>0 end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_REMOVE)
-	Duel.SendtoDeck(sg,nil,SEQ_DECKBOTTOM,REASON_COST)
-end
-
 function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(1-tp,LOCATION_SZONE,PLAYER_NONE,0)>0 end
 	local dis=Duel.SelectDisableField(tp,1,0,LOCATION_SZONE,0)
