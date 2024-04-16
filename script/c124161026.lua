@@ -93,7 +93,9 @@ end
 --effect 3
 function s.con3(e,c)
 	local tp=e:GetHandlerPlayer()
-	return 10-Duel.GetLocationCount(tp,LOCATION_MZONE)-Duel.GetFieldGroupCount(tp,LOCATION_MZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_EMZONE,0)-Duel.GetLocationCount(tp,LOCATION_SZONE)-Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_FZONE,0)>0
+	local iunu=10-Duel.GetLocationCount(tp,LOCATION_MZONE)-Duel.GetFieldGroupCount(tp,LOCATION_MZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_EMZONE,0)-Duel.GetLocationCount(tp,LOCATION_SZONE)-Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_FZONE,0)
+	local ounu=10-Duel.GetLocationCount(1-tp,LOCATION_MZONE)-Duel.GetFieldGroupCount(1-tp,LOCATION_MZONE,0)+Duel.GetFieldGroupCount(1-tp,LOCATION_EMZONE,0)-Duel.GetLocationCount(1-tp,LOCATION_SZONE)-Duel.GetFieldGroupCount(1-tp,LOCATION_SZONE,0)+Duel.GetFieldGroupCount(1-tp,LOCATION_FZONE,0)
+	return inun>ounu
 end
 
 function s.tg3(e,c)
