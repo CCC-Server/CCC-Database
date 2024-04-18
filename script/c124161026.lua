@@ -44,7 +44,6 @@ function s.val1(e,c,tc)
 	local tp=e:GetHandlerPlayer()
 	local unu=20-Duel.GetLocationCount(tp,LOCATION_MZONE)-Duel.GetFieldGroupCount(tp,LOCATION_MZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_EMZONE,0)-Duel.GetLocationCount(tp,LOCATION_SZONE)-Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)+Duel.GetFieldGroupCount(tp,LOCATION_FZONE,0)
 	-Duel.GetLocationCount(1-tp,LOCATION_MZONE)-Duel.GetFieldGroupCount(1-tp,LOCATION_MZONE,0)+Duel.GetFieldGroupCount(1-tp,LOCATION_EMZONE,0)-Duel.GetLocationCount(1-tp,LOCATION_SZONE)-Duel.GetFieldGroupCount(1-tp,LOCATION_SZONE,0)+Duel.GetFieldGroupCount(1-tp,LOCATION_FZONE,0)
-
 	local exunu=0
 	if Duel.GetFieldGroupCount(tp,LOCATION_EMZONE,0)+Duel.GetFieldGroupCount(1-tp,LOCATION_EMZONE,0)==2 then
 		exunu=0
@@ -52,8 +51,12 @@ function s.val1(e,c,tc)
 		exunu=1-Duel.GetLocationCountFromEx(tp,tp,tc,c,ZONES_EMZ)-Duel.GetLocationCountFromEx(1-tp,1-tp,tc,c,ZONES_EMZ)
 	else
 		exunu=2-Duel.GetLocationCountFromEx(tp,tp,tc,c,0x20)-Duel.GetLocationCountFromEx(tp,tp,tc,c,0x40)
-	end  
-	return (unu+exunu)*100
+	end
+	local funu=0
+	if Duel.GetFieldGroupCount(1-tp,LOCATION_FZONE,0)<1 and not Duel.CheckLocation(1-tp,LOCATION_SZONE,5) then
+		funu=1
+	end
+	return (unu+exunu+funu)*100
 end
 
 --effect 2
