@@ -34,7 +34,7 @@ function s.con1(e,tp,eg)
 end
 
 function s.tg1filter(c)
-	return c:IsSummonType(SUMMON_TYPE_SPECIAL) and c:IsFaceup()
+	return c:IsSummonType(SUMMON_TYPE_SPECIAL) and c:IsFaceup() and c:IsCanTurnSet()
 end
 
 function s.tg1revfilter(c)
