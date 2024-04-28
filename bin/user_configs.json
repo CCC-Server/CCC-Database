@@ -19,9 +19,9 @@
 			"should_read": true
 		},
 		{
-			"url": "https://github.com/oricaptive/Oricaptive",
-			"repo_name": "Oricap Server",
-			"repo_path": "./repositories/OriCap",
+			"url": "https://github.com/CCC-Server/CCC-Database",
+			"repo_name": "CCC 서버 확장팩",
+			"repo_path": "./repositories/CCC-Database",
 			"data_path": "database",
 			"script_path": "script",
 			"lflist_path": "lflists",
@@ -29,17 +29,17 @@
 			"should_read": true
 		},
 		{
-			"url": "https://github.com/oricaptive/Oricapics",
-			"repo_name": "OriCap Server Pics",
-			"repo_path": "./repositories/OriCap-pics",
+			"url": "https://github.com/CCC-Server/CCC-Pics",
+			"repo_name": "CCC 서버 이미지",
+			"repo_path": "./repositories/CCC-Pics",
 			"pics_path": "pics",
 			"should_update": true,
 			"should_read": true
 		},
 		{
-			"url": "https://github.com/Orikka-CS/EMP-TY",
-			"repo_name": "Custom expansions",
-			"repo_path": "./repositories/expansions-2",
+			"url": "https://github.com/CCC-Server/EMP-TY",
+			"repo_name": "커스텀 확장팩",
+			"repo_path": "./expansions-2",
 			"data_path": "",
 			"pics_path": "pics",
 			"script_path": "script",
@@ -49,21 +49,21 @@
 	],
 	"urls": [
 		{
-			"url": "https://raw.githubusercontent.com/oricaptive/Oricapics/main/field/{}.png",
+			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Pics/main/field/{}.png",
 			"type": "field"
 		},
 		{
-			"url": "https://raw.githubusercontent.com/oricaptive/Oricapics/main/field/{}.jpg",
+			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Pics/main/field/{}.jpg",
 			"type": "field"
 		},
 		{
-			"url": "https://raw.githubusercontent.com/Orikka-CS/EMP-TY/main/pics/field/{}.png",
+			"url": "https://raw.githubusercontent.com/CCC-Server/EMP-TY/main/pics/field/{}.png",
 			"type": "field"
 		}
 	],
 	"servers": [
 		{
-			"name": "오리캡 서버",
+			"name": "CCC 서버",
 			"address": "one.for-o.n-e.kr",
 			"duelport": 11553,
 			"roomaddress": "one.for-o.n-e.kr",
