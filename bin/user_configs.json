@@ -10,7 +10,7 @@
 			"should_read": true
 		},
 		{
-			"url": "https://github.com/Orikka-CS/EMP-TY",
+			"url": "https://github.com/CCC-Server/EMP-TY",
 			"repo_name": "추가 한국어 패치",
 			"repo_path": "./repositories/languages/한국어-2",
 			"is_language": true,
