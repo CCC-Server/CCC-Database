@@ -4,7 +4,7 @@ function s.initial_effect(c)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_GRAVE)
-	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON)
+	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON+CATEGORY_DECKDES)
 	e1:SetCountLimit(1,id)
 	e1:SetCost(s.cost1)
 	e1:SetTarget(s.tar1)
@@ -40,8 +40,8 @@ function s.tar1(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,c,1,0,0)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
-function s.ofil1(c,e,tp)
-	return c:IsSetCard(0xfa2) and c:IsCanBeSpecialSummoned(e,0,tp,false,false) and c:IsLevel(4)
+function s.ofil1(c)
+	return c:IsSetCard(0xfa2) and c:IsAbleToGrave()
 end
 function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
@@ -55,9 +55,13 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 			end,
 			aux.Stringid(id,0)
 		)
-		if res==1 and Duel.IsPlayerCanDiscardDeck(tp,3,REASON_EFFECT) and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-			Duel.BreakEffect()
-			Duel.DiscardDeck(tp,3,REASON_EFFECT)
+		if res==1 then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+			local g=Duel.SelectMatchingCard(tp,s.ofil1,tp,LOCATION_DECK,0,0,1,nil)
+			if #g>0 then
+				Duel.BreakEffect()
+				Duel.SendtoGrave(g,REASON_EFFECT)
+			end
 		end
 	end
 end
