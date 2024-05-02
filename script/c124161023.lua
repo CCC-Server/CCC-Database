@@ -50,8 +50,6 @@ function s.tg1(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.op1(e,tc,tp,sg,chk)
-	local c=e:GetHandler()
-	if not c:IsRelateToEffect(e) then return end
 	local sg=Duel.GetFirstTarget()
 	if sg:IsRelateToEffect(e) then
 		if Duel.SendtoGrave(sg,REASON_EFFECT) and sg:IsLocation(LOCATION_GRAVE) then
