@@ -1,4 +1,5 @@
 --영원한 후일담의 쌍권총
+Duel.LoadScript("strings.lua") --구현 완료되면 이 줄 삭제
 local s,id=GetID()
 function s.initial_effect(c)
 	--cannot attack
@@ -6,7 +7,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CANNOT_ATTACK)
 	c:RegisterEffect(e1)
-    --self destory
+    --self destroy
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
@@ -23,6 +24,7 @@ function s.initial_effect(c)
 	e3:SetValue(s.desval)
 	e3:SetOperation(s.desop)
 	c:RegisterEffect(e3)
+	--[[
 	--atk up
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,0))
@@ -35,6 +37,9 @@ function s.initial_effect(c)
 	e4:SetTarget(s.atktg)
 	e4:SetOperation(s.atkop)
 	c:RegisterEffect(e4)
+	--]]
+	--일부 미구현
+	c:UnimplementedPartially(c)
 end
 function s.filter(c)
 	return c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
@@ -60,10 +65,12 @@ end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Destroy(e:GetHandler(),REASON_EFFECT+REASON_REPLACE)
 end
+--[[
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	local a=Duel.GetAttacker()
 	local at=Duel.GetAttackTarget()
-	return at and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
+	return at and ((a:IsType(TYPE_NORMAL) and a:IsRace(RACE_ZOMBIE))
+		or (at:IsType(TYPE_NORMAL) and at:IsRace(RACE_ZOMBIE)))
 end
 function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local tc=e:GetLabelObject()
@@ -82,3 +89,4 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 		tc:RegisterEffect(e1)
 	end
 end
+--]]

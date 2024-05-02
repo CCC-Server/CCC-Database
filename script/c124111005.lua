@@ -1,4 +1,5 @@
 --영원한 후일담의 전기톱
+Duel.LoadScript("strings.lua") --구현 완료되면 이 줄 삭제
 local s,id=GetID()
 function s.initial_effect(c)
 	--cannot attack
@@ -6,7 +7,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CANNOT_ATTACK)
 	c:RegisterEffect(e1)
-    --self destory
+    --self destroy
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
@@ -23,6 +24,8 @@ function s.initial_effect(c)
 	e3:SetValue(s.desval)
 	e3:SetOperation(s.desop)
 	c:RegisterEffect(e3)
+	--일부 미구현
+	c:UnimplementedPartially(c)
 end
 function s.filter(c)
 	return c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)

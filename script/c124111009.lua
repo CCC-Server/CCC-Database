@@ -1,4 +1,5 @@
 --〈영원한 후일담〉 절찬 상영 중
+Duel.LoadScript("strings.lua") --구현 완료되면 이 줄 삭제
 local s,id=GetID()
 function s.initial_effect(c)
 	--Search
@@ -11,10 +12,13 @@ function s.initial_effect(c)
 	e1:SetTarget(s.thtg)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
+	--[[
 	--Normal Summon
 	--Special Summon
+	--]]
+	--일부 미구현
+	c:UnimplementedPartially(c)
 end
-s.listed_names={CARD_RA,id,10000090}
 function s.thfilter(c)
 	return c:IsSetCard(0x1f40) and not c:IsCode(id) and c:IsAbleToHand()
 end
