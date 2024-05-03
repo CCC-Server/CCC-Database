@@ -44,7 +44,7 @@ function s.tg1(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chkc then return chkc:IsLocation(LOCATION_MMZONE+LOCATION_STZONE) and chkc:IsControler(1-tp) and s.tg1filter(chkc,e,tp) end
 	local g=Duel.GetMatchingGroup(s.tg1filter,tp,0,LOCATION_MMZONE+LOCATION_STZONE,nil,e,tp)
 	if chk==0 then return #g>0 end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_SPSUMMON)
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_TOGRAVE)
 	Duel.SetTargetCard(sg)
 	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,g,1,0,0)
 end
