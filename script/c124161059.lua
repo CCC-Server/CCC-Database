@@ -93,7 +93,7 @@ end
 
 --effect 3
 function s.con3filter(c,tp)
-	return c:IsCode(124161058) and c:IsControler(tp) and c:GetEquipTarget()==tp
+	return c:IsCode(124161058) and c:IsControler(tp) and c:GetEquipTarget():GetControler()==tp
 end
 
 function s.con3(e,tp,eg)
