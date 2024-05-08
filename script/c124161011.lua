@@ -95,14 +95,10 @@ function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,1-tp,1)
 end
 
-function s.op2filter(c)
-	return c:IsPublic() and c:IsAbleToGrave()
-end
-
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local gi=Duel.GetMatchingGroup(s.tg2ifilter,tp,LOCATION_HAND,0,nil,e,tp)
-	local go=Duel.GetMatchingGroup(s.tg2ofilter,tp,0,LOCATION_HAND,nil,e,tp)
+	local go=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,0,LOCATION_HAND,nil)
 	if #gi==0 or #go==0 then return end
 	Duel.ConfirmCards(tp,go)
 	local sg=aux.SelectUnselectGroup(go,e,tp,1,#gi,aux.TRUE,1,tp,HINTMSG_REMOVE)
