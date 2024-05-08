@@ -104,6 +104,7 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	local gi=Duel.GetMatchingGroup(s.tg2ifilter,tp,LOCATION_HAND,0,nil,e,tp)
 	local go=Duel.GetMatchingGroup(s.tg2ofilter,tp,0,LOCATION_HAND,nil,e,tp)
 	if #gi==0 or #go==0 then return end
+	Duel.ConfirmCards(tp,go)
 	local sg=aux.SelectUnselectGroup(go,e,tp,1,#gi,aux.TRUE,1,tp,HINTMSG_REMOVE)
 	Duel.Remove(sg,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)
 	local e1=Effect.CreateEffect(e:GetHandler())
@@ -113,25 +114,28 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetLabelObject(sg)
 	e1:SetCondition(s.op2addcon)
 	e1:SetOperation(s.op2addop)
-	e1:SetReset(RESET_PHASE+PHASE_END,2) end
+	e1:SetReset(RESET_PHASE+PHASE_END,2)
 	Duel.RegisterEffect(e1,tp)
-	local tc=g:GetFirst()
-	for tc in aux.Next(g) do
+	sg:KeepAlive()
+	local tc=sg:GetFirst()
+	for tc in aux.Next(sg) do
 		tc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
 	end
 end
 
+function s.op2addfilter(c)
+	return c:GetFlagEffect(id)>0
+end
+
 function s.op2addcon(e,tp,eg,ep,ev,re,r,rp)
-	local sg=e:GetLabelObject()
-	if sg:GetFlagEffect(id)==0 then
-		e:Reset()
-		return false
-	else
-		return true
-	end
+	return Duel.GetTurnPlayer()==tp and Duel.GetTurnCount()~=e:GetLabel()
 end
 
 function s.op2addop(e,tp,eg,ep,ev,re,r,rp)
-	local sg=e:GetLabelObject()
-	Duel.SendtoHand(sg,1-tp,REASON_EFFECT)
+	local g=e:GetLabelObject()
+	local sg=g:Filter(s.op2addfilter,nil)
+	g:DeleteGroup()
+	if #sg>0 then
+		Duel.SendtoHand(sg,nil,REASON_EFFECT)
+	end
 end
