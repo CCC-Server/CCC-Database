@@ -29,6 +29,7 @@ function s.cst1(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return not c:IsPublic() end
 	Duel.ConfirmCards(1-tp,c)
+	Duel.ShuffleHand(tp)
 end
 
 function s.tg1filter(c,e,tp)
@@ -59,7 +60,6 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetReset(RESET_PHASE+PHASE_END,2)
 	e1:SetLabel(Duel.GetChainInfo(0,CHAININFO_TARGET_PARAM))
 	Duel.RegisterEffect(e1,tp)
-	Duel.ShuffleHand(tp)
 end
 
 --effect 2
