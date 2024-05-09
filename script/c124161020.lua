@@ -59,6 +59,7 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetReset(RESET_PHASE+PHASE_END,2)
 	e1:SetLabel(Duel.GetChainInfo(0,CHAININFO_TARGET_PARAM))
 	Duel.RegisterEffect(e1,tp)
+	Duel.ShuffleHand(tp)
 end
 
 --effect 2
