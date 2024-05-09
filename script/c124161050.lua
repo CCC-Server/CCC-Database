@@ -1,4 +1,4 @@
---Unendal Sorceress Eve
+--Unendal Witch Eve
 local s,id=GetID()
 function s.initial_effect(c)
 	--effect 1
@@ -52,12 +52,14 @@ end
 function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsRelateToEffect(e) then
-	   if not Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP) then return end
-	end
-	local g=Duel.GetMatchingGroup(s.tg1filter,tp,LOCATION_DECK,0,nil,e,tp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and #g>0 then
-		local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_SPSUMMON)
-		Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
+		if Duel.SpecialSummonStep(c,0,tp,tp,false,false,POS_FACEUP) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+			local sc=Duel.SelectMatchingCard(tp,s.tg1filter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+			if sc then
+				Duel.SpecialSummonStep(sc,0,tp,tp,false,false,POS_FACEUP)
+			end
+		end
+		Duel.SpecialSummonComplete()
 	end
 end
 
