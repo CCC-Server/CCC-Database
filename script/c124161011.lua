@@ -146,6 +146,7 @@ function s.op2addop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 3
-function s.con3(e,tp)
+function s.con3(e)
+	local tp=e:GetHandler():GetControler()
 	return Duel.GetMatchingGroupCount(s.tg2ifilter,tp,LOCATION_HAND,0,nil,e,tp)>0
 end
