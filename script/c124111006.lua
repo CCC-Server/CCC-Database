@@ -42,19 +42,19 @@ end
 function s.descon(e)
 	return not Duel.IsExistingMatchingCard(s.filter,e:GetHandler():GetControler(),LOCATION_MZONE,0,1,nil)
 end
-function s.dfilter(c,tp)
-	return c:IsLocation(LOCATION_MZONE) and c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
+function s.desfilter(c,tp)
+	return s.filter(c) and c:IsLocation(LOCATION_MZONE)
 		and not c:IsReason(REASON_REPLACE) and c:IsControler(tp)
 end
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return not eg:IsContains(e:GetHandler())
-		and eg:IsExists(s.dfilter,1,nil,tp) end
+		and eg:IsExists(s.desfilter,1,nil,tp) end
 	if Duel.SelectEffectYesNo(tp,e:GetHandler(),96) then
 		return true
 	else return false end
 end
 function s.desval(e,c)
-	return c:IsLocation(LOCATION_MZONE) and c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
+	return s.filter(c) and c:IsLocation(LOCATION_MZONE)
 		and not c:IsReason(REASON_REPLACE) and c:IsControler(e:GetHandlerPlayer())
 end
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
