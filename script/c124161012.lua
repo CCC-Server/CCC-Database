@@ -32,12 +32,13 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 	--effect 3
 	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetCode(EVENT_CONFIRM)
-	e4:SetRange(LOCATION_HAND)
+	e4:SetType(EFFECT_TYPE_FIELD)
+	e4:SetCode(EFFECT_CANNOT_TRIGGER)
+	e4:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	e4:SetRange(LOCATION_FZONE)
+	e4:SetTargetRange(0,LOCATION_SZONE)
+	e4:SetCondition(s.con3)
 	e4:SetTarget(s.tg3)
-	e4:SetOperation(s.op3)
 	c:RegisterEffect(e4)
 end
 
@@ -65,7 +66,7 @@ function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.op2filter(c)
-	return c:IsSetCard(0xf20) and c:IsAbleToHand()
+	return c:IsSetCard(0xf20) and not c:IsType(TYPE_FIELD) and c:IsAbleToHand()
 end
 
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
@@ -81,29 +82,15 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 3
-function s.tg3(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return not e:GetHandler():IsPublic() end
+function s.con3filter(c)
+	return c:IsPublic() and c:IsSetCard(0xf20)
 end
 
-function s.op3filter(c)
-	return c:IsSetCard(0xf20) and not c:IsType(TYPE_FIELD) and not c:IsPublic() 
+function s.con3(e)
+	local tp=e:GetHandler():GetControler()
+	return Duel.GetMatchingGroupCount(s.con3filter,tp,LOCATION_HAND,0,nil)>0
 end
 
-function s.op3(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if c:IsPublic() or not c:IsRelateToEffect(e) then return end
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
-	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_PUBLIC)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,2)
-	c:RegisterEffect(e1)
-	local g=Duel.GetMatchingGroup(s.op3filter,tp,LOCATION_HAND,0,c,e,tp)
-	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-		Duel.BreakEffect()
-		local sg=aux.SelectUnselectGroup(g,e,tp,1,2,nil,1,tp,HINTMSG_CONFIRM)
-		Duel.ConfirmCards(1-tp,sg)
-		Duel.ShuffleHand(tp)
-	end
+function s.tg3(e,c)
+	return c:IsFacedown()
 end

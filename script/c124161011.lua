@@ -146,7 +146,11 @@ function s.op2addop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 3
+function s.con3filter(c)
+	return c:IsPublic() and c:IsSetCard(0xf20)
+end
+
 function s.con3(e)
 	local tp=e:GetHandler():GetControler()
-	return Duel.GetMatchingGroupCount(s.tg2ifilter,tp,LOCATION_HAND,0,nil,e,tp)>0
+	return Duel.GetMatchingGroupCount(s.con3filter,tp,LOCATION_HAND,0,nil)>0
 end
