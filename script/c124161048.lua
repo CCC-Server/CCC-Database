@@ -27,7 +27,7 @@ end
 
 --effect 1
 function s.con1filter(c,e,tp,re,r,rp)
-	return r==REASON_COST and re:IsActivated() and rp==tp and re:GetHandler():IsSetCard(0xf23) and c:IsControler(tp) and c:IsAbleToHand() and c:IsLocation(LOCATION_GRAVE)
+	return c:IsReason(REASON_COST) and re:IsActivated() and rp==tp and re:GetHandler():IsSetCard(0xf23) and c:IsControler(tp) and c:IsAbleToHand() and c:IsLocation(LOCATION_GRAVE)
 end
 
 function s.con1(e,tp,eg,ep,ev,re,r,rp)
