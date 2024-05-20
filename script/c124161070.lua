@@ -1,4 +1,4 @@
---Tempetrix Valkyrie Grace
+--Cyclassie Valkyrie Grace
 local s,id=GetID()
 function s.initial_effect(c)
 	--fusion
