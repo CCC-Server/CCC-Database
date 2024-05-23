@@ -1,5 +1,4 @@
 --영원한 후일담의 쌍권총
---Duel.LoadScript("strings.lua") --구현 완료되면 이 줄 삭제
 local s,id=GetID()
 function s.initial_effect(c)
 	--cannot attack
@@ -36,8 +35,6 @@ function s.initial_effect(c)
 	e4:SetTarget(s.atktg)
 	e4:SetOperation(s.atkop)
 	c:RegisterEffect(e4)
-	--일부 미구현
-	--c:UnimplementedPartially(c)
 end
 function s.filter(c)
 	return c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
