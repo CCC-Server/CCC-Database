@@ -98,6 +98,6 @@ end
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
-		Duel.GetControl(tc,1-tp,nil,1)
+		Duel.GetControl(tc,tp)
 	end
 end
