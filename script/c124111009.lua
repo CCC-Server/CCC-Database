@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	c:UnimplementedPartially(c)
 end
 function s.thfilter(c)
-	return c:IsSetCard(0x1f40) and not c:IsCode(id) and c:IsAbleToHand()
+	return c:IsSetCard(0x1fd0) and not c:IsCode(id) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
