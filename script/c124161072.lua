@@ -75,8 +75,8 @@ function s.con2(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.con2filter,1,nil,tp)
 end
 
-function s.tg2gfilter(c,e)
-	return c:IsCanBeEffectTarget(e) and c:IsAbleToRemove()
+function s.tg2gfilter(c,e,tp)
+	return c:IsCanBeEffectTarget(e) and c:IsAbleToRemove() and c:IsReason(REASON_EFFECT) and c:IsPreviousLocation(LOCATION_ONFIELD) and c:GetPreviousControler()==1-tp and c:IsLocation(LOCATION_GRAVE)
 end
 
 function s.tg2filter(c)
@@ -85,7 +85,7 @@ end
 
 function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chkc then return chkc:IsLocation(LOCATION_GRAVE) end
-	local g=eg:Filter(s.tg2gfilter,nil,e)
+	local g=eg:Filter(s.tg2gfilter,nil,e,tp)
 	local rg=Duel.GetMatchingGroupCount(s.tg2filter,tp,LOCATION_GRAVE,0,nil)
 	if chk==0 then return #g>0 and rg>0 end
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,rg,aux.TRUE,1,tp,HINTMSG_REMOVE)
