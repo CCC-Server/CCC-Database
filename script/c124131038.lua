@@ -2,7 +2,7 @@
 Duel.LoadScript("strings.lua")
 local s,id=GetID()
 function s.initial_effect(c)
-	--덱에서 "라이트로드" 3장 묘지로
+	--덱에서 "라이트로드" 1장 묘지로
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetCategory(CATEGORY_TOGRAVE)
@@ -10,8 +10,8 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
 	e2:SetCountLimit(1,id)
-	e2:SetTarget(s.settg)
-	e2:SetOperation(s.setop)
+	e2:SetTarget(s.tgtg)
+	e2:SetOperation(s.tgop)
 	c:RegisterEffect(e2)
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
@@ -28,59 +28,31 @@ function s.initial_effect(c)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
-	--discard deck
+	--synchro level
 	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
-	e4:SetDescription(aux.Stringid(id,2))
-	e4:SetCategory(CATEGORY_DECKDES)
-	e4:SetCode(EVENT_PHASE+PHASE_END)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1)
-	e4:SetCondition(s.discon)
-	e4:SetTarget(s.distg)
-	e4:SetOperation(s.disop)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetCode(EFFECT_SYNCHRO_LEVEL)
+	e4:SetValue(s.slevel)
 	c:RegisterEffect(e4)
+	local e5=e4:Clone()
+	e5:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e5:SetCode(EFFECT_XYZ_LEVEL)
+	e5:SetRange(LOCATION_MZONE)
+	c:RegisterEffect(e5)
 end
-function s.setfilter(c)
+function s.tgfilter(c)
 	return c:IsSetCard(0x38) and c:IsLevelBelow(4) and c:IsMonster() and c:IsAbleToGrave()
 end
-function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK,0,1,nil) end
+function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
-function s.setop(e,tp,eg,ep,ev,re,r,rp)
-		--Cannot Special Summon monsters, except "라이트로드" monsters
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetDescription(aux.Stringid(id,2))
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-		e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-		e1:SetTargetRange(1,0)
-		e1:SetTarget(function(e,c) return not c:IsSetCard(0x38) end)
-		e1:SetReset(RESET_PHASE|PHASE_END)
-		Duel.RegisterEffect(e1,tp)
-    local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
-    if #g==0 then return end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,3,aux.dncheck,1,tp,HINTMSG_TOGRAVE)
-    if #sg>0 then
-	Duel.SendtoGrave(sg,REASON_EFFECT)
-    end
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetDescription(aux.Stringid(id,2))
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-	e1:SetTargetRange(1,0)
-	e1:SetTarget(s.splimit)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-	--lizard check
-	aux.addTempLizardCheck(e:GetHandler(),tp,s.lizfilter)
-end
-function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return not c:IsSetCard(0x38) and c:IsLocation(LOCATION_EXTRA)
-end
-function s.lizfilter(e,c)
-	return not c:IsOriginalSetCard(0x8)
+function s.tgop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoGrave(g,REASON_EFFECT)
+	end
 end
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsLocation(LOCATION_GRAVE) and (r==REASON_SYNCHRO or r==REASON_LINK)
@@ -111,4 +83,8 @@ function s.distg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.disop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.DiscardDeck(tp,3,REASON_EFFECT)
+end
+function s.slevel(e,c)
+	local lv=e:GetHandler():GetLevel()
+	return 4*65536+lv
 end
