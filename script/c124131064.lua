@@ -52,5 +52,5 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.sumlimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return c:IsLocation(LOCATION_EXTRA) and c:HasLevel()
+	return c:IsLocation(LOCATION_EXTRA) and not c:HasLevel()
 end
