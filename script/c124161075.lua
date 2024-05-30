@@ -11,7 +11,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.op1)
 	c:RegisterEffect(e1)
 	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_TODECK)
+	e2:SetCategory(CATEGORY_TOHAND)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -70,13 +70,13 @@ function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local sg2=aux.SelectUnselectGroup(g2,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_TODECK)
 	sg1:Merge(sg2)
 	Duel.SetTargetCard(sg1)
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,sg1,2,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,sg1,2,0,0)
 end
 
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	local sg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
 	local g=sg:Filter(Card.IsRelateToEffect,nil,e)
 	if #g>0 then
-		Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
 	end
 end
