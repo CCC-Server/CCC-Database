@@ -12,7 +12,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 end
 s.listed_series={0xc3}
-s.listed_names={CARD_POLYMERIZATION}
+s.listed_names={94820406}
 function s.filter1(c)
 	return c:IsCode(94820406) and c:IsAbleToHand()
 end
