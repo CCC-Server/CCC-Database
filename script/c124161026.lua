@@ -21,7 +21,6 @@ function s.initial_effect(c)
 	--effect 2
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_IGNITION)
-	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_FZONE)
 	e3:SetCountLimit(1,id)
 	e3:SetCost(s.cst2)
