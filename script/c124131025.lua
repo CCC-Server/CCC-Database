@@ -24,7 +24,7 @@ function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
 	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,124131033),tp,LOCATION_MZONE,0,1,nil)
+		and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0x81a),tp,LOCATION_MZONE,0,1,nil)
 end
 function s.effectfilter(e,ct)
 	local p=e:GetHandler():GetControler()
@@ -32,5 +32,5 @@ function s.effectfilter(e,ct)
 	return p==tp and loc&LOCATION_ONFIELD~=0
 end
 function s.atkcon(e)
-	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0x81a),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,124131033),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil)
 end
