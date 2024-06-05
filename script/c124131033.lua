@@ -10,14 +10,15 @@ function s.initial_effect(c)
 	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
-		--atk down
+		--atk up
 		local e2=Effect.CreateEffect(c)
-		e2:SetType(EFFECT_TYPE_FIELD)
-		e2:SetCode(EFFECT_SET_ATTACK_FINAL)
-		e2:SetRange(LOCATION_SZONE)
-		e2:SetTargetRange(LOCATION_MZONE,0)
-		e2:SetTarget(s.atktg)
-		e2:SetValue(s.val)
+		e2:SetDescription(aux.Stringid(id,1))
+		e2:SetCategory(CATEGORY_ATKCHANGE)
+		e2:SetType(EFFECT_TYPE_IGNITION)
+		e2:SetRange(LOCATION_FZONE)
+		e2:SetCountLimit(1,id)
+		e2:SetTarget(s.attg)
+		e2:SetOperation(s.atop)
 		c:RegisterEffect(e2)
 	--Opponent cannot target your face-down Defense Position monsters
 	local e3=Effect.CreateEffect(c)
@@ -43,9 +44,24 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
-function s.atktg(e,c)
-	return c:IsSetCard(0x81a)
+function s.attg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_MZONE,0,1,nil) end
 end
-function s.val(e,c)
-	return c:GetAttack()*2
+function s.filter(c)
+	return c:IsFaceup() and c:IsSetCard(0x81a)
+end
+function s.atop(e,tp,eg,ep,ev,re,r,rp)
+	local sg=Duel.GetMatchingGroup(s.filter,tp,LOCATION_MZONE,0,nil,e)
+	local c=e:GetHandler()
+	local fid=c:GetFieldID()
+	local tc=sg:GetFirst()
+	for tc in aux.Next(sg) do
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_SET_ATTACK_FINAL)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+		e1:SetValue(tc:GetAttack()*2)
+		tc:RegisterEffect(e1)
+		tc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1,fid)
+	end
 end

@@ -56,7 +56,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 end
 function s.atkcon(e)
-	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0x81a),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,124131033),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil)
 end
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()

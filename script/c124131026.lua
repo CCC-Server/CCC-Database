@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e4:SetCategory(CATEGORY_SUMMON)
 	e4:SetType(EFFECT_TYPE_IGNITION)
 	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(2,{id,2})
+	e4:SetCountLimit(1,{id,1})
     e4:SetCondition(s.atkcon)
 	e4:SetTarget(s.nstg)
 	e4:SetOperation(s.nsop)
@@ -53,7 +53,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.atkcon(e)
-	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0x81a),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,124131033),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil)
 end
 function s.nsfilter(c)
 	return c:IsRace(RACE_FIEND) and c:IsSummonable(true,nil)

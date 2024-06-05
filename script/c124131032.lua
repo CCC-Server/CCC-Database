@@ -10,8 +10,8 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetCountLimit(1,id)
-	e1:SetCost(aux.dxmcostgen(2,2,nil))
+	e1:SetCountLimit(1)
+	e1:SetCost(aux.dxmcostgen(1,1,nil))
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.operation)
 	c:RegisterEffect(e1,false,REGISTER_FLAG_DETACH_XMAT)
@@ -41,5 +41,5 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.damcon(e)
-    return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0x81a),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil) and  e:GetHandler():GetBattleTarget()~=nil
+    return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,124131033),e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil) and  e:GetHandler():GetBattleTarget()~=nil
 end
