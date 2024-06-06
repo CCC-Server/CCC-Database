@@ -43,6 +43,7 @@ function s.distg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
 	if re:GetHandler():IsDestructable() and re:GetHandler():IsRelateToEffect(re) then
 		Duel.SetOperationInfo(0,CATEGORY_DESTROY,eg,1,0,0)
+		Duel.SetOperationInfo(0,CATEGORY_DECKDES,nil,0,tp,3)
 	end
 end
 function s.disop(e,tp,eg,ep,ev,re,r,rp)
