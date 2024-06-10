@@ -20,13 +20,11 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	--effect 2
 	local e3=Effect.CreateEffect(c)
-	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCode(EVENT_CONFIRM)
+	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_TODECK)
+	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetRange(LOCATION_FZONE)
 	e3:SetCountLimit(1,id)
-	e3:SetCondition(s.con2)
+	e3:SetCost(s.cst2)
 	e3:SetTarget(s.tg2)
 	e3:SetOperation(s.op2)
 	c:RegisterEffect(e3)
@@ -52,33 +50,48 @@ function s.val1(e,c)
 end
 
 --effect 2
-function s.con2filter(c,tp)
-	return c:IsSetCard(0xf20) and c:IsControler(tp) and c:IsLocation(LOCATION_HAND)
+
+function s.cst2ffilter(c,ctype)
+	local key=TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP 
+	return c:IsSetCard(0xf20) and c:IsType(ctype&key) and c:IsAbleToHand() and not c:IsType(TYPE_FIELD)
 end
 
-function s.con2(e,tp,eg)
-	return eg:IsExists(s.con2filter,1,nil,tp)
+function s.cst2filter(c,tp)
+	return not c:IsPublic() and Duel.IsExistingMatchingCard(s.cst2ffilter,tp,LOCATION_DECK,0,1,nil,c:GetType())
 end
+
+function s.cst2(e,tp,eg,ep,ev,re,r,rp,chk)
+	local g=Duel.GetMatchingGroup(s.cst2filter,tp,LOCATION_HAND,0,nil,tp)
+	if chk==0 then return #g>0 end
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_CONFIRM):GetFirst()
+	Duel.ConfirmCards(1-tp,sg)
+	Duel.ShuffleHand(tp)
+	local key=TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP 
+	e:SetLabel(sg:GetType()&key)
+end
+
 
 function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>2 end
-	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
-end
-
-function s.op2filter(c)
-	return c:IsSetCard(0xf20) and not c:IsType(TYPE_FIELD) and c:IsAbleToHand()
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_HAND)
 end
 
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
-	Duel.ConfirmDecktop(tp,3)
-	local dt=Duel.GetDecktopGroup(tp,3)
-	if #dt>0 and dt:IsExists(s.op2filter,1,nil)and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local sg=dt:FilterSelect(tp,s.op2filter,1,1,nil)
-		Duel.SendtoHand(sg,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,sg)
+	local ctype=e:GetLabel()
+	local hg=Duel.GetMatchingGroup(s.cst2ffilter,tp,LOCATION_DECK,0,nil,ctype)
+	if #hg>0 then
+		local shg=aux.SelectUnselectGroup(hg,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_ATOHAND)
+		if Duel.SendtoHand(shg,nil,REASON_EFFECT) then
+			Duel.ConfirmCards(1-tp,shg)
+			Duel.ShuffleDeck(tp)
+			Duel.BreakEffect()
+			Duel.DisableShuffleCheck()
+			local dg=Duel.GetMatchingGroup(Card.IsAbleToDeck,tp,LOCATION_HAND,0,nil)
+			local sdg=aux.SelectUnselectGroup(dg,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_TODECK)
+			Duel.SendtoDeck(sdg,nil,SEQ_DECKBOTTOM,REASON_EFFECT)
+		end
 	end
-	Duel.ShuffleDeck(tp)
 end
 
 --effect 3

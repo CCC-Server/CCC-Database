@@ -7,10 +7,12 @@ function s.initial_effect(c)
 	--effect 1
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_DESTROY)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
+	e1:SetCode(EVENT_CHAIN_SOLVED)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetCountLimit(1,id)
+	e1:SetCondition(s.con1)
 	e1:SetTarget(s.tg1)
 	e1:SetOperation(s.op1)
 	c:RegisterEffect(e1)
@@ -26,6 +28,11 @@ function s.initial_effect(c)
 end
 
 --effect 1
+function s.con1(e,tp,eg,ep,ev,re,r,rp)
+	local rc=re:GetHandler()
+	return rp==tp and re:GetActivateLocation()==LOCATION_HAND 
+end
+
 function s.tg1filter(c)
 	return c:IsPublic(e)
 end
