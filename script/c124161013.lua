@@ -73,7 +73,7 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	c:RegisterEffect(e1)
 	local g=Duel.GetMatchingGroup(s.op2filter,tp,LOCATION_HAND,0,nil,e,tp)
 	g=g+c
-	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+	if #g>0 and Duel.IsPlayerCanDraw(tp) and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		Duel.BreakEffect()
 		local sg=aux.SelectUnselectGroup(g,e,tp,1,#g,nil,1,tp,HINTMSG_TODECK)
 		Duel.SendtoDeck(sg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)

@@ -31,13 +31,14 @@ function s.initial_effect(c)
 	--effect 3
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_FIELD)
-	e4:SetCode(EFFECT_CANNOT_TRIGGER)
-	e4:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	e4:SetCode(EFFECT_QP_ACT_IN_NTPHAND)
 	e4:SetRange(LOCATION_FZONE)
-	e4:SetTargetRange(0,LOCATION_SZONE)
-	e4:SetCondition(s.con3)
+	e4:SetTargetRange(LOCATION_HAND,0)
 	e4:SetTarget(s.tg3)
 	c:RegisterEffect(e4)
+	local e5=e4:Clone()
+	e5:SetCode(EFFECT_TRAP_ACT_IN_HAND)
+	c:RegisterEffect(e5)
 end
 
 --effect 1
@@ -51,13 +52,12 @@ end
 
 --effect 2
 
-function s.cst2ffilter(c,ctype)
-	local key=TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP 
-	return c:IsSetCard(0xf20) and c:IsType(ctype&key) and c:IsAbleToHand() and not c:IsType(TYPE_FIELD)
+function s.cst2ffilter(c,code)
+	return c:IsSetCard(0xf20) and not c:IsCode(code) and c:IsAbleToHand() and not c:IsType(TYPE_FIELD)
 end
 
 function s.cst2filter(c,tp)
-	return not c:IsPublic() and Duel.IsExistingMatchingCard(s.cst2ffilter,tp,LOCATION_DECK,0,1,nil,c:GetType())
+	return not c:IsPublic() and c:IsSetCard(0xf20) and Duel.IsExistingMatchingCard(s.cst2ffilter,tp,LOCATION_DECK,0,1,nil,c:GetCode())
 end
 
 function s.cst2(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -66,8 +66,7 @@ function s.cst2(e,tp,eg,ep,ev,re,r,rp,chk)
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_CONFIRM):GetFirst()
 	Duel.ConfirmCards(1-tp,sg)
 	Duel.ShuffleHand(tp)
-	local key=TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP 
-	e:SetLabel(sg:GetType()&key)
+	e:SetLabel(sg:GetCode())
 end
 
 
@@ -78,8 +77,8 @@ function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
-	local ctype=e:GetLabel()
-	local hg=Duel.GetMatchingGroup(s.cst2ffilter,tp,LOCATION_DECK,0,nil,ctype)
+	local code=e:GetLabel()
+	local hg=Duel.GetMatchingGroup(s.cst2ffilter,tp,LOCATION_DECK,0,nil,code)
 	if #hg>0 then
 		local shg=aux.SelectUnselectGroup(hg,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_ATOHAND)
 		if Duel.SendtoHand(shg,nil,REASON_EFFECT) then
@@ -95,15 +94,6 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 3
-function s.con3filter(c)
-	return c:IsPublic() and c:IsSetCard(0xf20)
-end
-
-function s.con3(e)
-	local tp=e:GetHandler():GetControler()
-	return Duel.GetMatchingGroupCount(s.con3filter,tp,LOCATION_HAND,0,nil)>0
-end
-
 function s.tg3(e,c)
-	return c:IsFacedown()
+	return c:IsPublic() and c:IsSetCard(0xf20)
 end
