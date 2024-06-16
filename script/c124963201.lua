@@ -41,14 +41,14 @@ function s.filter(c)
 end
 function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsPlayerCanSpecialSummonMonster(tp,96385200,0,TYPES_TOKEN,0,2000,1,RACE_BEAST,ATTRIBUTE_LIGHT) end
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,124963200,0,TYPES_TOKEN,0,2000,1,RACE_BEAST,ATTRIBUTE_LIGHT) end
 	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,0)
 end
 function s.op(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsPlayerCanSpecialSummonMonster(tp,96385200,0,TYPES_TOKEN,0,2000,1,RACE_BEAST,ATTRIBUTE_LIGHT) then
-		local token=Duel.CreateToken(tp,96385200)
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,124963200,0,TYPES_TOKEN,0,2000,1,RACE_BEAST,ATTRIBUTE_LIGHT) then
+		local token=Duel.CreateToken(tp,124963200)
 		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
 	end
 end
@@ -57,7 +57,7 @@ function s.condition(e,tp,eg,ep,ev,re,r,rp)
 	return d and d:IsControler(tp) and d:IsFaceup() and d:IsSetCard(0xa52)
 end
 function s.atkcon(e)
-	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,96385200),e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,124963200),e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
 end
 function s.atlimit(e,c)
 	return c:IsFaceup() and c:IsSetCard(0xa52)

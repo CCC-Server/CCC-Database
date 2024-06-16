@@ -40,7 +40,7 @@ function s.condition(e,tp,eg,ep,ev,re,r,rp)
 	return ep~=tp and re and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainNegatable(ev)
 end
 function s.filter(c)
-	return (c:IsSetCard(0xa52) or c:IsCode(96385200)) and c:IsMonster() and c:IsReleasable()
+	return (c:IsSetCard(0xa52) or c:IsCode(124963200)) and c:IsMonster() and c:IsReleasable()
 end
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_MZONE,0,1,e:GetHandler()) end
@@ -72,7 +72,7 @@ function s.activate1(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Destroy(eg,REASON_EFFECT)
 end
 function s.cfilter(c,tp)
-	return c:IsCode(96385208) and c:IsControler(tp)
+	return c:IsCode(124963208) and c:IsControler(tp)
 end
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.cfilter,1,nil,tp)

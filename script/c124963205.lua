@@ -47,13 +47,13 @@ function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsMainPhase()
 end
 function s.spfilter(c,e,tp,ex)
-	return c:IsSetCard(0xa52) and c:IsSpellTrap() and Duel.IsPlayerCanSpecialSummonMonster(tp,96385209,0,0x11,3000,3000,7,RACE_MACHINE,ATTRIBUTE_LIGHT) and c:IsFaceup()
+	return c:IsSetCard(0xa52) and c:IsSpellTrap() and Duel.IsPlayerCanSpecialSummonMonster(tp,124963209,0,0x11,3000,3000,7,RACE_MACHINE,ATTRIBUTE_LIGHT) and c:IsFaceup()
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local ex=Duel.GetFieldGroupCount(tp,0,LOCATION_MZONE)>0
 	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_ONFIELD) and s.spfilter(chkc,e,tp,ex) end
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_ONFIELD,0,1,nil,e,tp,ex) and Duel.IsPlayerCanSpecialSummonMonster(tp,96385209,0,0x11,3000,3000,7,RACE_MACHINE,ATTRIBUTE_LIGHT) end
+		and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_ONFIELD,0,1,nil,e,tp,ex) and Duel.IsPlayerCanSpecialSummonMonster(tp,124963209,0,0x11,3000,3000,7,RACE_MACHINE,ATTRIBUTE_LIGHT) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_ONFIELD,0,1,1,nil,e,tp,ex)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
@@ -63,7 +63,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) and Duel.IsPlayerCanSpecialSummonMonster(tp,96385209,0,0x11,3000,3000,7,RACE_MACHINE,ATTRIBUTE_LIGHT) then
+	if tc:IsRelateToEffect(e) and Duel.IsPlayerCanSpecialSummonMonster(tp,124963209,0,0x11,3000,3000,7,RACE_MACHINE,ATTRIBUTE_LIGHT) then
 		tc:AddMonsterAttribute(TYPE_NORMAL)
 		tc:AssumeProperty(ASSUME_RACE,RACE_MACHINE)
 		if tc and Duel.SpecialSummonStep(tc,0,tp,tp,true,false,POS_FACEUP) then

@@ -45,7 +45,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.descfilter(c)
-	return (c:IsSetCard(0xa52) or c:IsCode(96385200)) and c:IsReleasable()
+	return (c:IsSetCard(0xa52) or c:IsCode(124963200)) and c:IsReleasable()
 end
 function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.descfilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler()) end

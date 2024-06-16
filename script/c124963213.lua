@@ -60,7 +60,7 @@ function s.condition(e,tp,eg,ep,ev,re,r,rp)
 	return not Duel.IsExistingMatchingCard(Card.IsFaceup,tp,LOCATION_MZONE,0,1,nil)
 end
 function s.desfilter(c)
-	return (c:IsSetCard(0xa52) or c:IsCode(96385200)) and c:IsReleasable()
+	return (c:IsSetCard(0xa52) or c:IsCode(124963200)) and c:IsReleasable()
 end
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler()) end
@@ -86,7 +86,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.mfilter(c)
-	return c:IsFaceup() and (c:IsSetCard(0xa52) or c:IsCode(96385200))
+	return c:IsFaceup() and (c:IsSetCard(0xa52) or c:IsCode(124963200))
 end
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetTurnPlayer()==1-tp and Duel.IsMainPhase()

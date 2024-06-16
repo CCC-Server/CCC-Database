@@ -58,7 +58,7 @@ function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	return rp==1-tp and re:IsHasType(EFFECT_TYPE_ACTIVATE) and Duel.IsChainNegatable(ev)
 end
 function s.cfilter(c)
-	return (c:IsSetCard(0xa52) or c:IsCode(96385200)) and c:IsReleasable() and not c:IsStatus(STATUS_BATTLE_DESTROYED)
+	return (c:IsSetCard(0xa52) or c:IsCode(124963200)) and c:IsReleasable() and not c:IsStatus(STATUS_BATTLE_DESTROYED)
 end
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler()) end

@@ -50,15 +50,15 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.SelectMatchingCard(tp,s.filter,tp,LOCATION_HAND,0,1,1,nil,e,tp)
 	if Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0
 		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsPlayerCanSpecialSummonMonster(tp,96385200,0,TYPES_TOKEN,0,2000,1,RACE_BEAST,ATTRIBUTE_LIGHT)
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,124963200,0,TYPES_TOKEN,0,2000,1,RACE_BEAST,ATTRIBUTE_LIGHT)
 		and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		Duel.BreakEffect()
-		local token=Duel.CreateToken(tp,96385200)
+		local token=Duel.CreateToken(tp,124963200)
 		Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
 	end
 end
 function s.descfilter(c)
-	return (c:IsSetCard(0xa52) or c:IsCode(96385200)) and c:IsReleasable()
+	return (c:IsSetCard(0xa52) or c:IsCode(124963200)) and c:IsReleasable()
 end
 function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.descfilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler()) end
