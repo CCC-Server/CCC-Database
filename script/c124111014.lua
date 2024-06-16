@@ -1,4 +1,4 @@
---영원한 후일담의 프로타고니스트(테스트)
+--영원한 후일담의 프로타고니스트
 local s,id=GetID()
 function s.initial_effect(c)
 	Gemini.AddProcedure(c)
@@ -20,7 +20,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SendtoHand(e:GetHandler(),nil,REASON_COST)
 end
 function s.thfilter(c)
-	return c:IsSetCard(0x1fd0) or (c:IsRace(RACE_ZOMBIE) and c:IsType(TYPE_NORMAL)) and c:IsMonster()
+    return (c:IsSetCard(0x1fd0) or (c:IsRace(RACE_ZOMBIE) and c:IsType(TYPE_NORMAL))) and c:IsMonster()
 end 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_HAND|LOCATION_GRAVE,0,1,nil) end
