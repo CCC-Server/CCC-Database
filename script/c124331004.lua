@@ -14,17 +14,19 @@ function s.initial_effect(c)
 	e1:SetTarget(s.tg1)
 	e1:SetOperation(s.op1)
 	c:RegisterEffect(e1)
-	--effect 2
+	--Fusion Summon 1 Beast Fusion Monster
+	local params={function(c) return c:IsRace(RACE_BEAST) end}
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOGRAVE+CATEGORY_SPECIAL_SUMMON)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_MZONE)
+	e2:SetHintTiming(0,TIMING_MAIN_END)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(function(_,tp) return Duel.IsTurnPlayer(1-tp) end)
-	e2:SetTarget(s.sptg)
-	e2:SetOperation(s.spop)
+	e2:SetCondition(function() return Duel.IsMainPhase() end)
+	e2:SetTarget(Fusion.SummonEffTG(table.unpack(params)))
+	e2:SetOperation(Fusion.SummonEffOP(table.unpack(params)))
 	c:RegisterEffect(e2)
 end
 function s.cst1filter(c)
@@ -83,39 +85,4 @@ function s.spfilter(c,e,tp,rmc)
 	return c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 		and c:IsRace(RACE_BEAST)
 
-end
-
-function s.tgfilter(c)
-	return c:IsRace(RACE_BEAST) and c:IsAbleToGrave()
-end
-
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_EXTRA,0,nil,e,tp)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_MZONE,0,3,nil) and #g>0 end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_MZONE)
-end
-
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if not Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_MZONE,0,3,nil) then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local dg=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_MZONE,0,3,3,nil)
-	if #dg>0 then
-		Duel.SendtoGrave(dg,REASON_EFFECT)
-	end
-	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_EXTRA,0,nil,e,tp)
-	if #g>0 then
-		local checkfunc=aux.PropertyTableFilter(Card.GetRace,RACE_BEAST)
-		local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_SPSUMMON)
-		if #sg==0 then return end
-		local exg=sg:Filter(Card.IsLocation,nil,LOCATION_EXTRA) 
-		local nexg=sg-exg
-		for tc in nexg:Iter() do
-			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
-		end
-		for tc in exg:Iter() do
-			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
-		end
-		Duel.SpecialSummonComplete()
-	end
 end
