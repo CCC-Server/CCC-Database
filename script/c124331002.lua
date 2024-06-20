@@ -23,6 +23,7 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_CHAIN_SOLVED)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,{id,1})
+	e2:SetCost(aux.bfgcost)
 	e2:SetCondition(s.selfspcon)
 	e2:SetTarget(s.tokentg)
 	e2:SetOperation(s.tokenop)
@@ -97,7 +98,7 @@ return (re:IsActiveType(TYPE_MONSTER) and rc:IsRace(RACE_BEAST)) or rc:IsSetCard
 end
 
 function s.lvfilter(c,lv)
-	return c:IsFaceup() and c:IsLevelAbove(1) and not c:IsLevel(lv)
+	return c:IsFaceup() and c:IsLevelBelow(12) and not c:IsLevel(lv)
 end
 
 function s.tokentg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
