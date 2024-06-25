@@ -23,7 +23,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	--Bounce 1 monster card on the field 
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
+	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_TOHAND)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
@@ -67,7 +67,7 @@ end
 
 function s.con(e,tp,eg,ep,ev,re,r,rp)
 	local loc,rac=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION,CHAININFO_TRIGGERING_RACE)
-	return re:IsMonsterEffect() and rac&RACE_BEAST>0
+	return re:IsMonsterEffect() and rac&RACE_BEAST>0 and rp==tp
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)

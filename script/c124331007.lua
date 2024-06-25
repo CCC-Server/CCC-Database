@@ -16,15 +16,10 @@ function s.initial_effect(c)
 	e1:SetTarget(s.atttg)
 	e1:SetOperation(s.attop)
 	c:RegisterEffect(e1)
-	local e2=e1:Clone()
-	e2:SetType(EFFECT_TYPE_QUICK_O)
-	e2:SetCode(EVENT_FREE_CHAIN)
-	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-	e2:SetCondition(s.descon2)
-	c:RegisterEffect(e2)
+
 	--Change 1 monster to face-down Defense Position
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
+	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_POSITION)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -45,10 +40,6 @@ end
 
 function s.descon1(e,tp,eg,ep,ev,re,r,rp)
 	return not e:GetHandler():GetOverlayGroup():IsExists(Card.IsRace,1,nil,RACE_BEAST)
-end
-
-function s.descon2(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():GetOverlayGroup():IsExists(Card.IsRace,1,nil,RACE_BEAST)
 end
 
 function s.filter(c)

@@ -28,15 +28,13 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
-	-- Negate activated effect
+	--Negate an activated monster effect
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e3:SetCode(EVENT_CHAIN_SOLVING)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1,id)
-	e3:SetCondition(s.negcon)
-	e3:SetOperation(s.negop)
+	e3:SetCondition(s.discon)
+	e3:SetOperation(s.disop)
 	c:RegisterEffect(e3)
 end
 
@@ -64,23 +62,21 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
-function s.actfilter(c)
-	return c:IsFacedown() or not c:IsRace(RACE_BEAST)
+--Negate an activated monster effect
+function s.cfilter(c)
+	return c:IsRace(RACE_BEAST) and c:IsAbleToHand()
 end
 
-function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==1-tp and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainDisablable(ev) and e:GetHandler():GetFlagEffect(id)==0
-		and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsRace,RACE_BEAST),tp,LOCATION_MZONE|LOCATION_GRAVE,0,2,nil)
-		and not Duel.IsExistingMatchingCard(s.actfilter,tp,LOCATION_MZONE,0,1,nil)
+function s.discon(e,tp,eg,ep,ev,re,r,rp)
+	local rc=re:GetHandler()
+	return rp==1-tp and re:IsActiveType(TYPE_MONSTER) and Duel.IsChainDisablable(ev)
+		and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsAttribute,ATTRIBUTE_EARTH),tp,LOCATION_MZONE|LOCATION_GRAVE,0,2,nil)
 end
 
-function s.negop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local cid=Duel.GetChainInfo(ev,CHAININFO_CHAIN_ID)
-	if Duel.GetFlagEffectLabel(tp,id)==cid or not Duel.SelectEffectYesNo(tp,c) then return end
-	c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
-	Duel.RegisterFlagEffect(tp,id,RESET_CHAIN,0,1,cid)
-	Duel.Hint(HINT_CARD,0,id)
+function s.disop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetFlagEffect(tp,id)==0 and Duel.SelectEffectYesNo(tp,e:GetHandler()) then
+		Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,0,1)
+		Duel.Hint(HINT_CARD,0,id)
 	local rc=re:GetHandler()
 		if Duel.NegateEffect(ev) then
 			Duel.BreakEffect()
@@ -88,5 +84,5 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 			local tc=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,2,2,nil)
 			Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
 		end
+	end
 end
-
