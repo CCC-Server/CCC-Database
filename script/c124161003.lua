@@ -1,4 +1,4 @@
---Lightshape-Licht the Delight
+--Lightshape-Litch the Delight
 local s,id=GetID()
 function s.initial_effect(c)
 	--effect 1
@@ -17,7 +17,7 @@ function s.initial_effect(c)
 	--effect 2
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TODECK)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_CONFIRM)
