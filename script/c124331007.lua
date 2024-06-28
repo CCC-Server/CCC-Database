@@ -12,7 +12,7 @@ function s.initial_effect(c)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetCountLimit(1,id)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetCondition(s.descon1)
+
 	e1:SetTarget(s.atttg)
 	e1:SetOperation(s.attop)
 	c:RegisterEffect(e1)
@@ -25,7 +25,7 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_MZONE)
-            e3:SetCountLimit(1,{id,1})
+			e3:SetCountLimit(1,{id,1})
 	e3:SetHintTiming(TIMING_MAIN_END,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
 	e3:SetCondition(s.con1)
 	e3:SetCost(s.thcost)
@@ -38,9 +38,6 @@ function s.con1()
 	return Duel.IsMainPhase()
 end
 
-function s.descon1(e,tp,eg,ep,ev,re,r,rp)
-	return not e:GetHandler():GetOverlayGroup():IsExists(Card.IsRace,1,nil,RACE_BEAST)
-end
 
 function s.filter(c)
 	return not c:IsType(TYPE_TOKEN) and c:IsAbleToChangeControler()
