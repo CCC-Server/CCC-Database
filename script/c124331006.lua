@@ -16,7 +16,7 @@ function s.initial_effect(c)
 	--Special Summon 1 Beast monster from your deck
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOEXTRA)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
@@ -34,7 +34,7 @@ function s.effval(e,ct)
 end
 
 function s.filter(c,e,tp)
-	return c:IsRace(RACE_BEAST) and c:GetLevel()<=6 and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsRace(RACE_BEAST) and c:GetLevel()<=6 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
