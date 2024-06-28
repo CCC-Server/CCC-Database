@@ -1,4 +1,4 @@
---아르카나 포스 XX-저지먼트..
+--아르카나 포스 XX-저지먼트
 local s,id=GetID()
 function s.initial_effect(c)
 	--Special summon procedure (from hand)
