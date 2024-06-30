@@ -106,14 +106,14 @@ end
 
 --return normal trap to grave
 function s.filter(c,tp)
-	return c:IsFaceup() and c:IsNormalTrap() and c:IsAbleToDeck() and c:IsControler(tp)
+	return c:IsFaceup() and c:IsNormalTrap() and c:IsAbleToDeck() and c:IsControler(tp) and not c:IsCode(id)
 end
 
 function s.distarget(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_REMOVED) and s.filter(chkc) end
-	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_REMOVED,0,3,nil,tp) end
+	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_REMOVED,0,1,nil,tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,0))
-	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_REMOVED,0,1,3,nil,tp)
+	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_REMOVED,0,1,1,nil,tp)
 	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,g,#g,0,0)
 end
 
