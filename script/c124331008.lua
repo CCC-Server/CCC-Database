@@ -6,15 +6,13 @@ function s.initial_effect(c)
 	--Link summon
 	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsType,TYPE_EFFECT),2,nil,s.matcheck)
 	c:EnableReviveLimit()
-	--protect
+	--Cards this points to cannot be destroyed
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetTargetRange(LOCATION_ONFIELD,0)
-	e1:SetCondition(s.indescon)
-	e1:SetTarget(s.indestg)
-	e1:SetValue(1)
+	e1:SetProperty(EFFECT_INDESTRUCTABLE_EFFECT)
+	e1:SetTargetRange(LOCATION_MZONE,LOCATION_MZONE)
+	e1:SetTarget(function(e,c) return e:GetHandler():GetLinkedGroup():IsContains(c):IsRace(RACE_BEAST) end)
+	e1:SetValue(aux.tgoval)
 	c:RegisterEffect(e1)   
 	--Negate activation
 	local e3=Effect.CreateEffect(c)
@@ -50,9 +48,6 @@ function s.linkfilter(c)
 	return c:IsFaceup() and c:IsRace(RACE_BEAST)
 end
 
-function s.indescon(e,c)
-	return e:GetHandler():GetLinkedGroup():IsExists(s.linkfilter,1,nil)
-end
 
 function s.indestg(e,c)
 	return c:IsFaceup() and c:IsSetCard(0xda0) or c:IsRace(RACE_BEAST)

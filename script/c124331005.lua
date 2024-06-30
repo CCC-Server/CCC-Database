@@ -5,16 +5,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	--Fusion Summon Procedure
 	Fusion.AddProcMixN(c,true,true,aux.FilterBoolFunctionEx(Card.IsRace,RACE_BEAST),3)
-	--Your opponent cannot target BEAST monsters you control with card effects
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-	e1:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetTargetRange(LOCATION_MZONE,0)
-	e1:SetTarget(function(e,_c) return _c:IsRace(RACE_BEAST) end)
-	e1:SetValue(aux.tgoval)
-	c:RegisterEffect(e1)
+
 	--Special Summon from Grave
 	local e2=Effect.CreateEffect(c)
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
