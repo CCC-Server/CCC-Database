@@ -88,7 +88,7 @@ end
 --Set 1 Normal Trap from the Deck
 
 function s.tg2filter(c)
-	return return c:IsNormalTrap() and c:IsSSetable() and c:IsCode(0xda1) and not c:IsCode(id)
+	return c:IsNormalTrap() and c:IsSSetable() and c:IsSetCard(0xda1) and not c:IsCode(id)
 end
 
 function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
