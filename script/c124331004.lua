@@ -14,7 +14,7 @@ function s.initial_effect(c)
 	e1:SetTarget(s.tg1)
 	e1:SetOperation(s.op1)
 	c:RegisterEffect(e1)
-	--Fusion Summon 1 Beast Fusion Monster
+	--Fusion Summon 1 "mimiko" Fusion Monster
 	local params={function(c) return c:IsRace(RACE_BEAST) end}
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
@@ -83,6 +83,6 @@ end
 function s.spfilter(c,e,tp,rmc)
 	local loc_extr=c:IsLocation(LOCATION_EXTRA)
 	return c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-		and c:IsRace(RACE_BEAST)
+		and c:IsSetCard(0xda0)
 
 end

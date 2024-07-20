@@ -21,7 +21,7 @@ function s.initial_effect(c)
 end
 
 function s.ffilter(c)
-	return c:IsRace(RACE_BEAST)
+	return c:IsSetCard(0xda0)
 end
 function s.fextra(e,tp,mg,sumtype)
 	return Duel.GetMatchingGroup(aux.NecroValleyFilter(Fusion.IsMonsterFilter(Card.IsAbleToDeck)),tp,LOCATION_GRAVE,0,nil),s.fcheck
