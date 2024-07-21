@@ -1,0 +1,58 @@
+--포레드런 라이라
+local s,id=GetID()
+function s.initial_effect(c)
+	--special summon
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
+	e1:SetCode(EVENT_TO_HAND)
+	e1:SetRange(LOCATION_HAND)
+	e1:SetCondition(s.condition)
+	e1:SetTarget(s.target)
+	e1:SetOperation(s.operation)
+	c:RegisterEffect(e1)
+	--damage
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_DAMAGE)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCountLimit(1,id)
+    e2:SetCondition(s.con)
+	e2:SetTarget(s.damtg)
+	e2:SetOperation(s.damop)
+	c:RegisterEffect(e2)
+end
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+	return (r&REASON_EFFECT)~=0 and e:GetHandler():IsPreviousLocation(LOCATION_DECK) and e:GetHandler():IsPreviousControler(tp)
+end
+function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():IsRelateToEffect(e) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
+end
+function s.operation(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not c:IsRelateToEffect(e) then return end
+	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+end
+
+function s.confilter(c)
+	return c:IsFaceup() and (c:IsLevelAbove(5) or c:IsRankAbove(5) or c:IsLinkAbove(3))
+end
+function s.con(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsExistingMatchingCard(s.confilter,tp,0,LOCATION_MZONE,1,nil)
+end
+function s.damtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetTargetPlayer(1-tp)
+	Duel.SetTargetParam(1500)
+	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,1500)
+end
+function s.damop(e,tp,eg,ep,ev,re,r,rp)
+	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
+	Duel.Damage(p,d,REASON_EFFECT)
+	end

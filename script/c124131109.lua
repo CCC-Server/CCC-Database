@@ -1,0 +1,40 @@
+--포레드런 미도
+local s,id=GetID()
+function s.initial_effect(c)
+	-- atk/def
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetTargetRange(LOCATION_MZONE,0)
+	e3:SetCode(EFFECT_UPDATE_ATTACK)
+	e3:SetTarget(s.tg)
+	e3:SetValue(500)
+	c:RegisterEffect(e3)
+	local e4=e3:Clone()
+	e4:SetCode(EFFECT_UPDATE_DEFENSE)
+	e4:SetValue(500)
+	c:RegisterEffect(e4)
+	--All of opponent's monsters loses 2000 ATK
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_UPDATE_ATTACK)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetTargetRange(0,LOCATION_MZONE)
+	e2:SetCondition(s.con)
+	e2:SetValue(-2000)
+	c:RegisterEffect(e2)
+    local e1=e2:Clone()
+	e1:SetCode(EFFECT_UPDATE_DEFENSE)
+	e1:SetValue(-2000)
+	c:RegisterEffect(e1)
+end
+function s.tg(e,c)
+	return c:IsSetCard(0x81d)
+end
+function s.confilter(c)
+	return c:IsFaceup() and (c:IsLevelAbove(5) or c:IsRankAbove(5) or c:IsLinkAbove(3))
+end
+function s.con(e,tp,eg,ep,ev,re,r,rp)
+    local tp=e:GetHandler():GetControler()
+	return Duel.IsExistingMatchingCard(s.confilter,tp,0,LOCATION_MZONE,1,nil)
+end
