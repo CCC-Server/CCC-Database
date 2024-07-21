@@ -31,7 +31,7 @@ function s.initial_effect(c)
 end
 
 function s.cst1filter(c)
-	return c:IsRace(RACE_BEAST) and not c:IsPublic()
+	return (c:IsRace(RACE_BEAST) or c:IsCode(124331019)) and not c:IsPublic()
 end
 
 function s.tokenfilter(c)
@@ -102,14 +102,14 @@ function s.lvfilter(c,lv)
 end
 
 function s.tokentg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-        local c=e:GetHandler()
-    if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_GRAVE) and chkc:IsRace(RACE_BEAST) and s.lvfilter(chkc,lv) end
-    if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-        and Duel.IsPlayerCanSpecialSummonMonster(tp,12433101,0,TYPES_TOKEN,0,0,1,RACE_BEAST,ATTRIBUTE_EARTH)
-        and Duel.IsExistingTarget(s.tokenfilter,tp,LOCATION_GRAVE,0,1,c) end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-    Duel.SelectTarget(tp,s.tokenfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-    Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,tp,0)
+		local c=e:GetHandler()
+	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_GRAVE) and chkc:IsRace(RACE_BEAST) and s.lvfilter(chkc,lv) end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and Duel.IsPlayerCanSpecialSummonMonster(tp,12433101,0,TYPES_TOKEN,0,0,1,RACE_BEAST,ATTRIBUTE_EARTH)
+		and Duel.IsExistingTarget(s.tokenfilter,tp,LOCATION_GRAVE,0,1,c) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	Duel.SelectTarget(tp,s.tokenfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,tp,0)
 end
 
 function s.tokenop(e,tp,eg,ep,ev,re,r,rp)

@@ -32,7 +32,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 function s.cst1filter(c)
-	return c:IsRace(RACE_BEAST) and not c:IsPublic()
+	return (c:IsRace(RACE_BEAST) or c:IsCode(124331019)) and not c:IsPublic()
 end
 
 function s.cst1(e,tp,eg,ep,ev,re,r,rp,chk)

@@ -4,8 +4,8 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	--Fusion Summon Procedure
+	c:EnableReviveLimit()
 	Fusion.AddProcMixN(c,true,true,aux.FilterBoolFunctionEx(Card.IsRace,RACE_BEAST),3)
-
 	--Special Summon from Grave
 	local e2=Effect.CreateEffect(c)
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
