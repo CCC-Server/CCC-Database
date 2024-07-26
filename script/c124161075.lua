@@ -43,7 +43,7 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	c=e:GetHandler()
 	local g=Duel.GetMatchingGroup(s.tg1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	if #g==0 then return end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_ATOHAND)
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_RTOHAND)
 	Duel.SendtoHand(sg,nil,REASON_EFFECT)
 	Duel.ConfirmCards(1-tp,sg)
 	Duel.ShuffleDeck(tp)
