@@ -171,7 +171,6 @@ Archetype.MakeCheck = function(archetype,codes,setcodes)
 	if not checkmax(codes,0x7fffffff) or not checkmax(setcodes,0xffff) then return false end
 	local result=false
 	if not archtable[archetype] then
-		
 		archtable[archetype] = {
 			["codes"] = codes,
 			["setcodes"] = setcodes
