@@ -1,6 +1,6 @@
 --大霊術－「一流」
 Duel.LoadScript("strings.lua") --구현 완료되면 삭제
-Duel.LoadScript("archetype_Crowel.lua")
+Duel.LoadScript("archetype_crowel.lua")
 local s,id=GetID()
 function s.initial_effect(c)
 	--Activate
