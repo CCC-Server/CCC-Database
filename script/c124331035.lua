@@ -46,8 +46,8 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 end
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
-	if not Duel.IsExistingMatchingCard(Card.IsMonster,1-tp,LOCATION_HAND+LOCATION_MZONE,0,1,nil) then return end
-	local tc=Duel.SelectMatchingCard(1-tp,Card.IsMonster,1-tp,LOCATION_HAND+LOCATION_MZONE,0,1,1,nil):GetFirst()
+	if not Duel.IsExistingMatchingCard(Card.IsMonster,1-tp,LOCATION_HAND,0,1,nil) then return end
+	local tc=Duel.SelectMatchingCard(1-tp,Card.IsMonster,1-tp,LOCATION_HAND,0,1,1,nil):GetFirst()
 	if Duel.MoveToField(tc,1-tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
 		--Treated as a Continuous Spell
 		local e1=Effect.CreateEffect(e:GetHandler())
