@@ -31,12 +31,14 @@ function s.initial_effect(c)
 	e3:SetValue(function(e,sc) return sc:IsSetCard(0xda2) end)
 	c:RegisterEffect(e3)
 	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_IGNITION)
-	e4:SetRange(LOCATION_EXTRA)
-	e4:SetCountLimit(1,{id,2})
-	e4:SetTarget(s.pentg)
-	e4:SetOperation(s.penop)
-	c:RegisterEffect(e4)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetCode(EVENT_BE_MATERIAL)
+	e3:SetCountLimit(1,{id,1})
+	e3:SetCondition(s.pencon)
+	e3:SetTarget(s.pentg)
+	e3:SetOperation(s.penop)
+	c:RegisterEffect(e3)
 end
 function s.synfilter(c)
 	return c:IsRace(RACE_BEASTWARRIOR) or c:IsRace(RACE_WARRIOR)
@@ -84,12 +86,19 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SSet(tp,g)
 	end
 end
+
+--Place this card in the Pendulum Zone
+function s.pencon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	return r&REASON_SYNCHRO==REASON_SYNCHRO and c:IsFaceup() and c:IsLocation(LOCATION_EXTRA)
+end
 function s.pentg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckPendulumZones(tp) and e:GetHandler():IsFaceup() end
+	if chk==0 then return Duel.CheckPendulumZones(tp) end
 end
 function s.penop(e,tp,eg,ep,ev,re,r,rp)
+	if not Duel.CheckPendulumZones(tp) then return end
 	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and Duel.CheckPendulumZones(tp) then
+	if c:IsRelateToEffect(e) then
 		Duel.MoveToField(c,tp,tp,LOCATION_PZONE,POS_FACEUP,true)
 	end
 end
