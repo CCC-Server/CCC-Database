@@ -50,7 +50,7 @@ function s.restg(tp)
 end
 
 function s.poltg(tp)
-	return Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0 and Duel.GetFieldGroupCount(1-tp,LOCATION_HAND,0)
+	return Duel.GetFieldGroupCount(tp,0,LOCATION_EXTRA)>0 and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0
 end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -95,9 +95,11 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		end
 		if cd==124331033 then
 			if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
-			if not Duel.IsExistingMatchingCard(Card.IsMonster,1-tp,LOCATION_HAND,0,1,nil) then return end
-			local tc=Duel.SelectMatchingCard(1-tp,Card.IsMonster,1-tp,LOCATION_HAND,0,1,1,nil):GetFirst()
-			if Duel.MoveToField(tc,1-tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
+			local g=Duel.GetFieldGroup(tp,0,LOCATION_EXTRA)
+			if #g==0 then return end
+			Duel.ConfirmCards(tp,g)
+			local tc=Duel.SelectMatchingCard(tp,aux.TRUE,tp,0,LOCATION_EXTRA,1,1,nil):GetFirst()
+			if Duel.MoveToField(tc,tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
 				--Treated as a Continuous Spell
 				local e1=Effect.CreateEffect(e:GetHandler())
 				e1:SetType(EFFECT_TYPE_SINGLE)
@@ -107,6 +109,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 				e1:SetReset(RESET_EVENT|(RESETS_STANDARD&~RESET_TURN_SET))
 				tc:RegisterEffect(e1)
 			end
+			Duel.ShuffleExtra(1-tp)
 		end
 	end
 end

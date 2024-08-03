@@ -16,13 +16,15 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1,false,124331036)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,2))
-	e2:SetCategory(CATEGORY_HANDES+CATEGORY_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetCategory(CATEGORY_HANDES+CATEGORY_TODECK)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+	e2:SetCode(EVENT_PHASE+PHASE_END)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1)
+	e2:SetCondition(s.spcon)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
-	c:RegisterEffect(e2)	
+	c:RegisterEffect(e2)  
 end
 
 function s.synfilter(c)
@@ -35,13 +37,15 @@ function s.condition(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsExistingMatchingCard(s.confilter,tp,LOCATION_ONFIELD,0,1,e:GetHandler())
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0 and Duel.GetFieldGroupCount(1-tp,LOCATION_HAND,0) end
+	if chk==0 then return Duel.GetFieldGroupCount(tp,0,LOCATION_EXTRA)>0 and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0 end
 end
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
-	if not Duel.IsExistingMatchingCard(Card.IsMonster,1-tp,LOCATION_HAND,0,1,nil) then return end
-	local tc=Duel.SelectMatchingCard(1-tp,Card.IsMonster,1-tp,LOCATION_HAND,0,1,1,nil):GetFirst()
-	if Duel.MoveToField(tc,1-tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
+	local g=Duel.GetFieldGroup(tp,0,LOCATION_EXTRA)
+	if #g==0 then return end
+	Duel.ConfirmCards(tp,g)
+	local tc=Duel.SelectMatchingCard(tp,aux.TRUE,tp,0,LOCATION_EXTRA,1,1,nil):GetFirst()
+	if Duel.MoveToField(tc,tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
 		--Treated as a Continuous Spell
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
@@ -51,13 +55,17 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_EVENT|(RESETS_STANDARD&~RESET_TURN_SET))
 		tc:RegisterEffect(e1)
 	end
+	Duel.ShuffleExtra(1-tp)
+end
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetTurnPlayer()~=tp
 end
 function s.spfilter(c,e,tp)
 	return c:IsFaceup() and c:IsOriginalType(TYPE_MONSTER) and c:IsContinuousSpell() and c:IsAbleToDeck()
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetMatchingGroupCount(Card.IsDiscardable,tp,0,LOCATION_HAND,e:GetHandler())>0 and Duel.GetMatchingGroupCount(s.spfilter,1-tp,LOCATION_SZONE,0,nil,e,1-tp)>0 end
-	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,1-tp,LOCATION_GRAVE)
+	if chk==0 then return true end
+	Duel.SetPossibleOperationInfo(0,CATEGORY_TODECK,nil,1,1-tp,LOCATION_SZONE)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.spfilter,1-tp,LOCATION_SZONE,0,nil,e,1-tp)
