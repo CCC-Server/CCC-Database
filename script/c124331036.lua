@@ -81,7 +81,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		if cd==124331032 then
 			if not Duel.IsExistingTarget(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) then return end
 			if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
-			local tc=Duel.SelectMatchingCard(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,1,nil):GetFirst()
+			local tc=Duel.SelectMatchingCard(tp,s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,1,nil):GetFirst()
 			if Duel.MoveToField(tc,tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
 				--Treated as a Continuous Spell
 				local e1=Effect.CreateEffect(e:GetHandler())
