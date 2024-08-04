@@ -40,11 +40,11 @@ function s.opfilter(c)
 	return (c:IsLocation(LOCATION_GRAVE) and c:IsMonster()) or (c:IsLocation(LOCATION_EXTRA) and c:IsFaceup())
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return Duel.IsExistingTarget(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0 end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0 end
 end
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
-	if not Duel.IsExistingTarget(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) then return end
+	if not Duel.IsExistingMatchingCard(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) then return end
 	local tc=Duel.SelectMatchingCard(tp,s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,1,nil):GetFirst()
 	if Duel.MoveToField(tc,tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
 		--Treated as a Continuous Spell

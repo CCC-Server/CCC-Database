@@ -38,7 +38,7 @@ function s.filter(c,tp)
 end
 
 function s.mirtg(tp)
-	return Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_MZONE,1,nil) and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0
+	return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil) and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0
 end
 
 function s.opfilter(c)
@@ -46,7 +46,7 @@ function s.opfilter(c)
 end
 
 function s.restg(tp)
-	return Duel.IsExistingTarget(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0
+	return Duel.IsExistingMatchingCard(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) and Duel.GetLocationCount(1-tp,LOCATION_SZONE)>0
 end
 
 function s.poltg(tp)
@@ -55,7 +55,7 @@ end
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsFaceup() end
-	if chk==0 then return Duel.IsExistingTarget(s.filter,tp,LOCATION_MZONE,0,1,nil,tp) end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_MZONE,0,1,nil,tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
 	Duel.SelectTarget(tp,s.filter,tp,LOCATION_MZONE,0,1,1,nil,tp)
 end
@@ -65,7 +65,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		local cd=tar:GetCode()
 		if cd==124331031 then
 			if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
-			if not Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_MZONE,1,nil) then return end
+			if not Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_MZONE,1,nil) then return end
 			local tc=Duel.SelectMatchingCard(tp,aux.TRUE,tp,0,LOCATION_MZONE,1,1,nil):GetFirst()
 			if Duel.MoveToField(tc,tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
 				--Treated as a Continuous Spell
@@ -79,7 +79,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 		if cd==124331032 then
-			if not Duel.IsExistingTarget(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) then return end
+			if not Duel.IsExistingMatchingCard(s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,nil) then return end
 			if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
 			local tc=Duel.SelectMatchingCard(tp,s.opfilter,tp,0,LOCATION_GRAVE+LOCATION_EXTRA,1,1,nil):GetFirst()
 			if Duel.MoveToField(tc,tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
