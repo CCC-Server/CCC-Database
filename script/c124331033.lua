@@ -43,8 +43,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(1-tp,LOCATION_SZONE)==0 then return end
 	local g=Duel.GetFieldGroup(tp,0,LOCATION_EXTRA)
 	if #g==0 then return end
-	Duel.ConfirmCards(tp,g)
-	local tc=Duel.SelectMatchingCard(tp,aux.TRUE,tp,0,LOCATION_EXTRA,1,1,nil):GetFirst()
+	local tc=g:RandomSelect(tp,1):GetFirst()
 	if Duel.MoveToField(tc,tp,1-tp,LOCATION_SZONE,POS_FACEUP,true) then
 		--Treated as a Continuous Spell
 		local e1=Effect.CreateEffect(e:GetHandler())
@@ -55,7 +54,6 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_EVENT|(RESETS_STANDARD&~RESET_TURN_SET))
 		tc:RegisterEffect(e1)
 	end
-	Duel.ShuffleExtra(1-tp)
 end
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetTurnPlayer()~=tp
