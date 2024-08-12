@@ -32,12 +32,13 @@ end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
-	if g then
-		if Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEDOWN_DEFENSE)>0 then
-			if Duel.Remove(g,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and g:IsLocation(LOCATION_REMOVED) and not g:IsReason(REASON_REDIRECT) then
+	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+	if tc then
+		if Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEDOWN_DEFENSE)>0 then
+			local seq=tc:GetSequence()
+			if Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
 				Duel.BreakEffect()
-				Duel.ReturnToField(g)
+				Duel.ReturnToField(tc,nil,0x1<<seq)
 			end
 		end
 	end
