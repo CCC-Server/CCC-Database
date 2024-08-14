@@ -97,7 +97,7 @@ end
 function s.damtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	Duel.SetTargetPlayer(1-tp)
-	Duel.SetTargetParam(2100)
+	Duel.SetTargetParam(2500)
 	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,2500)
 end
 function s.damop(e,tp,eg,ep,ev,re,r,rp)
