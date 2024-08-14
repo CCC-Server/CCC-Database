@@ -79,7 +79,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.svfilter(c)
-	return c:IsMonster() and c:IsSetCard(0xdc0) and c:IsAbleToHand()
+	return c:IsSetCard(0xdc0) and c:IsAbleToHand()
 end
 function s.svtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.svfilter(chkc) end
