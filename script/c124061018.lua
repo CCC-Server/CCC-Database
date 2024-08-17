@@ -1,4 +1,5 @@
 --大霊術－「一流」
+--대령술－「일류」
 Duel.LoadScript("archetype_crowel.lua")
 local s,id=GetID()
 function s.initial_effect(c)
@@ -52,8 +53,8 @@ function s.initial_effect(c)
 		ge2:SetCode(EFFECT_ACTIVATE_COST)
 		ge2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 		ge2:SetTargetRange(1,1)
-		ge2:SetCost(s.acchk)
 		ge2:SetTarget(s.actarget)
+		ge2:SetCost(s.acchk)
 		ge2:SetOperation(s.acop)
 		Duel.RegisterEffect(ge2,0)
 		s.SetLabelObjectge2=(function(e) e:SetLabelObject(ge2) end)
@@ -161,6 +162,7 @@ function s.acchk(e,te,tp)
 		result=Duel.CheckLocation(tp,LOCATION_PZONE,0) or Duel.CheckLocation(tp,LOCATION_PZONE,1)
 	elseif category&(TYPE_SPELL|TYPE_TRAP)>0 then
 		result=Duel.GetLocationCount(tp,LOCATION_SZONE)>0
+		--◆ limit zone 관련 추가 코드 필요
 	end
 	return result
 end
@@ -169,4 +171,6 @@ function s.acop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_CARD,0,id)
 	local g=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_HAND,0,1,1,nil,tp)
 	Duel.SendtoDeck(g,nil,SEQ_DECKBOTTOM,REASON_RULE)
+	--General cases
+	--◆ use limit 관련 추가 코드 필요
 end
