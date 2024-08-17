@@ -8,3 +8,6 @@ function s.initial_effect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCountLimit(1,{id,0})
 end
+
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}

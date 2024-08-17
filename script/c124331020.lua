@@ -20,6 +20,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 end
 
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 --Destroy opponent's cards up to the number of Beast Monster and "Mimiko" Cards
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_FUSION)

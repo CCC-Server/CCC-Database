@@ -27,6 +27,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)  
 end
 
+--Part of "Dimension Cap" archetype
+s.listed_series={0xda2}
+
 function s.synfilter(c)
 	return c:IsRace(RACE_BEASTWARRIOR) or c:IsRace(RACE_WARRIOR)
 end

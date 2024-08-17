@@ -20,6 +20,10 @@ function s.initial_effect(c)
 	e2:SetOperation(s.operation)
 	c:RegisterEffect(e2)
 end
+
+--Part of "Dimension Cap" archetype
+s.listed_series={0xda2}
+
 function s.thfilter(c)
 	return c:IsSetCard(0xda2) and c:IsAbleToHand() and (c:IsLocation(LOCATION_DECK) or c:IsFaceup()) and not c:IsCode(id)
 end

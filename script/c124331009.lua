@@ -36,6 +36,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 function s.indtg(e,c)
 	return c:IsRace(RACE_BEAST)
 end

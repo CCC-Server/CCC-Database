@@ -45,6 +45,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
+--Part of "Ediacaran" archetype
+s.listed_series={0xda1}
+
 --Special Summon procedure (from the Extra Deck)
 function s.spfilter(c)
 	return c:IsNormalTrap() and c:IsAbleToRemoveAsCost()

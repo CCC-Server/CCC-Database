@@ -43,6 +43,9 @@ function s.initial_effect(c)
 	e1:SetLabelObject(e3)
 end
 
+--Part of "Ediacaran" archetype
+s.listed_series={0xda1}
+
 --Can be activated from the hand
 function s.cost1(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then

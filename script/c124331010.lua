@@ -20,6 +20,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 function s.ffilter(c)
 	return c:IsSetCard(0xda0)
 end

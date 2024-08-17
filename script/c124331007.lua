@@ -34,6 +34,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 function s.con1()
 	return Duel.IsMainPhase()
 end

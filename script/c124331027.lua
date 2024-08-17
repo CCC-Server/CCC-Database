@@ -21,6 +21,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
+--Part of "Dimension Cap" archetype
+s.listed_series={0xda2}
+
 function s.penfilter(c)
 	return c:IsSetCard(0xda2) and c:IsType(TYPE_PENDULUM) and (not c:IsLocation(LOCATION_EXTRA) or c:IsFaceup())
 end

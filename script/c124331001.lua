@@ -31,6 +31,10 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e3)
 end
+
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 function s.cst1filter(c)
 	return (c:IsRace(RACE_BEAST) or c:IsCode(124331019)) and not c:IsPublic()
 end

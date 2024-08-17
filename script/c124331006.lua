@@ -27,6 +27,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 function s.effval(e,ct)
 	local te=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_EFFECT)
 	local effs=e:GetLabelObject()

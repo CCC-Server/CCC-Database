@@ -40,6 +40,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 function s.matcheck(g,lc,sumtype,tp)
 	return g:IsExists(Card.IsRace,1,nil,RACE_BEAST,lc,sumtype,tp)
 end

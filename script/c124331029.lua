@@ -27,6 +27,10 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e3)
 end
+
+--Part of "Dimension Cap" archetype
+s.listed_series={0xda2}
+
 function s.spfilter(c)
 	return c:IsFaceup() and c:IsSetCard(0xda2)
 end

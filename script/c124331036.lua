@@ -33,6 +33,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
+--Part of "Dimension Cap" archetype
+s.listed_series={0xda2}
+
 function s.filter(c,tp)
 	return c:IsType(TYPE_SYNCHRO) and c:IsSetCard(0xda2) and ((c:GetCode()==124331031 and s.mirtg(tp)) or (c:GetCode()==124331032 and s.restg(tp)) or (c:GetCode()==124331033 and s.poltg(tp)))
 end

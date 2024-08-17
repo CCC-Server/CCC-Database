@@ -40,6 +40,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
+--Part of "Mimiko" archetype
+s.listed_series={0xda0}
+
 --search 1 "Mimiko" card and return 1 hand to deck
 function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return not e:GetHandler():IsPublic() end
