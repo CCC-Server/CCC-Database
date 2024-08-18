@@ -56,10 +56,15 @@ end
 function s.descon(_,tp)
 	return Duel.IsTurnPlayer(1-tp)
 end
+function s.costfilter(c)
+	return c:IsFaceup() and c:IsSetCard(0xc00) and c:IsType(TYPE_PENDULUM)
+end
 function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return Duel.GetCustomActivityCount(id,tp,ACTIVITY_SPSUMMON)==0 and c:IsAbleToRemoveAsCost() end
-	Duel.Remove(c,POS_FACEUP,REASON_COST)
+	local g=Duel.GetMatchingGroup(s.costfilter,tp,LOCATION_EXTRA,0,nil)
+	if chk==0 then return Duel.GetCustomActivityCount(id,tp,ACTIVITY_SPSUMMON)==0 and #g>0 and c:IsAbleToRemoveAsCost() end
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_REMOVE)
+	Duel.Remove(c+sg,POS_FACEUP,REASON_COST)
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH)
 	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
