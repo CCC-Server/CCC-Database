@@ -27,6 +27,7 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,2})
+	e3:SetCost(s.sdcost)
 	e3:SetTarget(s.sdtg)
 	e3:SetOperation(s.sdop)
 	c:RegisterEffect(e3)
@@ -137,4 +138,8 @@ function s.sdop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.SpecialSummon(g,SUMMON_TYPE_RITUAL,tp,tp,true,true,POS_FACEUP)
 		end
 	end
+end
+function s.sdcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLPCost(tp,900) end
+	Duel.PayLPCost(tp,900)
 end

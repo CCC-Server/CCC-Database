@@ -28,6 +28,7 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,2})
+	e3:SetCost(s.sdcost)
 	e3:SetTarget(s.sdtg)
 	e3:SetOperation(s.sdop)
 	c:RegisterEffect(e3)
@@ -55,14 +56,14 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	Duel.NegateEffect(ev)
 end
 function s.tgfilter(c,tp)
-	return c:IsFaceup() and (c:IsType(TYPE_RITUAL) or c:IsSetCard(0xda3)) and c:IsReleasableByEffect()
+	return c:IsFaceup() and (c:IsType(TYPE_RITUAL) or c:IsSetCard(0xda3)) and c:IsAbleToGrave()
 end
 function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsControler(tp) and chkc:IsOnField() and s.tgfilter(chkc,tp) end
-	if chk==0 then return Duel.IsExistingTarget(s.tgfilter,tp,LOCATION_MZONE,0,1,nil,tp)
+	if chk==0 then return Duel.IsExistingTarget(s.tgfilter,tp,LOCATION_ONFIELD,0,1,nil,tp)
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,true,true) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-	local g=Duel.SelectTarget(tp,s.tgfilter,tp,LOCATION_MZONE,0,1,1,nil,tp)
+	local g=Duel.SelectTarget(tp,s.tgfilter,tp,LOCATION_ONFIELD,0,1,1,nil,tp)
 	Duel.SetOperationInfo(0,CATEGORY_RELEASE,g,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
@@ -94,4 +95,8 @@ function s.sdop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.SpecialSummon(g,SUMMON_TYPE_RITUAL,tp,tp,true,true,POS_FACEUP)
 		end
 	end
+end
+function s.sdcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLPCost(tp,900) end
+	Duel.PayLPCost(tp,900)
 end

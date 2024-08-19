@@ -29,6 +29,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_RELEASE)
+	e2:SetCost(s.effcost)
 	e2:SetOperation(s.effop)
 	c:RegisterEffect(e2)
 end
@@ -69,4 +70,8 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.RegisterEffect(e1,tp)
 end
 
+function s.effcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.CheckLPCost(tp,900) end
+	Duel.PayLPCost(tp,900)
+end
 
