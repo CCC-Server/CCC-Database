@@ -37,8 +37,7 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-	return g:FilterCount(Card.IsRace,nil,RACE_ILLUSION)==#g
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0xc00),tp,LOCATION_MZONE,0,1,nil)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
