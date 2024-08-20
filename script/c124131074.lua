@@ -7,19 +7,20 @@ function s.initial_effect(c)
 		--to hand
 		local e1=Effect.CreateEffect(c)
 		e1:SetDescription(aux.Stringid(id,0))
-		e1:SetType(EFFECT_TYPE_TRIGGER_F+EFFECT_TYPE_SINGLE)
+		e1:SetType(EFFECT_TYPE_TRIGGER_O+EFFECT_TYPE_SINGLE)
 		e1:SetCategory(CATEGORY_TOHAND)
+		e1:SetProperty(EFFECT_FLAG_DELAY)
 		e1:SetCode(EVENT_SPSUMMON_SUCCESS)
 		e1:SetTarget(s.target)
 		e1:SetOperation(s.operation)
 		c:RegisterEffect(e1)
-        --to grave
+		--to grave
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,1))
 	e4:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e4:SetCode(EVENT_TO_GRAVE)
-    e4:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_CARD_TARGET)
+	e4:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
 	e4:SetCondition(s.tgcon)
 	e4:SetTarget(s.sptg)
 	e4:SetOperation(s.spop)
@@ -29,10 +30,10 @@ function s.filter(c)
 	return c:IsFacedown() and c:IsAbleToHand()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
 	local g=Duel.GetMatchingGroup(s.filter,tp,0,LOCATION_ONFIELD,nil)
+	if chk==0 then return #g>0 end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,g,#g,0,0)
-    Duel.SetChainLimit(s.chlimit)
+	Duel.SetChainLimit(s.chlimit)
 end
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.filter,tp,0,LOCATION_ONFIELD,nil)
