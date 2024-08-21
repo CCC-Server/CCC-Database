@@ -150,7 +150,7 @@ function s.tdfilter(c,tp)
 end
 function s.acchk(e,te,tp)
 	--This card's case
-	if te:GetHandler():IsLocation(LOCATION_DECK) and Duel.GetMatchingGroupCount(s.tdfilter,tp,LOCATION_HAND,0,nil,tp)<1 then return false end
+	--if te:GetHandler():IsLocation(LOCATION_DECK) and Duel.GetMatchingGroupCount(s.tdfilter,tp,LOCATION_HAND,0,nil,tp)<1 then return false end
 	--General cases
 	if te:GetHandler():IsForbidden() then return false end
 	local category=te:GetActiveType()
@@ -169,8 +169,8 @@ end
 function s.acop(e,tp,eg,ep,ev,re,r,rp)
 	--This card's case
 	Duel.Hint(HINT_CARD,0,id)
-	local g=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_HAND,0,1,1,nil,tp)
-	Duel.SendtoDeck(g,nil,SEQ_DECKBOTTOM,REASON_RULE)
+	--local g=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_HAND,0,1,1,nil,tp)
+	--Duel.SendtoDeck(g,nil,SEQ_DECKBOTTOM,REASON_RULE)
 	--General cases
 	--◆ use limit 관련 추가 코드 필요
 end
