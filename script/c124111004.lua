@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CANNOT_ATTACK)
 	c:RegisterEffect(e1)
-    --self destroy
+	--self destroy
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
@@ -14,7 +14,7 @@ function s.initial_effect(c)
 	e2:SetCode(EFFECT_SELF_DESTROY)
 	e2:SetCondition(s.descon)
 	c:RegisterEffect(e2)
-    --destroy replace
+	--destroy replace
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_CONTINUOUS+EFFECT_TYPE_FIELD)
 	e3:SetCode(EFFECT_DESTROY_REPLACE)
@@ -83,16 +83,16 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetValue(1000)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_BATTLE)
 		tc:RegisterEffect(e1)
-		if not tc:IsImmuneToEffect(e) and not c:IsHasEffect(EFFECT_REVERSE_UPDATE)
-			and Duel.GetAttacker()==tc and c:CanChainAttack() then
+		if not tc:IsImmuneToEffect(e) and not tc:IsHasEffect(EFFECT_REVERSE_UPDATE)
+			and Duel.GetAttacker()==tc and tc:CanChainAttack() then
 				--Make another attack in a row
-				local e1=Effect.CreateEffect(c)
+				local e1=Effect.CreateEffect(e:GetHandler())
 				e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 				e1:SetCode(EVENT_DAMAGE_STEP_END)
 				e1:SetRange(LOCATION_MZONE)
 				e1:SetOperation(function(e) Duel.ChainAttack() end)
 				e1:SetReset(RESET_PHASE+PHASE_DAMAGE)
-				c:RegisterEffect(e1)
+				tc:RegisterEffect(e1)
 		end
 	end
 end
