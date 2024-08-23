@@ -68,6 +68,7 @@ function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	local a=Duel.GetAttacker()
 	local d=a:GetBattleTarget()
 	if a:IsControler(1-tp) then a,d=d,a end
+	if not d then return end
 	local dg=Duel.GetMatchingGroup(s.atkfilter2,tp,0,LOCATION_MMZONE,nil,d:GetSequence())
 	return a and a:IsFaceup() and a:IsRelateToBattle() and s.atkfilter(a)
 		and d and d:IsRelateToBattle()
