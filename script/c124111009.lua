@@ -76,6 +76,9 @@ end
 function s.nsfilter(c)
 	return c:IsRace(RACE_ZOMBIE) and c:IsSummonable(true,nil)
 end
+function s.nsfilter2(c)
+	return c:IsRace(RACE_ZOMBIE) and c:IsSummonableCard()
+end
 function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	local e1=Effect.CreateEffect(c)
@@ -101,6 +104,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetTarget(function(_,c) return c:IsLocation(LOCATION_EXTRA) end)
 	e1:SetReset(RESET_PHASE|PHASE_END)
 	Duel.RegisterEffect(e1,tp)
+	if not Duel.IsExistingMatchingCard(s.nsfilter2,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
 	local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
 	if sc:IsLevelAbove(5) then
