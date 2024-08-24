@@ -77,7 +77,7 @@ function s.nsfilter(c)
 	return c:IsRace(RACE_ZOMBIE) and c:IsSummonable(true,nil)
 end
 function s.nsfilter2(c)
-	return c:IsRace(RACE_ZOMBIE) and c:IsSummonableCard()
+	return c:IsRace(RACE_ZOMBIE) and ((c:IsLocation(LOCATION_HAND) and c:IsSummonableCard()) or (c:IsLocation(LOCATION_ONFIELD) and c:IsType(TYPE_GEMINI) and c:IsType(TYPE_NORMAL)))
 end
 function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
