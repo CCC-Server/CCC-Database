@@ -44,16 +44,13 @@ function s.initial_effect(c)
 	e5:SetCondition(s.fscon)
 	e5:SetOperation(s.fsop)
 	c:RegisterEffect(e5)
-
-end
-function s.filter(c)
-	return c:IsCode(id) and c:IsPreviousLocation(LOCATION_FZONE)
 end
 s.listed_series={ARCHETYPE_SPIRITUAL_ART}
 --Activate from Deck/GY
 function s.acttg(e,c)
 	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and not c:IsCode(id) and c:IsFieldSpell()
 end
+--Redirect
 function s.rmcon(e)
 	local c=e:GetHandler()
 	if c:IsLocation(LOCATION_FZONE) then
@@ -63,6 +60,7 @@ function s.rmcon(e)
 		return false
 	end
 end
+--Activate self from Banished
 function s.fscon(e)
 	return e:GetHandler():HasFlagEffect(id)
 end

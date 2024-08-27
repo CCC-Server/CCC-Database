@@ -11,7 +11,6 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 end
-
 function s.filter(c)
 	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsAttribute(ATTRIBUTE_DARK) 
 end
@@ -27,7 +26,7 @@ end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local b1=Duel.GetFieldGroupCount(tp,LOCATION_EXTRA,0)>0
 	local b2=Duel.GetFieldGroupCount(tp,0,LOCATION_EXTRA)>0
-	local g
+	local g=nil
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,0)},
 		{b2,aux.Stringid(id,1)})
