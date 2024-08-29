@@ -1,6 +1,7 @@
 --메가리스 코메테스
 local s,id=GetID()
 function s.initial_effect(c)
+	:EnableReviveLimit()
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
