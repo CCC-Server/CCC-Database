@@ -11,25 +11,17 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
 	e1:SetValue(s.splimit)
 	c:RegisterEffect(e1)
-	--special summon
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_SPSUMMON_PROC)
-	e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e2:SetRange(LOCATION_HAND)
-	e2:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	e2:SetCondition(s.spcon2)
-	c:RegisterEffect(e2)
-	--dis
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-	e3:SetCategory(CATEGORY_DECKDES)
-	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e3:SetCondition(s.discon)
-	e3:SetTarget(s.distg)
-	e3:SetOperation(s.disop)
-	c:RegisterEffect(e3)
+    --Special Summon this card from your hand
+    local e3=Effect.CreateEffect(c)
+    e3:SetDescription(aux.Stringid(id,0))
+    e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
+    e3:SetType(EFFECT_TYPE_QUICK_O)
+    e3:SetCode(EVENT_FREE_CHAIN)
+    e3:SetRange(LOCATION_HAND)
+    e3:SetCondition(s.spcon2)
+    e3:SetTarget(s.selfsptg)
+    e3:SetOperation(s.selfspop)
+    c:RegisterEffect(e3)
     --Double damage
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_SINGLE)
@@ -43,7 +35,7 @@ function s.initial_effect(c)
 	e5:SetCategory(CATEGORY_NEGATE+CATEGORY_DESTROY)
 	e5:SetType(EFFECT_TYPE_QUICK_O)
 	e5:SetCode(EVENT_CHAINING)
-	e5:SetCountLimit(1)
+	e5:SetCountLimit(2)
 	e5:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
 	e5:SetRange(LOCATION_MZONE)
 	e5:SetCondition(s.discon2)
@@ -58,34 +50,28 @@ end
 function s.spfilter(c)
 	return c:IsFaceup() and c:IsCode(124131014)
 end
+
 function s.spcon2(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_MZONE,0,1,nil)
+    local tp=e:GetHandlerPlayer()
+    return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+        and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_ONFIELD,0,1,nil) and Duel.IsBattlePhase()
 end
-function s.discon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsSummonType(SUMMON_TYPE_SPECIAL)
+function s.selfsptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
-function s.distg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,10,tp,LOCATION_DECK)
-end
-function s.disop(e,tp,eg,ep,ev,re,r,rp)
+
+function s.selfspop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local g=Duel.GetDecktopGroup(tp,10)
-	Duel.DisableShuffleCheck()
-	Duel.Remove(g,POS_FACEDOWN,REASON_EFFECT)
-	if c:IsLocation(LOCATION_MZONE) then
-		c:RegisterFlagEffect(id,RESET_EVENT+0x680000,0,10)
-	end
-	e:SetLabelObject(g)
+	if not c:IsRelateToEffect(e) then return end
+	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 end
 function s.damcon(e)
 	return e:GetHandler():GetBattleTarget()~=nil
 end
 function s.discon2(e,tp,eg,ep,ev,re,r,rp)
-	return not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED) and Duel.IsChainNegatable(ev)
+	return Duel.IsBattlePhase() and Duel.IsChainNegatable(ev)
 end
 function s.distg2(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end

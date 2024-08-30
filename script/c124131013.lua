@@ -19,22 +19,16 @@ function s.initial_effect(c)
 	e2:SetCondition(s.atkcon)
 	e2:SetValue(s.atkval)
 	c:RegisterEffect(e2)
-	--indes
-	local e3=Effect.CreateEffect(c)
-	e3:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetTargetRange(LOCATION_MZONE,0)
-	e3:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,0x810))
-	e3:SetValue(1)
-    e3:SetCondition(s.accon)
-	c:RegisterEffect(e3)
-	--cannot be target
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
-	e4:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-	e4:SetValue(aux.tgoval)
-	c:RegisterEffect(e4)
+	--자신의 배틀 페이즈에, 자신 필드의 "데 리퍼" 몬스터는 상대의 몬스터 카드의 효과를 받지 않는다.
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD)
+	e5:SetCode(EFFECT_IMMUNE_EFFECT)
+	e5:SetTargetRange(LOCATION_MZONE,0)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCondition(s.con3)
+	e5:SetTarget(s.tg3)
+	e5:SetValue(s.val3)
+	c:RegisterEffect(e5)
 end
 function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0x810)
@@ -59,4 +53,15 @@ function s.atkfilter(c)
 end
 function s.atkval(e,c)
 	return Duel.GetMatchingGroupCount(s.atkfilter,c:GetControler(),LOCATION_ONFIELD,0,nil)*500
+end
+function s.con3(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsBattlePhase()
+end
+
+function s.tg3(e,c)
+	return c:IsSetCard(0x810) and c:IsMonster()
+end
+
+function s.val3(e,te)
+	return te:IsActiveType(TYPE_MONSTER) and te:GetOwnerPlayer()~=e:GetHandlerPlayer()
 end

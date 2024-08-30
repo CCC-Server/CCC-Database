@@ -10,15 +10,6 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
 	e1:SetValue(s.splimit)
 	c:RegisterEffect(e1)
-    --atkup
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_UPDATE_ATTACK)
-	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCondition(s.atkcon)
-	e2:SetValue(s.atkval)
-	c:RegisterEffect(e2)
     --effectno
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,0))
@@ -27,24 +18,28 @@ function s.initial_effect(c)
     e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
     e3:SetRange(LOCATION_MZONE)
     e3:SetCountLimit(1,id)
+    e3:SetCondition(s.con3)
     e3:SetTarget(s.target)
     e3:SetOperation(s.operation)
     c:RegisterEffect(e3)
+    --cannot spsummon
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD)
+	e4:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e4:SetTargetRange(0,1)
+	e4:SetCondition(s.discon)
+	e4:SetTarget(s.splimit2)
+	c:RegisterEffect(e4)
 end
 function s.splimit(e,se,sp,st)
 	return se:GetHandler():IsSetCard(0x810)
 		and (se:IsHasType(EFFECT_TYPE_ACTIONS) or se:GetCode()==EFFECT_SPSUMMON_PROC)
 end
-function s.atkcon(e)
-	local ph=Duel.GetCurrentPhase()
-	local tp=Duel.GetTurnPlayer()
-	return tp==e:GetHandler():GetControler() and ph>=PHASE_BATTLE_START and ph<=PHASE_BATTLE
-end
-function s.atkfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0x810)
-end
-function s.atkval(e,c)
-	return Duel.GetMatchingGroupCount(s.atkfilter,c:GetControler(),LOCATION_ONFIELD,0,nil)*200
+
+function s.con3(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsBattlePhase()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) end
@@ -77,4 +72,10 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
      tc:RegisterEffect(e5)
     end
    end
-   
+
+function s.discon(e)
+    return Duel.IsExistingMatchingCard(Card.IsCode,e:GetHandlerPlayer(),LOCATION_FZONE,0,1,nil,124131004)
+end
+function s.splimit2(e,c)
+	return c:IsLocation(LOCATION_HAND)
+end

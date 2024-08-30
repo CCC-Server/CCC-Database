@@ -2,58 +2,70 @@
 local s,id=GetID()
 function s.initial_effect(c)
     c:EnableUnsummonable()
-    --spsummon condition
-    local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_SINGLE)
-    e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-    e1:SetCode(EFFECT_SPSUMMON_CONDITION)
-    e1:SetValue(s.splimit)
-    c:RegisterEffect(e1)
-    --special summon
-    local e2=Effect.CreateEffect(c)
-    e2:SetType(EFFECT_TYPE_FIELD)
-    e2:SetCode(EFFECT_SPSUMMON_PROC)
-    e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-    e2:SetRange(LOCATION_HAND)
-    e2:SetCondition(s.spcon2)
-    c:RegisterEffect(e2)
+	--spsummon condition
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
+	e1:SetValue(s.splimit)
+	c:RegisterEffect(e1)
+    --Special Summon this card from your hand
+    local e3=Effect.CreateEffect(c)
+    e3:SetDescription(aux.Stringid(id,0))
+    e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
+    e3:SetType(EFFECT_TYPE_QUICK_O)
+    e3:SetCode(EVENT_FREE_CHAIN)
+    e3:SetRange(LOCATION_HAND)
+    e3:SetCondition(s.spcon2)
+    e3:SetTarget(s.selfsptg)
+    e3:SetOperation(s.selfspop)
+    c:RegisterEffect(e3)
 	--damage
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
-	e3:SetCategory(CATEGORY_DAMAGE)
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-	e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e3:SetCode(EVENT_BATTLE_DESTROYING)
-	e3:SetCondition(s.damcon)
-	e3:SetTarget(s.damtg)
-	e3:SetOperation(s.damop)
-	c:RegisterEffect(e3)
-    --Send to GY and increase ATK
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,1))
-	e4:SetCategory(CATEGORY_TOGRAVE+CATEGORY_ATKCHANGE)
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetCode(EVENT_BATTLED)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1,id)
-	e4:SetCondition(s.tgcon)
-	e4:SetTarget(s.tgtg)
-	e4:SetOperation(s.tgop)
+	e4:SetCategory(CATEGORY_DAMAGE)
+	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+	e4:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e4:SetCode(EVENT_BATTLE_DESTROYING)
+	e4:SetCondition(s.damcon)
+	e4:SetTarget(s.damtg)
+	e4:SetOperation(s.damop)
 	c:RegisterEffect(e4)
+    --파괴되지 않는다.
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD)
+	e5:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetTargetRange(LOCATION_MZONE,0)
+    e5:SetCondition(s.con2)
+	e5:SetTarget(s.efilter)
+	e5:SetValue(1)
+	c:RegisterEffect(e5)
 end
 function s.splimit(e,se,sp,st)
-	return se:GetHandler():IsCode(124131007)
+	return se:GetHandler():IsSetCard(0x810)
 		and (se:IsHasType(EFFECT_TYPE_ACTIONS) or se:GetCode()==EFFECT_SPSUMMON_PROC)
 end
-function s.filter(c)
-	return c:IsCode(124131009) and c:IsFaceup()
+
+function s.spfilter(c)
+	return c:IsFaceup() and c:IsCode(124131009)
 end
+
 function s.spcon2(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_MZONE,0,1,nil)
+    local tp=e:GetHandlerPlayer()
+    return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+        and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_ONFIELD,0,1,nil) and Duel.IsBattlePhase()
+end
+function s.selfsptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
+end
+
+function s.selfspop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not c:IsRelateToEffect(e) then return end
+	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 end
 function s.damcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
@@ -79,39 +91,9 @@ function s.damop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Damage(p,dam,REASON_EFFECT)
 	end
 end
---Send to GY and increase ATK
-function s.tgcon(e,tp,eg,ep,ev,re,r,rp)
-	local bc=Duel.GetBattleMonster(tp)
-	return bc and bc:IsSetCard(0x810)
+function s.efilter(e,c)
+	return c:IsSetCard(0x810) and c:IsMonster()
 end
-function s.tgfilter(c)
-	return c:IsSetCard(0x810) and c:IsAbleToGrave()
-end
-function s.atkfilter(c)
-	return c:IsSetCard(0x810) and c:IsFaceup() and not c:IsStatus(STATUS_BATTLE_DESTROYED)
-end
-function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil)
-		and Duel.IsExistingMatchingCard(s.atkfilter,tp,LOCATION_MZONE,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
-end
-function s.tgop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local sg=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #sg>0 and Duel.SendtoGrave(sg,REASON_EFFECT)>0 and sg:GetFirst():IsLocation(LOCATION_GRAVE) then
-		local atkg=Duel.GetMatchingGroup(s.atkfilter,tp,LOCATION_MZONE,0,nil)
-		if #atkg==0 then return end
-		Duel.BreakEffect()
-		local c=e:GetHandler()
-		for tc in aux.Next(atkg) do
-			--Increase ATK
-			local e1=Effect.CreateEffect(c)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_UPDATE_ATTACK)
-			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-			e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END+RESET_OPPO_TURN)
-			e1:SetValue(300)
-			tc:RegisterEffect(e1)
-		end
-	end
-end
+function s.con2(e,c)
+    return Duel.IsBattlePhase()
+    end
