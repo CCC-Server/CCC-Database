@@ -57,7 +57,6 @@ function s.arcanareg(c,coin)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	c:RegisterEffect(e1)
 	--Tails: 서치 불가
-	--Prevents search
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_CANNOT_TO_HAND)
@@ -81,8 +80,8 @@ function s.drop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Draw(p,d,REASON_EFFECT)
 end
 function s.rdcon2(e,tp,eg,ep,ev,re,r,rp)
-	return Arcana.GetCoinResult(e:GetHandler())==COIN_TAILS and eg:IsExists(Card.IsSummonPlayer,1,nil,1-tp)
-end
+    return Arcana.GetCoinResult(e:GetHandler())==COIN_TAILS
+    end
 function s.drtg2(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():IsRelateToEffect(e) end
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,0,tp,1)

@@ -85,7 +85,7 @@ function s.arcanareg(c,coin)
 end
 function s.rdcon1(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    return Arcana.GetCoinResult(e:GetHandler())==COIN_HEADS  and c:IsRelateToBattle() and c:IsStatus(STATUS_OPPO_BATTLE)
+    return Arcana.GetCoinResult(e:GetHandler())==COIN_HEADS
 end
 function s.efilter(e,re)
 	return e:GetHandlerPlayer()~=re:GetOwnerPlayer()
