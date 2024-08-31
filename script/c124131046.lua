@@ -56,17 +56,14 @@ function s.arcanareg(c,coin)
 	e1:SetOperation(s.drop)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 	c:RegisterEffect(e1)
-	--Tails: 제외
+	--Tails: 서치 불가
+	--Prevents search
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
-	e2:SetCategory(CATEGORY_REMOVE)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_CANNOT_TO_HAND)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetTargetRange(LOCATION_DECK,0)
 	e2:SetCondition(s.rdcon2)
-	e2:SetTarget(s.drtg2)
-	e2:SetOperation(s.drop2)
-	e2:SetReset(RESET_EVENT+RESETS_STANDARD)
 	c:RegisterEffect(e2)
 	Arcana.RegisterCoinResult(c,coin)
 end

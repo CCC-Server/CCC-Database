@@ -61,16 +61,15 @@ function s.coinop(e,tp,eg,ep,ev,re,r,rp)
 	s.arcanareg(c,Arcana.TossCoin(c,tp))
 end
 function s.arcanareg(c,coin)
-	--Heads: 이 카드가 전투로 상대 몬스터를 파괴했을 때에 발동할 수 있다. 자신은 덱에서 2장 드로우한다.
-    local e1=Effect.CreateEffect(c)
+	--Heads: 이 카드는 상대 카드의 효과를 받지 않는다.
+	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,2))
-	e1:SetCategory(CATEGORY_DRAW)
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetCode(EVENT_BATTLE_DESTROYING)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_IMMUNE_EFFECT)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetRange(LOCATION_MZONE)
 	e1:SetCondition(s.rdcon1)
-	e1:SetTarget(s.drtg)
-	e1:SetOperation(s.drop)
+	e1:SetValue(s.efilter)
 	c:RegisterEffect(e1)
 	--Tails: 상대는 효과 몬스터의 효과를 발동할 수 없다. 
 	local e2=Effect.CreateEffect(c)
@@ -88,11 +87,8 @@ function s.rdcon1(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     return Arcana.GetCoinResult(e:GetHandler())==COIN_HEADS  and c:IsRelateToBattle() and c:IsStatus(STATUS_OPPO_BATTLE)
 end
-function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetTargetPlayer(tp)
-	Duel.SetTargetParam(2)
-	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,2)
+function s.efilter(e,re)
+	return e:GetHandlerPlayer()~=re:GetOwnerPlayer()
 end
 function s.drop(e,tp,eg,ep,ev,re,r,rp)
 	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
