@@ -14,15 +14,11 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetRange(LOCATION_FZONE)
-	e2:SetTargetRange(LOCATION_MZONE+LOCATION_GRAVE,0)
+	e2:SetTargetRange(LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE)
 	e2:SetTarget(aux.TargetBoolFunction(function(c) return c:IsMonster() and (c:IsFaceup() or not c:IsLocation(LOCATION_ONFIELD)) end))
 	e2:SetCode(EFFECT_ADD_ATTRIBUTE)
-	e2:SetValue(s.attval1)
+	e2:SetValue(s.attval)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetTargetRange(0,LOCATION_MZONE+LOCATION_GRAVE)
-	e3:SetValue(s.attval2)
-	c:RegisterEffect(e3)
 	--Activate from Hand
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,0))
@@ -47,17 +43,10 @@ function s.initial_effect(c)
 end
 s.listed_series={ARCHETYPE_SPIRITUAL_ART}
 --Add attribute
-function s.mfilter(c)
-	return c:IsFaceup() and c:IsRace(RACE_SPELLCASTER)
-		and (c:GetBaseAttack()==1850 or (c:GetBaseAttack()==500 and c:GetBaseDefense()==1500))
-end
-function s.attval1(e,c)
-	return Duel.GetMatchingGroup(s.mfilter,e:GetHandlerPlayer(),LOCATION_MZONE+LOCATION_GRAVE,0,nil):GetBitwiseOr(Card.GetOriginalAttribute)
-end
-function s.attval2(e,c)
-	return Duel.GetMatchingGroup(s.mfilter,e:GetHandlerPlayer(),0,LOCATION_MZONE+LOCATION_GRAVE,nil):GetBitwiseOr(Card.GetOriginalAttribute)
+function s.attval(e,c)
+	return Duel.GetMatchingGroup(Card.IsArchetype,e:GetHandlerPlayer(),LOCATION_MZONE+LOCATION_GRAVE,LOCATION_MZONE+LOCATION_GRAVE,nil,ARCHETYPE_SPIRITUAL_ART):GetBitwiseOr(Card.GetOriginalAttribute)
 end
 --Activate from Deck
 function s.acttg(e,c)
-	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap())
+	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and c:IsIsSpellTrap() and not c:IsFieldSpell()
 end
