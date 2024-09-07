@@ -91,7 +91,7 @@ function s.sdcon(_,tp)
 end
 
 function s.sdfilter(c,e,tp)
-	return c:IsType(TYPE_RITUAL) and c:IsSetCard(0xda3) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,true,POS_FACEUP)
+	return c:IsType(TYPE_RITUAL) and c:IsSetCard(0xda3) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,true,POS_FACEUP) and not c:IsCode(id)
 end
 
 function s.sdtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -113,6 +113,6 @@ function s.sdop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.sdcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,900) end
-	Duel.PayLPCost(tp,900)
+	if chk==0 then return Duel.CheckLPCost(tp,3000) end
+	Duel.PayLPCost(tp,3000)
 end

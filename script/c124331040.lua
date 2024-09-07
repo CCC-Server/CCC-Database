@@ -5,9 +5,8 @@ function s.initial_effect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCountLimit(1,id)
 	e1:SetCategory(CATEGORY_RELEASE+CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_HAND+LOCATION_GRAVE)
+	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetRange(LOCATION_HAND)
 	e1:SetCondition(s.spcon)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
@@ -34,17 +33,13 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
-function s.spcon(_,tp)
-	return Duel.IsTurnPlayer(1-tp)
-end
-
 function s.tributefilter(c,e,tp)
 	return c:IsSetCard(0xda3) and c:IsAbleToGrave()
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tributefilter,tp,LOCATION_DECK,0,1,c,e,tp)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tributefilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,c,e,tp)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,true) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
 end
@@ -120,7 +115,7 @@ function s.aclimit2(e,tp,eg,ep,ev,re,r,rp)
 	Duel.ResetFlagEffect(tp,id)
 end
 function s.sdfilter(c,e,tp)
-	return c:IsType(TYPE_RITUAL) and c:IsSetCard(0xda3) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,true,POS_FACEUP)
+	return c:IsType(TYPE_RITUAL) and c:IsSetCard(0xda3) and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,true,POS_FACEUP) and not c:IsCode(id)
 end
 
 function s.sdtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -142,6 +137,6 @@ function s.sdop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.sdcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,900) end
-	Duel.PayLPCost(tp,900)
+	if chk==0 then return Duel.CheckLPCost(tp,3000) end
+	Duel.PayLPCost(tp,3000)
 end
