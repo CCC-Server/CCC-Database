@@ -42,14 +42,18 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
 	if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEDOWN_DEFENSE)>0 then
-		Duel.BreakEffect()
-		if tc:IsImmuneToEffect(e) or not Duel.SelectYesNo(aux.Stringid(id,0))
-			or Duel.ChangePosition(tc,POS_FACEUP_DEFENSE,POS_FACEDOWN_DEFENSE,POS_FACEUP_ATTACK,POS_FACEUP_ATTACK)==0 then
-				Duel.BreakEffect()
-				local seq=tc:GetSequence()
-				if Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
-					Duel.ReturnToField(tc,nil,0x1<<seq)
-				end
+		local yesno=Duel.SelectYesNo(aux.Stringid(id,0))
+		local pos=0
+		if yesno then
+			Duel.BreakEffect()
+			pos=Duel.ChangePosition(tc,POS_FACEUP_DEFENSE,POS_FACEDOWN_DEFENSE,POS_FACEUP_ATTACK,POS_FACEUP_ATTACK)
+		end
+		if pos<1 then
+			Duel.BreakEffect()
+			local seq=tc:GetSequence()
+			if Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
+				Duel.ReturnToField(tc,nil,0x1<<seq)
+			end
 		end
 	end
 end
