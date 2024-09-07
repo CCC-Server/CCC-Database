@@ -48,5 +48,5 @@ function s.attval(e,c)
 end
 --Activate from Deck
 function s.acttg(e,c)
-	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and c:IsIsSpellTrap() and not c:IsFieldSpell()
+	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and c:IsSpellTrap() and not c:IsFieldSpell()
 end
