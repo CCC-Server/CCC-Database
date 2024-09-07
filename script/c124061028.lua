@@ -22,25 +22,28 @@ function s.setfilter(c)
 	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap()) and c:IsSSetable()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and #g>0 end
+	if chk==0 then
+		if Duel.GetLocationCount(tp,LOCATION_SZONE)<2 then return false end
+		local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
+		return aux.SelectUnselectGroup(g,e,tp,2,2,aux.dncheck,0)
+	end
 end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_SZONE)<2 then return false end
 	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
-	if #g>0 and Duel.GetLocationCount(tp,LOCATION_SZONE)>0 then
-		local sg=aux.SelectUnselectGroup(g,e,tp,1,2,aux.dncheck,1,tp,HINTMSG_SET)
-		Duel.SSet(tp,sg)
-		for tc in sg:Iter() do
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetType(EFFECT_TYPE_SINGLE)
+	local tg=aux.SelectUnselectGroup(g,e,tp,2,2,aux.dncheck,1,tp,HINTMSG_TOFIELD)
+	if #tg~=2 or Duel.SSet(tp,tg)==0 then return end
+	local sg=tg:Filter(Card.IsLocation,LOCATION_SZONE)
+	for tc in aux.Next(tg) do
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		if tc:IsTrap() then
+			e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
+		else	
 			e1:SetCode(EFFECT_QP_ACT_IN_SET_TURN)
-			e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
-			e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-			tc:RegisterEffect(e1)
-			local e2=e1:Clone()
-			e2:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
-			tc:RegisterEffect(e2)
 		end
+		e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+		tc:RegisterEffect(e1)
 	end
 end
