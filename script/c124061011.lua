@@ -93,7 +93,7 @@ end
 function s.chcon(e,tp,eg,ep,ev,re,r,rp)
 	local ch=ev-1
 	local rc=re:GetHandler()
-	if not (re:IsHasType(EFFECT_TYPE_ACTIVATE) and c:IsArchetype(ARCHETYPE_SPIRITUAL_LIGHT_ART) and rp==tp) then return false end
+	if not (re:IsHasType(EFFECT_TYPE_ACTIVATE) and rc:IsArchetype(ARCHETYPE_SPIRITUAL_LIGHT_ART) and rp==tp) then return false end
 	local ch_player,ch_eff=Duel.GetChainInfo(ch,CHAININFO_TRIGGERING_PLAYER,CHAININFO_TRIGGERING_EFFECT)
 	if ch==0 then return end
 	local ch_c=ch_eff:GetHandler()

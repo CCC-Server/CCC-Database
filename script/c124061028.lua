@@ -1,7 +1,7 @@
 --闇霊術－「星」
 --암령술-"성"
 Duel.LoadScript("archetype_crowel.lua")
-localss,id=GetID()
+local s,id=GetID()
 function s.initial_effect(c)
 	--Set
 	local e1=Effect.CreateEffect(c)
@@ -33,7 +33,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
 	local tg=aux.SelectUnselectGroup(g,e,tp,2,2,aux.dncheck,1,tp,HINTMSG_TOFIELD)
 	if #tg~=2 or Duel.SSet(tp,tg)==0 then return end
-	local sg=tg:Filter(Card.IsLocation,LOCATION_SZONE)
+	local sg=tg:Filter(Card.IsLocation,nil,LOCATION_SZONE)
 	for tc in aux.Next(tg) do
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
