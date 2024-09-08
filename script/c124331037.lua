@@ -34,7 +34,7 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,2})
-	e3:SetCost(s.sdcost)
+	e3:SetCondition(function (e) return (Duel.IsTurnPlayer(1-e:GetHandlerPlayer()) and Duel.IsMainPhase()) or (Duel.IsTurnPlayer(e:GetHandlerPlayer()) and Duel.IsBattlePhase()) end)
 	e3:SetTarget(s.sdtg)
 	e3:SetOperation(s.sdop)
 	c:RegisterEffect(e3)
@@ -74,12 +74,12 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 		local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,nil)
 		return g:GetClassCount(Card.GetCode)>=1
 	end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK|LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,nil)
 	if g:GetClassCount(Card.GetCode)>=1 then
-		local sg=aux.SelectUnselectGroup(g,e,tp,1,2,aux.dncheck,1,tp,HINTMSG_ATOHAND)
+		local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.dncheck,1,tp,HINTMSG_ATOHAND)
 		Duel.SendtoHand(sg,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,sg)
 	end

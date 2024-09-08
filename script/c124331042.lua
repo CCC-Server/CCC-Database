@@ -13,7 +13,7 @@ function s.initial_effect(c)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCountLimit(1,id)
-	e1:SetCategory(CATEGORY_DRAW)
+	e1:SetCategory(CATEGORY_RELEASE)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
 	e1:SetCode(EVENT_RELEASE)
@@ -45,14 +45,17 @@ end
 function s.con1(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.con1filter,1,nil,tp,re,r,rp)
 end
-
+function s.tributefilter(c,e,tp)
+	return c:IsSetCard(0xda3) and c:IsAbleToGrave() and not c:IsCode(id)
+end
 function s.tg1(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsPlayerCanDraw(tp,1) end
-	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tributefilter,tp,LOCATION_DECK,0,1,c,e,tp) end
 end
 
 function s.op1(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Draw(tp,1,REASON_EFFECT) 
+	local rg=Duel.SelectMatchingCard(tp,s.tributefilter,tp,LOCATION_DECK,0,1,1,e:GetHandler(),e,tp)
+	if #rg==0 then return end
+	Duel.SendtoGrave(rg,REASON_RELEASE+REASON_EFFECT)
 end
 
 --effect 2

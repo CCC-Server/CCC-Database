@@ -5,7 +5,8 @@ function s.initial_effect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCountLimit(1,id)
 	e1:SetCategory(CATEGORY_RELEASE+CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetType(EFFECT_TYPE_QUICK_O)
+	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCondition(s.spcon)
 	e1:SetTarget(s.sptg)
@@ -27,10 +28,13 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,2})
-	e3:SetCost(s.sdcost)
+	e3:SetCondition(function (e) return (Duel.IsTurnPlayer(1-e:GetHandlerPlayer()) and Duel.IsMainPhase()) or (Duel.IsTurnPlayer(e:GetHandlerPlayer()) and Duel.IsBattlePhase()) end)
 	e3:SetTarget(s.sdtg)
 	e3:SetOperation(s.sdop)
 	c:RegisterEffect(e3)
+end
+function s.spcon(_,tp)
+	return Duel.IsTurnPlayer(1-tp)
 end
 
 function s.tributefilter(c,e,tp)
@@ -39,7 +43,7 @@ end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tributefilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,c,e,tp)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tributefilter,tp,LOCATION_HAND,0,1,c,e,tp)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_RITUAL,tp,true,true) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
 end
@@ -54,7 +58,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	e0:SetReset(RESET_PHASE|PHASE_END,2)
 	Duel.RegisterEffect(e0,tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-	local rg=Duel.SelectMatchingCard(tp,s.tributefilter,tp,LOCATION_DECK,0,1,1,e:GetHandler(),e,tp)
+	local rg=Duel.SelectMatchingCard(tp,s.tributefilter,tp,LOCATION_HAND,0,1,1,e:GetHandler(),e,tp)
 	if #rg==0 or Duel.SendtoGrave(rg,REASON_RELEASE+REASON_EFFECT)==0 then return end
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,SUMMON_TYPE_RITUAL,tp,tp,true,true,POS_FACEUP)>0 then
