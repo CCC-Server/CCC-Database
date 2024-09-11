@@ -14,6 +14,7 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetCategory(CATEGORY_TOHAND)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_SSET)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,{id,1})
@@ -57,7 +58,11 @@ end
 
 --effect 2
 function s.con2filter(c,tp)
-	return c:IsControler(1-tp) and c:IsLocation(LOCATION_STZONE)
+	return c:IsControler(tp) and c:IsLocation(LOCATION_STZONE)
+end
+
+function s.con2(e,tp,eg)
+	return eg:IsExists(s.con2filter,1,nil,tp)
 end
 
 function s.tg2filter(c)
@@ -74,10 +79,11 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local g=Duel.GetMatchingGroup(s.tg2filter,tp,LOCATION_SZONE,0,nil)
 	if #g==0 then return end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_RTOHAND)
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_RTOHAND):GetFirst()
 	Duel.ConfirmCards(1-tp,sg)
 	Duel.SendtoHand(sg,nil,REASON_EFFECT)
-	Duel.GetLocationCount(tp,LOCATION_STZONE)>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+	if Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		Duel.BreakEffect()
 		Duel.SSet(tp,sg)
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
