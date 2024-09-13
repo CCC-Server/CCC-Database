@@ -26,25 +26,19 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SendtoGrave(e:GetHandler(),REASON_COST+REASON_DISCARD)
 end
 function s.plsfilter(c,tp)
-	return c:IsSetCard(0x138) and c:IsContinuousSpell() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
+	return c:IsSetCard(0x138) and (c:IsContinuousSpell() or c:IsContinuousTrap()) and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
-function s.pltfilter(c,tp)
-	return c:IsSetCard(0x138) and c:IsContinuousTrap() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
-end
+
 function s.pltg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>1
-		and Duel.IsExistingMatchingCard(s.plsfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil,tp) and Duel.IsExistingMatchingCard(s.pltfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil,tp) end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
+		and Duel.IsExistingMatchingCard(s.plsfilter,tp,LOCATION_DECK,0,1,nil,tp) end
 end
 function s.plop(e,tp,eg,ep,ev,re,r,rp)
-	if not (Duel.IsExistingMatchingCard(s.plsfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil,tp) and Duel.IsExistingMatchingCard(s.pltfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil,tp)) then return end
-	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=1 then return end
+	if not Duel.IsExistingMatchingCard(s.plsfilter,tp,LOCATION_DECK,0,1,nil,tp) then end
+	if Duel.GetLocationCount(tp,LOCATION_SZONE)==0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 	local tc
-	tc=Duel.SelectMatchingCard(tp,s.plsfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,tp):GetFirst()
-	if tc then
-		Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
-	end
-	tc=Duel.SelectMatchingCard(tp,s.pltfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,tp):GetFirst()
+	tc=Duel.SelectMatchingCard(tp,s.plsfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
 	if tc then
 		Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 	end
