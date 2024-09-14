@@ -7,6 +7,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetHintTiming(0,TIMING_END_PHASE)
+	e1:SetCondition(s.condition)
 	e1:SetCountLimit(1,id)
 	e1:SetTarget(s.target)
 	e1:SetOperation(s.activate)
@@ -20,6 +21,9 @@ function s.initial_effect(c)
 	e2:SetTarget(s.dptg)
 	e2:SetOperation(s.dpop)
 	c:RegisterEffect(e2)
+end
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetCurrentPhase()&PHASE_MAIN1+PHASE_MAIN2>0
 end
 function s.spfilter2(c,fg,minmat,maxmat)
 	return c:IsLinkSummonable(nil,fg,minmat,maxmat)
