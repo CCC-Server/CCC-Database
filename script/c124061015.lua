@@ -34,7 +34,7 @@ function s.initial_effect(c)
 end
 function s.btcon(e,tp,eg,ep,ev,re,r,rp)
 	local bc=e:GetHandler():GetBattleTarget()
-	return bc and bc:IsControler(1-tp) and not Duel.IsExistingTarget(HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id)
+	return bc and bc:IsControler(1-tp) and not Duel.IsExistingTarget(Card.HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id)
 end
 function s.bttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local bc=e:GetHandler():GetBattleTarget()
@@ -44,7 +44,7 @@ end
 function s.btop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local bc=e:GetHandler():GetBattleTarget()
-	if c:IsRelateToEffect(e) and c:IsFaceup() and bc and not Duel.IsExistingTarget(HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id) and not bc:IsImmuneToEffect(e) then
+	if c:IsRelateToEffect(e) and c:IsFaceup() and bc and not Duel.IsExistingTarget(Card.HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id) and not bc:IsImmuneToEffect(e) then
 		bc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
 		c:SetCardTarget(bc)
 		local e1=Effect.CreateEffect(c)
@@ -64,7 +64,7 @@ end
 
 function s.mecon(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
-	return rp==1-tp and rc:IsLocation(LOCATION_MZONE) and not Duel.IsExistingTarget(HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id)
+	return rp==1-tp and rc:IsLocation(LOCATION_MZONE) and not Duel.IsExistingTarget(Card.HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id)
 end
 function s.metg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local rc=re:GetHandler()
@@ -75,7 +75,7 @@ end
 function s.meop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local rc=re:GetHandler()
-	if c:IsRelateToEffect(e) and c:IsFaceup() and rc:IsLocation(LOCATION_MZONE) and rc:IsControler(1-tp) and not Duel.IsExistingTarget(HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id) and not rc:IsImmuneToEffect(e) then
+	if c:IsRelateToEffect(e) and c:IsFaceup() and rc:IsLocation(LOCATION_MZONE) and rc:IsControler(1-tp) and not Duel.IsExistingTarget(Card.HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id) and not rc:IsImmuneToEffect(e) then
 		rc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
 		c:SetCardTarget(rc)
 		local e1=Effect.CreateEffect(c)
@@ -96,7 +96,7 @@ function s.chcon(e,tp,eg,ep,ev,re,r,rp)
 	local ch_player,ch_eff=Duel.GetChainInfo(ch,CHAININFO_TRIGGERING_PLAYER,CHAININFO_TRIGGERING_EFFECT)
 	if ch==0 then return end
 	local ch_c=ch_eff:GetHandler()
-	return ch_player==1-tp and (ch_c:IsAttribute(ATTRIBUTE_FIRE) and ch_c:IsControlerCanBeChanged() and ch_c:IsLocation(LOCATION_MZONE) and ch_c:IsControlerCanBeChanged() and ch_c:IsFaceup()) and not Duel.IsExistingTarget(HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id)
+	return ch_player==1-tp and (ch_c:IsAttribute(ATTRIBUTE_FIRE) and ch_c:IsControlerCanBeChanged() and ch_c:IsLocation(LOCATION_MZONE) and ch_c:IsControlerCanBeChanged() and ch_c:IsFaceup()) and not Duel.IsExistingTarget(Card.HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id)
 end
 function s.chtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local ch=ev-1
@@ -111,7 +111,7 @@ function s.chop(e,tp,eg,ep,ev,re,r,rp)
 	local ch=ev-1
 	local re=Duel.GetChainInfo(ch,CHAININFO_TRIGGERING_EFFECT)
 	local rc=re:GetHandler()
-	if c:IsRelateToEffect(e) and c:IsFaceup() and rc:IsLocation(LOCATION_MZONE) and rc:IsControler(1-tp) and not Duel.IsExistingTarget(HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id) and not rc:IsImmuneToEffect(e) then
+	if c:IsRelateToEffect(e) and c:IsFaceup() and rc:IsLocation(LOCATION_MZONE) and rc:IsControler(1-tp) and not Duel.IsExistingTarget(Card.HasFlagEffect,tp,LOCATION_MZONE,0,1,e:GetHandler(),id) and not rc:IsImmuneToEffect(e) then
 		rc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
 		c:SetCardTarget(rc)
 		local e1=Effect.CreateEffect(c)
