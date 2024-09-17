@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CANNOT_ATTACK)
 	c:RegisterEffect(e1)
-    --self destroy
+	--self destroy
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
@@ -14,7 +14,7 @@ function s.initial_effect(c)
 	e2:SetCode(EFFECT_SELF_DESTROY)
 	e2:SetCondition(s.descon)
 	c:RegisterEffect(e2)
-    --destroy replace
+	--destroy replace
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_CONTINUOUS+EFFECT_TYPE_FIELD)
 	e3:SetCode(EFFECT_DESTROY_REPLACE)
@@ -23,7 +23,7 @@ function s.initial_effect(c)
 	e3:SetValue(s.desval)
 	e3:SetOperation(s.desop)
 	c:RegisterEffect(e3)
-    --negate effect
+	--negate effect
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,0))
 	e4:SetCategory(CATEGORY_DISABLE+CATEGORY_DESTROY)
@@ -35,6 +35,25 @@ function s.initial_effect(c)
 	e4:SetTarget(s.distg)
 	e4:SetOperation(s.disop)
 	c:RegisterEffect(e4)
+	--Opponent cannot target this card for attacks
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_SINGLE)
+	e5:SetCode(EFFECT_CANNOT_BE_BATTLE_TARGET)
+	e5:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetValue(aux.imval2)
+	c:RegisterEffect(e5)
+	--Search Level 8 or lower monster and Normal summon
+	local e6=Effect.CreateEffect(c)
+	e6:SetDescription(aux.Stringid(id,1))
+	e6:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SUMMON)
+	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e6:SetProperty(EFFECT_FLAG_DELAY)
+	e6:SetCode(EVENT_DESTROYED)
+	e6:SetCondition(s.thcon)
+	e6:SetTarget(s.thtg)
+	e6:SetOperation(s.thop)
+	c:RegisterEffect(e6)
 end
 function s.filter(c)
 	return c:IsFaceup() and c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)
@@ -76,4 +95,30 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.NegateEffect(ev) and re:GetHandler():IsRelateToEffect(re) then
 		Duel.Destroy(eg,REASON_EFFECT)
 	end
+end	
+function s.thcon(e,tp,eg,ep,ev,re,r,rp)
+	return r&REASON_EFFECT~=0
+end	
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+end	
+function s.thfilter(c)
+	return c:IsSetCard(0x1fd0) and c:IsType(TYPE_MONSTER) or c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE) and c:IsAbleToHand() and c:IsLevelBelow(8)
+	end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
+	local sg1=Duel.GetMatchingGroup(s.sumfilter,tp,LOCATION_HAND,0,nil)
+		if #sg1>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+			Duel.BreakEffect()
+			Duel.ShuffleHand(tp)
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+			local sg2=sg1:Select(tp,1,1,nil):GetFirst()
+			Duel.Summon(tp,sg2,true,nil)
+		end
+    end
 end
