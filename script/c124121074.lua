@@ -38,8 +38,7 @@ end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g1=Duel.GetMatchingGroup(s.rfilter1,tp,LOCATION_MZONE|LOCATION_HAND,0,e:GetHandler())
 	local g2=Duel.GetMatchingGroup(s.rfilter2,tp,LOCATION_MZONE|LOCATION_HAND,0,nil)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK,0,2,nil,e,tp) and #g1+#g2>1 end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK,0,2,nil,e,tp) and #g1+#g2>1 end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_GRAVE+LOCATION_DECK)
 end
 function s.rfilter1(c)
@@ -62,7 +61,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE+LOCATION_DECK,0,2,2,sg,e,tp)
 	Duel.SpecialSummon(tc,SUMMON_TYPE_RITUAL,tp,tp,true,true,POS_FACEUP)
 	for ttc in tc:Iter() do
-		ttc:CompleteProcedure()	
+		ttc:CompleteProcedure() 
 	end
 end
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
