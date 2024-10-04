@@ -42,13 +42,13 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_GRAVE+LOCATION_DECK)
 end
 function s.rfilter1(c)
-	return c:IsReleasableByEffect() and c:IsSetCard(0x138) and c:IsMonster()
+	return c:IsReleasableByEffect() and c:IsType(TYPE_RITUAL) and c:IsMonster()
 end
 function s.rfilter2(c)
-	return c:IsReleasableByEffect() and not c:IsSetCard(0x138) and c:IsMonster()
+	return c:IsReleasableByEffect() and not c:IsType(TYPE_RITUAL) and c:IsMonster()
 end
 function s.rcon(sg)
-	return sg:IsExists(Card.IsSetCard,1,nil,0x138)
+	return sg:IsExists(Card.IsType,1,nil,TYPE_RITUAL)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.GetMatchingGroup(s.rfilter1,tp,LOCATION_MZONE|LOCATION_HAND,0,e:GetHandler())
@@ -56,9 +56,9 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if #g1+#g2<2 then return end 
 	local sg=aux.SelectUnselectGroup(g1+g2,e,tp,2,2,s.rcon,1,tp,HINTMSG_RELEASE)
 	Duel.SendtoGrave(sg,REASON_EFFECT+REASON_RELEASE)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=1 then return end
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=1 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK,0,2,nil,e,tp)<2 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE+LOCATION_DECK,0,2,2,sg,e,tp)
+	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE+LOCATION_DECK,0,2,2,nil,e,tp)
 	Duel.SpecialSummon(tc,SUMMON_TYPE_RITUAL,tp,tp,true,true,POS_FACEUP)
 	for ttc in tc:Iter() do
 		ttc:CompleteProcedure() 
