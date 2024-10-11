@@ -57,7 +57,8 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.con2(e,tp,eg,ep,ev,re,r,rp)
-	return rp~=tp
+	local c=e:GetHandler()
+	return rp~=tp and c:IsPreviousPosition(POS_FACEUP) and c:IsReason(REASON_EFFECT) and c:IsSummonType(SUMMON_TYPE_FUSION) and Duel.GetCurrentPhase()~=PHASE_DAMAGE 
 end
 function s.tfil2(c)
 	return (c:IsCode(24094653) or c:IsCode(48130397)) and c:CheckActivateEffect(true,true,false)~=nil
