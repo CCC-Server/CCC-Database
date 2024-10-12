@@ -48,10 +48,11 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if re:GetHandler():IsRelateToEffect(re) then
-		Duel.Destroy(eg,REASON_EFFECT)
-		local c=e:GetHandler()
-		if c:IsRelateToEffect(e) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+		if Duel.Destroy(eg,REASON_EFFECT)>0 then
+			local c=e:GetHandler()
+			if c:IsRelateToEffect(e) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+				Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+			end
 		end
 	end
 end
