@@ -2,8 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
-	--Link Summon procedure
-	Link.AddProcedure(c,s.matfilter,1,1)
+	Link.AddProcedure(c,s.lmatfilter,1,1)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -15,8 +14,8 @@ function s.initial_effect(c)
 	e1:SetOperation(s.effop)
 	c:RegisterEffect(e1)
 end
-function s.matfilter(c,lc,sumtype,tp)
-	return c:IsSetCard(0xf1,lc,sumtype,tp) and not c:IsType(TYPE_LINK,lc,sumtype,tp)
+function s.lmatfilter(c,lc,stype,tp)
+	return c:IsSetCard(0xf1,lc,stype,tp) and not c:IsType(TYPE_LINK,lc,stype,tp)
 end
 
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
