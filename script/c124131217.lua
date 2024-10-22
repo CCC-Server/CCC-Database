@@ -32,7 +32,7 @@ function s.initial_effect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(3,id)
+	e3:SetCountLimit(1,id)
     e3:SetCondition(s.ctlcon)
 	e3:SetTarget(s.sptg2)
 	e3:SetOperation(s.spop2)
@@ -62,13 +62,13 @@ end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) end
+		and c:IsCanBeSpecialSummoned(e,0,tp,true,false) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
-	Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+	Duel.SpecialSummon(c,0,tp,tp,true,false,POS_FACEUP)
 end
 function s.ctlcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.HasFlagEffect(tp,id)
@@ -98,7 +98,10 @@ function s.spop2(e,tp,eg,ep,ev,re,r,rp)
 	end
 	if not turne then return end
 	local op=turne:GetOperation()
-	op(turne,turne:GetOwnerPlayer(),nil,0,id,nil,0,0)
+	for i=1,3 do
+		op(turne,turne:GetOwnerPlayer(),nil,0,id,nil,0,0)
+		if not turne then break end
+	end
 end
 function s.thcfilter(c)
 	return c:IsAbleToRemoveAsCost()
