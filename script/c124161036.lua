@@ -48,11 +48,11 @@ function s.op1filter(c,e,tp)
 end
 
 function s.op1(e,tp,eg,ep,ev,re,r,rp)
-	local sg=Duel.GetFirstTarget()
-	if sg:IsRelateToEffect(e) then
-		if Duel.Destroy(sg,REASON_EFFECT)<1 then return end
+	local tg=Duel.GetFirstTarget()
+	if tg:IsRelateToEffect(e) then
+		if Duel.Destroy(tg,REASON_EFFECT)<1 then return end
 		local g=Duel.GetMatchingGroup(s.op1filter,tp,LOCATION_DECK,0,nil,e,tp)
-		if sg:GetOwner()==tp and #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+		if tg:GetOwner()==tp and #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
 			local spg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_SPSUMMON)
 			Duel.BreakEffect()
 			Duel.SpecialSummon(spg,0,tp,tp,false,false,POS_FACEUP)
