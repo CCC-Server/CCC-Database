@@ -38,7 +38,7 @@ function s.splimit(e,c)
 end
 
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-	return re and re:GetHandler():IsSetCard(0xc01)
+	return re and re:GetHandler():IsSetCard(0xc01) and e:GetHandler():IsReason(REASON_EFFECT)
 end
 
 function s.filter(c,e,tp)
