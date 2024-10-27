@@ -7,11 +7,12 @@ function s.initial_effect(c)
 	--synchro summon
 	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_BEAST),1,1,Synchro.NonTuner(nil),1,99)
 	c:EnableReviveLimit()
+	--your Beast monster's effect which was activated cannot diseffect
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_CANNOT_DISEFFECT)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(s.effval)
+	e1:SetValue(s.val2)
 	c:RegisterEffect(e1)
 	--Special Summon 1 Beast monster from your deck
 	local e2=Effect.CreateEffect(c)
@@ -30,12 +31,14 @@ end
 --Part of "Mimiko" archetype
 s.listed_series={0xda0}
 
-function s.effval(e,ct)
-	local te=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_EFFECT)
-	local effs=e:GetLabelObject()
-	return effs and effs[te:GetFieldID()]==e:GetHandler():GetFieldID()
+--your Beast monster's effect which was activated cannot diseffect
+function s.val2(e,ct)
+	local p=e:GetHandler():GetControler()
+	local te,tp,loc=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_EFFECT,CHAININFO_TRIGGERING_PLAYER,CHAININFO_TRIGGERING_LOCATION)
+	return p==tp and loc&LOCATION_HAND~=0 and te:GetHandler():IsRace(RACE_BEAST)
 end
 
+--Special Summon 1 Beast monster from your deck
 function s.filter(c,e,tp)
 	return c:IsRace(RACE_BEAST) and c:GetLevel()<=6 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
