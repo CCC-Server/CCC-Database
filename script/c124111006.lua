@@ -25,7 +25,6 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 	--negate effect
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,0))
 	e4:SetCategory(CATEGORY_DISABLE+CATEGORY_DESTROY)
 	e4:SetType(EFFECT_TYPE_QUICK_O)
 	e4:SetCode(EVENT_CHAINING)
@@ -45,7 +44,6 @@ function s.initial_effect(c)
 	c:RegisterEffect(e5)
 	--Search Level 8 or lower monster and Normal summon
 	local e6=Effect.CreateEffect(c)
-	e6:SetDescription(aux.Stringid(id,1))
 	e6:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SUMMON)
 	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e6:SetProperty(EFFECT_FLAG_DELAY)
@@ -95,30 +93,30 @@ function s.disop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.NegateEffect(ev) and re:GetHandler():IsRelateToEffect(re) then
 		Duel.Destroy(eg,REASON_EFFECT)
 	end
-end	
+end 
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return r&REASON_EFFECT~=0
-end	
+end 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
-end	
+end 
 function s.thfilter(c)
-	return c:IsSetCard(0x1fd0) and c:IsType(TYPE_MONSTER) or c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE) and c:IsAbleToHand() and c:IsLevelBelow(8)
-	end
+	return (c:IsSetCard(0x1fd0)) or (c:IsType(TYPE_NORMAL) and c:IsRace(RACE_ZOMBIE)) and c:IsType(TYPE_MONSTER) and c:IsAbleToHand() and c:IsLevelBelow(8)
+end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g>0 then
 		Duel.SendtoHand(g,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g)
-	local sg1=Duel.GetMatchingGroup(s.sumfilter,tp,LOCATION_HAND,0,nil)
-		if #sg1>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+	local sg1=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_HAND,0,nil)
+		if #sg1>0 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
 			Duel.BreakEffect()
 			Duel.ShuffleHand(tp)
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
 			local sg2=sg1:Select(tp,1,1,nil):GetFirst()
 			Duel.Summon(tp,sg2,true,nil)
 		end
-    end
+	end
 end

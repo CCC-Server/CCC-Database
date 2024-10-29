@@ -1,8 +1,8 @@
+--영원한 후일담의 안타고니스트
 local s,id=GetID()
 function s.initial_effect(c)
 	--Special Summon this card from your hand to either field
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -15,7 +15,6 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 	--This card's owner adds 1 "영원한 후일담" Spell/Trap from their Deck to their hand
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,2))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e2:SetType(EFFECT_TYPE_SINGLE|EFFECT_TYPE_TRIGGER_F)
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
@@ -29,7 +28,7 @@ function s.initial_effect(c)
 end
 s.listed_series={0x1fd0}
 function s.spconfilter(c)
-	return c:IsRace(RACE_ZOMBIE) and c:IsType(TYPE_NORMAL) and c:IsFaceup()
+	return (c:IsSetCard(0x1fd0) or (c:IsRace(RACE_ZOMBIE) and c:IsType(TYPE_NORMAL))) and c:IsFaceup()
 end
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsExistingMatchingCard(s.spconfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
@@ -47,8 +46,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local b2=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)
 	if not (b1 or b2) then return end
 	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,3)},
-		{b2,aux.Stringid(id,4)})
+		{b1,aux.Stringid(id,0)},
+		{b2,aux.Stringid(id,1)})
 	local target_player=op==1 and tp or 1-tp
 	Duel.SpecialSummon(c,0,tp,target_player,false,false,POS_FACEUP)
 end
