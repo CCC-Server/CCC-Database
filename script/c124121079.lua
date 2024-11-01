@@ -31,10 +31,17 @@ end
 function s.matfilter(c)
 	return c:IsFaceup() and c:IsSetCard(0xf1) and c:IsCanBeXyzMaterial()
 end
+function s.spfilter(c,e,tp)
+	return c:IsSetCard(0xf1) and c:IsType(TYPE_XYZ) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+function s.spxfilter(c,e,tp)
+	return c:IsSetCard(0xf1)
+end
+
 function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_MZONE,0,nil)
 	local b1=Duel.IsExistingMatchingCard(s.xfilter,tp,LOCATION_MZONE,0,1,nil) and Duel.IsExistingMatchingCard(s.xdfilter,tp,LOCATION_HAND+ LOCATION_DECK,0,1,nil)
-	local b2=Duel.IsExistingMatchingCard(Card.IsXyzSummonable,tp,LOCATION_EXTRA,0,1,nil,nil,mg)
+	local b2=Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA+LOCATION_GRAVE,0,1,nil,e,tp) and Duel.IsExistingMatchingCard(s.spxfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil) and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 	if chk==0 then return b1 or b2 end
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,0)},
@@ -58,12 +65,13 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
 		local xsg=Duel.SelectMatchingCard(tp,s.xdfilter,tp,LOCATION_HAND+ LOCATION_DECK,0,1,1,nil,nil):GetFirst()
 		Duel.Overlay(sg,xsg,true)
 	else
-		local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_MZONE,0,nil)
-		if #mg==0 then return end
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local xc=Duel.SelectMatchingCard(tp,Card.IsXyzSummonable,tp,LOCATION_EXTRA,0,1,1,nil,nil,mg):GetFirst()
-		if xc then
-			Duel.XyzSummon(tp,xc,nil,mg,1,99)
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA+LOCATION_GRAVE,0,1,1,nil,e,tp):GetFirst()
+		if g then
+		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+		local xg=Duel.GetMatchingGroup(s.spxfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,g)
+		local sg=aux.SelectUnselectGroup(xg,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_XMATERIAL)
+		Duel.Overlay(g,sg,true)
 		end
 	end
 end

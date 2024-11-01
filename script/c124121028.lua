@@ -29,7 +29,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 function s.pfil1(c,lc,sumtype,tp)
-	return c:IsAttribute(ATTRIBUTE_DARK,lc,sumtype,tp) or c:IsOnField()
+	return c:IsAttribute(ATTRIBUTE_DARK,lc,sumtype,tp) or (c:IsOnField() and c:IsType(TYPE_EFFECT))
 end
 function s.con1(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()

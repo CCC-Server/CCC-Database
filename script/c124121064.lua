@@ -73,21 +73,20 @@ function s.cost3(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
 		return (c:CheckRemoveOverlayCard(tp,1,REASON_COST)
-			or Duel.IsExistingMatchingCard(Card.IsAbleToRemoveAsCost,tp,LOCATION_HAND,0,1,nil))
-			and Duel.CheckLPCost(tp,1000)
+			or Duel.CheckLPCost(tp,1000))
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
 	local ct=1
+	local sg=Group.CreateGroup()
 	if c:CheckRemoveOverlayCard(tp,1,REASON_COST) then
 		ct=0
-	end
-	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemoveAsCost,tp,LOCATION_HAND,0,ct,1,nil)
-	if #g>0 then
-		Duel.Remove(g,POS_FACEUP,REASON_COST)
+		sg=aux.SelectUnselectGroup(c:GetOverlayGroup(),e,tp,0,1,aux.TRUE,1,tp,HINTMSG_REMOVEXYZ)
+	end	
+	if ct==1 or #sg==0 then
+		Duel.PayLPCost(tp,1000)
 	else
-		c:RemoveOverlayCard(tp,1,1,REASON_COST)
+		Duel.SendtoGrave(sg,REASON_COST)
 	end
-	Duel.PayLPCost(tp,1000)
 end
 function s.tfil3(c,e,tp)
 	return c:IsCode(id-3) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
@@ -95,15 +94,17 @@ end
 function s.tar3(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingMatchingCard(Card.IsAbleToRemove,tp,LOCATION_HAND,0,1,nil)
 			and Duel.IsExistingMatchingCard(s.tfil3,tp,LOCATION_DECK,0,1,nil,e,tp)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 function s.op3(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then
+	local rg=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_HAND,0,1,1,nil)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 or #rg==0 then
 		return
 	end
+	Duel.Remove(rg,POS_FACEUP,REASON_EFFECT)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(tp,s.tfil3,tp,LOCATION_DECK,0,1,1,nil,e,tp)
 	if #g>0 then

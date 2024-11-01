@@ -33,7 +33,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.spfilter(c,e,tp)
-	return c:IsLevelBelow(6) and ((c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsSetCard(0x107a)) or (c:IsAttribute(ATTRIBUTE_WIND) and c:IsRace(RACE_BEAST))) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return ((c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsSetCard(0x107a)) or (c:IsAttribute(ATTRIBUTE_WIND) and c:IsRace(RACE_BEAST) and c:IsLevelBelow(6))) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
@@ -77,7 +77,7 @@ function s.gsop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.SelectMatchingCard(tp,s.gsfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
 	if #g>0 then
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
-		local bg=Duel.GetMatchingGroup(aux.FaceupFilter(Card.IsType,TYPE_FUSION+TYPE_SYNCHRO),tp,LOCATION_MZONE,0,nil)
+		local bg=Duel.GetMatchingGroup(aux.FaceupFilter(Card.IsType,TYPE_SYNCHRO),tp,LOCATION_MZONE,0,nil)
 		for tc in bg:Iter() do
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)

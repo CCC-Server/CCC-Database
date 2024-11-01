@@ -36,7 +36,7 @@ function s.initial_effect(c)
 	e6:SetCode(EVENT_FREE_CHAIN)
 	e6:SetRange(LOCATION_MZONE)
 	e6:SetCategory(CATEGORY_REMOVE)
-	e6:SetCountLimit(1,id)
+	e6:SetCountLimit(1)
 	e6:SetCondition(Duel.IsMainPhase)
 	e6:SetCost(s.cost6)
 	e6:SetTarget(s.tar6)
@@ -97,13 +97,13 @@ function s.tfil6(c)
 end
 function s.tar6(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.tfil6,tp,LOCATION_DECK,0,1,nil)
+		return Duel.IsExistingMatchingCard(s.tfil6,tp,LOCATION_DECK,0,3,nil)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,tp,LOCATION_DECK)
 end
 function s.op6(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.tfil6,tp,LOCATION_DECK,0,nil)
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,3,aux.dncheck,1,tp,HINTMSG_REMOVE,nil,nil,false)
+	local sg=aux.SelectUnselectGroup(g,e,tp,3,3,aux.dncheck,1,tp,HINTMSG_REMOVE,nil,nil,false)
 	if sg and #sg>0 then
 		Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)
 	end

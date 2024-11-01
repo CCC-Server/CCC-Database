@@ -26,7 +26,7 @@ function s.wfilter(c)
 	return c:IsRace(RACE_WARRIOR) and c:IsAttribute(ATTRIBUTE_LIGHT)
 end
 function s.bfilter(c)
-	return c:IsRace(RACE_BEAST) and c:IsAttribute(ATTRIBUTE_WIND)
+	return c:IsRace(RACE_BEAST)
 end
 function s.confilter(c)
 	return c:IsAbleToDeckAsCost() and (c:IsLocation(LOCATION_MZONE) or c:IsFaceup())

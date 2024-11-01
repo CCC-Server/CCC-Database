@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
-	Fusion.AddProcMix(c,true,true,aux.FilterBoolFunctionEx(Card.IsType,TYPE_FUSION),aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_DARK),Card.IsOnField)
+	Fusion.AddProcMix(c,true,true,aux.FilterBoolFunctionEx(Card.IsType,TYPE_FUSION),aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_DARK),s.pfil1)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -22,6 +22,9 @@ function s.initial_effect(c)
 	e2:SetTarget(s.tar2)
 	e2:SetOperation(s.op2)
 	c:RegisterEffect(e2)
+end
+function s.pfil1(c,lc,sumtype,tp)
+	return c:IsOnField() and c:IsType(TYPE_EFFECT)
 end
 function s.tfil1(c,e,tp)
 	return ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false))
