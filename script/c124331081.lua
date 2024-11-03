@@ -51,7 +51,7 @@ function s.costfilter(c,e,tp)
 	for i=1,lv-1 do
 		k=k*2
 	end
-	return c:IsSetCard(0xda7) and c:IsAbleToRemoveAsCost() and s.lv_list[tp]&k==0
+	return c:IsSetCard(0xda7) and not c:IsType(TYPE_SPELL) and not c:IsType(TYPE_TRAP) and c:IsAbleToRemoveAsCost() and s.lv_list[tp]&k==0
 end
 function s.discost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE|LOCATION_GRAVE,0,1,nil,e,tp) end
