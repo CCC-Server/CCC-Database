@@ -1,9 +1,18 @@
 ﻿{
 	"repos": [
 		{
-			"url": "https://github.com/JSY1728/EDOPRO-Korean-CDB-TEST",
-			"repo_name": "한국어 패치 (팀 ALL YGOPRO)",
+			"url": "https://github.com/Team-AllYGOPro/edopro-korean",
+			"repo_name": "한국어 패치",
 			"repo_path": "./repositories/languages/한국어",
+			"is_language": true,
+			"language": "한국어",
+			"should_update": true,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/Team-AllYGOPro/edopro-korean-delta",
+			"repo_name": "한국어 패치 (델타 테스트)",
+			"repo_path": "./repositories/languages/한국어-1",
 			"is_language": true,
 			"language": "한국어",
 			"should_update": true,
@@ -30,8 +39,16 @@
 		},
 		{
 			"url": "https://github.com/CCC-Server/CCC-Pics",
-			"repo_name": "CCC 서버 이미지",
+			"repo_name": "오리카 디코방 이미지",
 			"repo_path": "./repositories/CCC-Pics",
+			"pics_path": "pics",
+			"should_update": true,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/CCC-Server/PG-Pics",
+			"repo_name": "유덕들 놀이터 이미지",
+			"repo_path": "./repositories/PG-Pics",
 			"pics_path": "pics",
 			"should_update": true,
 			"should_read": true
@@ -54,6 +71,14 @@
 		},
 		{
 			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Pics/main/field/{}.jpg",
+			"type": "field"
+		},
+		{
+			"url": "https://raw.githubusercontent.com/CCC-Server/PG-Pics/main/field/{}.png",
+			"type": "field"
+		},
+		{
+			"url": "https://raw.githubusercontent.com/CCC-Server/PG-Pics/main/field/{}.jpg",
 			"type": "field"
 		},
 		{
