@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	--synchro summon
-	Synchro.AddProcedure(c,aux.Synchro.NonTunerEx(s.matfilter),1,99)
+	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_FAIRY),1,1,Synchro.NonTunerEx(s.matfilter),1,99)
 	c:EnableReviveLimit()
 	--pendulum Summon
 	Pendulum.AddProcedure(c,false)
