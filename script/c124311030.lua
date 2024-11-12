@@ -47,6 +47,14 @@ function s.tgfilter(c)
 end
 function s.plop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
+	local e3=Effect.CreateEffect(e:GetHandler())
+	e3:SetType(EFFECT_TYPE_FIELD)
+	e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e3:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e3:SetTargetRange(1,0)
+	e3:SetTarget(s.splimit)
+	e3:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e3,tp)
 	if Duel.GetLocationCount(tp,LOCATION_SZONE)==0 then return end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 		local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK+LOCATION_REMOVED,0,1,1,nil)
@@ -83,4 +91,8 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoHand(g,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g)
 	end
+end
+
+function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
+	return c:IsLevelAbove(2) or c:IsRankAbove(2) or c:IsLinkAbove(2)
 end
