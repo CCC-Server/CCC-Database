@@ -74,4 +74,9 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
     local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_EXTRA,0,1,1,nil)
     if #g==0 or Duel.SendtoHand(g,nil,REASON_EFFECT)==0 or not g:GetFirst():IsLocation(LOCATION_HAND) then return end
     Duel.ConfirmCards(1-tp,g)
+    local sg=Duel.GetMatchingGroup(s.exfilter,tp,LOCATION_EXTRA,0,nil)
+    if #sg==0 or not Duel.SelectYesNo(tp,aux.Stringid(id,5)) then return end
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+    local sc=sg:Select(tp,1,1,nil):GetFirst()
+    if not sc then return end
 end
