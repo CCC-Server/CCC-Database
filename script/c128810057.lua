@@ -14,8 +14,8 @@ function s.initial_effect(c)
     --Add 1 "Celestial Titan" Pendulum Monster to the hand
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
-    e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON)
-    e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+    e2:SetCategory(CATEGORY_TOHAND)
+    e2:SetType(EFFECT_TYPE_SINGLE)
     e2:SetProperty(EFFECT_FLAG_DELAY)
     e2:SetCode(EVENT_SUMMON_SUCCESS)
     e2:SetCountLimit(1,{id,1})
@@ -74,9 +74,4 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
     local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_EXTRA,0,1,1,nil)
     if #g==0 or Duel.SendtoHand(g,nil,REASON_EFFECT)==0 or not g:GetFirst():IsLocation(LOCATION_HAND) then return end
     Duel.ConfirmCards(1-tp,g)
-    local sg=Duel.GetMatchingGroup(s.exfilter,tp,LOCATION_EXTRA,0,nil)
-    if #sg==0 or not Duel.SelectYesNo(tp,aux.Stringid(id,5)) then return end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-    local sc=sg:Select(tp,1,1,nil):GetFirst()
-    if not sc then return end
 end
