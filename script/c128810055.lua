@@ -14,7 +14,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
 	e2:SetTargetRange(LOCATION_MZONE,0)
 	e2:SetTarget(aux.TargetBoolFunction(Card.IsRace,RACE_FAIRY))
-	e2:SetValue(s.evalue)
+	e2:SetValue(1)
 	c:RegisterEffect(e2)
 	--Search
 	local e3=Effect.CreateEffect(c)
@@ -29,9 +29,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 s.listed_series={0xc02}
-function s.evalue(e,re,rp)
-	return re:IsActiveType(TYPE_Monster) and rp~=e:GetHandlerPlayer()
-end
+
 function s.thcfilter(c,tp)
 	return c:IsType(TYPE_PENDULUM) and c:IsPreviousSetCard(0xc02)
 		and c:IsPreviousControler(tp) and c:IsPreviousPosition(POS_FACEUP)
