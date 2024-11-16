@@ -60,10 +60,10 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chkc then return chkc:IsLocation(LOCATION_ONFIELD) and chkc:IsFaceup() and c:IsControler(tp) and s.filter(chkc,e) end
-	if chk==0 then return e:GetHandler():IsSSetable() and Duel.IsExistingTarget(s.filter,tp,LOCATION_ONFIELD,0,1,nil,e) end
+	if chkc then return chkc:IsLocation(LOCATION_ONFIELD) and chkc:IsFaceup() and c:IsControler(tp) and s.dfilter(chkc,e) end
+	if chk==0 then return e:GetHandler():IsSSetable() and Duel.IsExistingTarget(s.dfilter,tp,LOCATION_ONFIELD,0,1,nil,e) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,s.filter,tp,LOCATION_ONFIELD,0,1,1,nil,e)
+	local g=Duel.SelectTarget(tp,s.dfilter,tp,LOCATION_ONFIELD,0,1,1,nil,e)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,e:GetHandler(),1,0,0)
 end
@@ -76,6 +76,6 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 end
 end
 end
-function s.filter(c,e)
+function s.dfilter(c,e)
 	return c:IsDestructable(e)
 end
