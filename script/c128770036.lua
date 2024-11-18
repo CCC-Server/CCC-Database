@@ -45,11 +45,12 @@ function s.thcon(e, tp, eg, ep, ev, re, r, rp)
 end
 
 -- 패로 되돌릴 대상 선택
+-- 패로 되돌릴 대상 선택 (묘지의 카드를 지정)
 function s.thtg(e, tp, eg, ep, ev, re, r, rp, chk, chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and chkc:IsAbleToHand() end
-	if chk == 0 then return Duel.IsExistingTarget(Card.IsAbleToHand, tp, LOCATION_MZONE, 0, 1, nil) end
+	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and not chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and chkc:IsAbleToHand() end
+	if chk == 0 then return Duel.IsExistingTarget(Card.IsAbleToHand, tp, LOCATION_GRAVE, 0, 1, nil) end
 	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_RTOHAND)
-	local g = Duel.SelectTarget(tp, Card.IsAbleToHand, tp, LOCATION_MZONE, 0, 1, 1, nil)
+	local g = Duel.SelectTarget(tp, Card.IsAbleToHand, tp, LOCATION_GRAVE, 0, 1, 1, nil)
 	Duel.SetOperationInfo(0, CATEGORY_TOHAND, g, 1, 0, 0)
 end
 

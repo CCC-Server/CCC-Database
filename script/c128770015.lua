@@ -3,7 +3,7 @@ function s.initial_effect(c)
 			 Fusion.AddProcMixN(c,true,true,aux.FilterBoolFunctionEx(Card.IsSetCard,0x30d),4)
 	c:EnableReviveLimit()
  local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
+   e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e1:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
@@ -30,11 +30,10 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e3:SetCode(EVENT_SUMMON_SUCCESS)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1,{id,1})
+	e3:SetCountLimit(1,{id,2})
 	e3:SetCondition(s.reccon)
 	e3:SetOperation(s.recop)
 	c:RegisterEffect(e3)
-
 	local e4=e3:Clone()
 	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e4)
@@ -44,16 +43,13 @@ function s.spfilter(c,e,tp)
 		 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE)
 end
 function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
-   if chk==0 then return Duel.GetMZoneCount(tp,e:GetHandler())>0
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_REMOVED+LOCATION_GRAVE,0,1,nil,e,tp) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_GRAVE)
+   if chk==0 then return Duel.GetMZoneCount(tp,e:GetHandler())>1
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_REMOVED+LOCATION_GRAVE,0,2,nil,e,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_REMOVED+LOCATION_GRAVE)
 end
 function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	local ft=math.min(Duel.GetLocationCount(tp,LOCATION_MZONE),2)
-	if ft<1 then return end
-	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local sg=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_HAND+LOCATION_GRAVE,0,1,ft,nil,e,tp)
+	local sg=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_REMOVED+LOCATION_GRAVE,0,2,2,nil,e,tp)
 	local c=e:GetHandler()
 	for tc in sg:Iter() do
 		if Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
@@ -96,9 +92,8 @@ function s.tkop(e, tp, eg, ep, ev, re, r, rp)
 	end
 end
 function s.reccon(e, tp, eg, ep, ev, re, r, rp)
-	return eg:IsExists(function(c) return c:IsControler(tp) and c:IsSetCard(0x30d) end, 1, nil)
+	return eg:IsExists(function(c) return c:IsControler(tp) and c:IsSetCard(0x30d) end, 1, nil) and not eg:IsContains(e:GetHandler())
 end
-
 function s.recop(e, tp, eg, ep, ev, re, r, rp)
 	Duel.Recover(tp, 800, REASON_EFFECT)
 end

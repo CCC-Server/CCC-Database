@@ -7,12 +7,11 @@ function s.initial_effect(c)
 	-- Effect 1: Special summon "M.A" monster from the GY
 	local e1 = Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id, 0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON + CATEGORY_REMOVE)
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetCountLimit(1, id)
 	e1:SetTarget(s.sptarget)
-	e1:SetCost(s.spcost)
 	e1:SetOperation(s.spoperation)
 	c:RegisterEffect(e1)
 
@@ -34,25 +33,25 @@ end
 function s.sptarget(e, tp, eg, ep, ev, re, r, rp, chk, chkc)
 	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and chkc:IsSetCard(0x30d) and chkc:IsMonster() end
 	if chk == 0 then return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0
-		and Duel.IsExistingTarget(aux.NecroValleyFilter(Card.IsMonster, Card.IsSetCard), tp, LOCATION_GRAVE, 0, 1, nil, 0x30d) end
+		and Duel.IsExistingTarget(aux.NecroValleyFilter(Card.IsMonster, Card.IsSetCard), tp, LOCATION_GRAVE, 0, 1, nil, 0x30d) 
+		and Duel.IsExistingMatchingCard(Card.IsAbleToRemove, tp, LOCATION_HAND, 0, 1, nil) end
 	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_SPSUMMON)
 	local g = Duel.SelectTarget(tp, aux.NecroValleyFilter(Card.IsMonster, Card.IsSetCard), tp, LOCATION_GRAVE, 0, 1, 1, nil, 0x30d)
 	Duel.SetOperationInfo(0, CATEGORY_SPECIAL_SUMMON, g, 1, 0, 0)
+	Duel.SetOperationInfo(0, CATEGORY_REMOVE, nil, 1, tp, LOCATION_HAND)
 end
 
--- Effect 1: Cost to banish 1 card from the hand
-function s.spcost(e, tp, eg, ep, ev, re, r, rp, chk)
-	if chk == 0 then return Duel.IsExistingMatchingCard(Card.IsAbleToRemove, tp, LOCATION_HAND, 0, 1, nil) end
-	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_REMOVE)
-	local g = Duel.SelectMatchingCard(tp, Card.IsAbleToRemove, tp, LOCATION_HAND, 0, 1, 1, nil)
-	Duel.Remove(g, POS_FACEUP, REASON_COST)
-end
-
--- Effect 1: Special summon the targeted "M.A" monster
+-- Effect 1: Special summon the targeted "M.A" monster and remove a card from hand
 function s.spoperation(e, tp, eg, ep, ev, re, r, rp)
 	local tc = Duel.GetFirstTarget()
 	if tc and Duel.GetLocationCount(tp, LOCATION_MZONE) > 0 and tc:IsRelateToEffect(e) then
-		Duel.SpecialSummon(tc, 0, tp, tp, false, false, POS_FACEUP)
+		if Duel.SpecialSummon(tc, 0, tp, tp, false, false, POS_FACEUP) ~= 0 then
+			Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_REMOVE)
+			local g = Duel.SelectMatchingCard(tp, Card.IsAbleToRemove, tp, LOCATION_HAND, 0, 1, 1, nil)
+			if #g > 0 then
+				Duel.Remove(g, POS_FACEUP, REASON_EFFECT)
+			end
+		end
 	end
 end
 
@@ -70,10 +69,10 @@ function s.desfilter(c)
 end
 
 function s.destg(e, tp, eg, ep, ev, re, r, rp, chk, chkc)
- if chk == 0 then return Duel.IsExistingTarget(s.desfilter, tp, 0, LOCATION_ONFIELD, 1, nil) end
+	if chkc then return chkc:IsOnField() and chkc:IsControler(1 - tp) and s.desfilter(chkc) end
+	if chk == 0 then return Duel.IsExistingTarget(s.desfilter, tp, 0, LOCATION_ONFIELD, 1, nil) end
 	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_DESTROY)
 	local g = Duel.SelectTarget(tp, s.desfilter, tp, 0, LOCATION_ONFIELD, 1, 1, nil)
-	if chkc then return chkc:IsOnField() and chkc:IsControler(1 - tp) and s.desfilter(chkc) end
 	Duel.SetOperationInfo(0, CATEGORY_DESTROY, g, 1, 0, 0)
 end
 
