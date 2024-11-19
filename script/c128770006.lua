@@ -1,116 +1,91 @@
+--M.A Card
 local s, id = GetID()
 function s.initial_effect(c)
-	-- Enable counter
-	c:EnableCounterPermit(0x250a)
-	
-	-- 효과 ①: "M.A" 몬스터의 공격력 상승 및 사도 카운터 올리기
-	local e1 = Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetCondition(s.counter_condition)
-	e1:SetOperation(s.counter_operation)
-	c:RegisterEffect(e1)
-	
-	local e2 = Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_UPDATE_ATTACK)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetTargetRange(LOCATION_MZONE, 0)
-	e2:SetTarget(s.atk_target)
-	e2:SetValue(400)
-	c:RegisterEffect(e2)
+  --①: Add "M.A" monster from deck to hand (Cannot be negated)
+  local e1 = Effect.CreateEffect(c)
+  e1:SetDescription(aux.Stringid(id, 0))
+  e1:SetCategory(CATEGORY_TOHAND + CATEGORY_SEARCH)
+  e1:SetType(EFFECT_TYPE_IGNITION)
+  e1:SetRange(LOCATION_HAND + LOCATION_MZONE)
+  e1:SetCountLimit(1, id)
+  e1:SetCost(s.thcost)
+  e1:SetTarget(s.thtg)
+  e1:SetOperation(s.thop)
+  e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE + EFFECT_FLAG_UNCOPYABLE)
+  c:RegisterEffect(e1)
 
-	-- 효과 ②: 패에서 "M.A" 몬스터 특수 소환
-	local e3 = Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id, 1))
-	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_IGNITION)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1)
-	e3:SetTarget(s.spsummon_target)
-	e3:SetOperation(s.spsummon_operation)
-	c:RegisterEffect(e3)
-
-	-- 효과 ③: 사도 카운터가 12개일 때 "M.A-백야" 특수 소환
-	local e4 = Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id, 2))
-	e4:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e4:SetType(EFFECT_TYPE_FIELD + EFFECT_TYPE_TRIGGER_O)
-	e4:SetCode(EVENT_PHASE + PHASE_STANDBY)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1)
-	e4:SetCondition(s.special_condition)
-	e4:SetCost(s.special_cost)
-	e4:SetTarget(s.special_target)
-	e4:SetOperation(s.special_operation)
-	c:RegisterEffect(e4)
+  --②: Gain effect when removed from play
+  local e2 = Effect.CreateEffect(c)
+  e2:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
+  e2:SetProperty(EFFECT_FLAG_DELAY + EFFECT_FLAG_CARD_TARGET)
+  e2:SetCode(EVENT_REMOVE)
+  e2:SetCountLimit(1, {id, 1})
+  e2:SetTarget(s.eftg)
+  e2:SetOperation(s.efop)
+  c:RegisterEffect(e2)
 end
 
--- 사도 카운터 코드 및 "M.A" 몬스터 코드 정의
-s.counter_code = 0x250a
-s.ma_set_code = 0x30d
-s.white_night_code = 128770019
-
--- 효과 ①: "M.A" 몬스터의 공격력 상승 및 사도 카운터 올리기
-function s.counter_condition(e, tp, eg, ep, ev, re, r, rp)
-	return eg:IsExists(Card.IsSetCard, 1, nil, s.ma_set_code)
+-- Cost function for sending this card to the Graveyard
+function s.thcost(e, tp, eg, ep, ev, re, r, rp, chk)
+  if chk == 0 then return e:GetHandler():IsAbleToGraveAsCost() end
+  Duel.SendtoGrave(e:GetHandler(), REASON_COST)
 end
 
-function s.counter_operation(e, tp, eg, ep, ev, re, r, rp)
-	local c = e:GetHandler()
-	if c:IsFaceup() and c:GetCounter(s.counter_code) < 12 then
-		c:AddCounter(s.counter_code, 1)
-	end
+-- Target function for adding "M.A" monster to hand
+function s.thtg(e, tp, eg, ep, ev, re, r, rp, chk)
+  if chk == 0 then return Duel.IsExistingMatchingCard(s.thfilter, tp, LOCATION_DECK, 0, 1, nil) end
+  Duel.SetOperationInfo(0, CATEGORY_TOHAND, nil, 1, tp, LOCATION_DECK)
 end
 
-function s.atk_target(e, c)
-	return c:IsSetCard(s.ma_set_code)
+-- Operation function for adding "M.A" monster to hand
+function s.thop(e, tp, eg, ep, ev, re, r, rp)
+  Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_ATOHAND)
+  local g = Duel.SelectMatchingCard(tp, s.thfilter, tp, LOCATION_DECK, 0, 1, 1, nil)
+  if #g > 0 then
+	Duel.SendtoHand(g, nil, REASON_EFFECT)
+	Duel.ConfirmCards(1 - tp, g)
+  end
 end
 
--- 효과 ②: 패에서 "M.A" 몬스터 특수 소환
-function s.spsummon_target(e, tp, eg, ep, ev, re, r, rp, chk)
-	if chk == 0 then return Duel.GetLocationCount(tp, LOCATION_MZONE) > 0
-		and Duel.IsExistingMatchingCard(s.spsummon_filter, tp, LOCATION_HAND, 0, 1, nil, e, tp) end
-	Duel.SetOperationInfo(0, CATEGORY_SPECIAL_SUMMON, nil, 1, tp, LOCATION_HAND)
+-- Filter function for "M.A" monsters
+function s.thfilter(c)
+  return c:IsSetCard(0x30d) and c:IsAbleToHand() and c:IsType(TYPE_MONSTER) 
 end
 
-function s.spsummon_filter(c, e, tp)
-	return c:IsSetCard(s.ma_set_code) and c:IsCanBeSpecialSummoned(e, 0, tp, false, false)
+-- Filter function for "M.A" Fusion monsters
+function s.thfilter2(c)
+  return c:IsSetCard(0x30d) and c:IsType(TYPE_MONSTER) and c:IsType(TYPE_FUSION)
 end
 
-function s.spsummon_operation(e, tp, eg, ep, ev, re, r, rp)
-	if Duel.GetLocationCount(tp, LOCATION_MZONE) <= 0 then return end
-	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_SPSUMMON)
-	local g = Duel.SelectMatchingCard(tp, s.spsummon_filter, tp, LOCATION_HAND, 0, 1, 1, nil, e, tp)
-	if #g > 0 then
-		Duel.SpecialSummon(g, 0, tp, tp, false, false, POS_FACEUP)
-	end
+-- Target function for gaining protection effect
+function s.eftg(e, tp, eg, ep, ev, re, r, rp, chk, chkc)
+  if chkc then return chkc:IsFaceup() and chkc:IsControler(tp) and chkc:IsSetCard(0x30d) and chkc:IsType(TYPE_FUSION) end
+  if chk == 0 then return Duel.IsExistingTarget(aux.FaceupFilter(s.thfilter2), tp, LOCATION_MZONE, 0, 1, nil) end
+  Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_TARGET)
+  local g = Duel.SelectTarget(tp, aux.FaceupFilter(s.thfilter2), tp, LOCATION_MZONE, 0, 1, 1, nil)
+  Duel.SetOperationInfo(0, CATEGORY_ATKCHANGE, g, 1, 0, 0)
 end
 
--- 효과 ③: 사도 카운터가 12개일 때 "M.A-백야" 특수 소환
-function s.special_condition(e, tp, eg, ep, ev, re, r, rp)
-	local c = e:GetHandler()
-	return c:GetCounter(s.counter_code) >= 12
+-- Operation function for gaining protection effect
+function s.efop(e, tp, eg, ep, ev, re, r, rp)
+  local tc = Duel.GetFirstTarget()
+  if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
+	-- Create an effect that protects other "M.A." monsters
+	local e1 = Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
+	e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e1:SetTargetRange(LOCATION_MZONE, 0)
+	e1:SetLabelObject(tc)
+	e1:SetTarget(s.protectfilter)
+	e1:SetValue(aux.tgoval)
+	e1:SetReset(RESET_EVENT + RESETS_STANDARD)
+	Duel.RegisterEffect(e1, tp)
+  end
 end
 
-function s.special_cost(e, tp, eg, ep, ev, re, r, rp, chk)
-	local c = e:GetHandler()
-	if chk == 0 then return c:IsAbleToGraveAsCost() end
-	Duel.SendtoGrave(c, REASON_COST)
+-- Filter function to protect other "M.A." monsters
+function s.protectfilter(e, c)
+ return c:IsSetCard(0x30d) and  c ~= e:GetLabelObject()
 end
 
-function s.special_target(e, tp, eg, ep, ev, re, r, rp, chk)
-	if chk == 0 then return Duel.GetLocationCountFromEx(tp) > 0
-		and Duel.IsExistingMatchingCard(aux.FilterBoolFunction(Card.IsCode, s.white_night_code), tp, LOCATION_EXTRA, 0, 1, nil) end
-	Duel.SetOperationInfo(0, CATEGORY_SPECIAL_SUMMON, nil, 1, tp, LOCATION_EXTRA)
-end
-
-function s.special_operation(e, tp, eg, ep, ev, re, r, rp)
-	Duel.Hint(HINT_SELECTMSG, tp, HINTMSG_SPSUMMON)
-	local white_night = Duel.SelectMatchingCard(tp, aux.FilterBoolFunction(Card.IsCode, s.white_night_code), tp, LOCATION_EXTRA, 0, 1, 1, nil):GetFirst()
-	if white_night then
-		Duel.SpecialSummon(white_night, SUMMON_TYPE_SPECIAL, tp, tp, false, false, POS_FACEUP)
-		white_night:CompleteProcedure()
-	end
-end

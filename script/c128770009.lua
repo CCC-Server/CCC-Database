@@ -70,7 +70,7 @@ function sdesopgogi(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.tgfilter(c)
-	return c:IsSetCard(0x30d) and not c:IsCode(id) and c:IsAbleToGrave()
+	return c:IsSetCard(0x30d) and c:IsType(TYPE_MONSTER) and not c:IsCode(id) and c:IsAbleToGrave()
 end
 function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
