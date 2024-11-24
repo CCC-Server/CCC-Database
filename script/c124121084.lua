@@ -45,9 +45,13 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		local g=Duel.SelectMatchingCard(tp,s.spcostfilter,tp,LOCATION_ONFIELD+LOCATION_HAND,0,1,1,nil,tp)
 		Duel.SendtoGrave(g,REASON_COST)
 	end
-	--On Activate
-	if Duel.SelectYesNo(tp,94) then
+	--On Activate (temporary)
+	local e2=label_obj:GetLabelObject()
+	co=e2:GetCost() or aux.TRUE
+	tg=e2:GetTarget() or aux.TRUE
+	if co(e,tp,eg,ep,ev,re,r,rp,0) and tg(e,tp,eg,ep,ev,re,r,rp,0) and Duel.SelectYesNo(tp,94) then
 		Effect.UseCountLimit(label_obj:GetLabelObject(),tp)
+		co(e,tp,eg,ep,ev,re,r,rp,1)
 		e:SetTarget(s.sptg)
 		e:SetOperation(s.spop)
 	else
