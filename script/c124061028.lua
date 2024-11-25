@@ -34,7 +34,8 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local tg=aux.SelectUnselectGroup(g,e,tp,2,2,aux.dncheck,1,tp,HINTMSG_TOFIELD)
 	if #tg~=2 or Duel.SSet(tp,tg)==0 then return end
 	local sg=tg:Filter(Card.IsLocation,nil,LOCATION_SZONE)
-	for tc in aux.Next(tg) do
+	Duel.ConfirmCards(1-tp,sg)
+	for tc in aux.Next(sg) do
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		if tc:IsTrap() then

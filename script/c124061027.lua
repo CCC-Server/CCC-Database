@@ -42,6 +42,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
 	if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEDOWN_DEFENSE)>0 then
+		Duel.ConfirmCards(1-tp,tc)
 		local yesno=Duel.SelectYesNo(tp,aux.Stringid(id,0))
 		local pos=0
 		if yesno then
