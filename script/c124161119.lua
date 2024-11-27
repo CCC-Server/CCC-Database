@@ -60,21 +60,6 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --effect 2
-function s.cst2filter(c)
-	return (c:IsFacedown() or c:IsSetCard(0xf2a)) and c:IsType(TYPE_XYZ)
-end
-
-function s.cst2(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Group.CreateGroup()
-	local xg=Duel.GetMatchingGroup(s.cst2filter,tp,LOCATION_MZONE,0,nil)
-	for tc in aux.Next(xg) do
-		g:Merge(tc:GetOverlayGroup())
-	end
-	if chk==0 then return #g>0 end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_REMOVEXYZ)
-	Duel.SendtoGrave(sg,REASON_COST)
-end
-
 function s.tg2filter(c,e)
 	return c:IsType(TYPE_TUNER) and c:IsCanBeEffectTarget(e) 
 end
