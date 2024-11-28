@@ -47,27 +47,12 @@ end
 function s.con(e,tp,eg,ep,ev,re,r,rp)
 	local mft={Duel.GetLocationCount(tp,LOCATION_MZONE),Duel.GetLocationCountFromEx(tp),Duel.GetUsableMZoneCount(tp)}
 	local sft=Duel.GetLocationCount(tp,LOCATION_SZONE)
-	--Create card
-	local opt1=true
-	--To field
-	local opt2=Duel.IsExistingMatchingCard(s.filter,tp,0x73,0,1,nil,e,tp,mft,sft)
-	return (opt1 or opt2)
+	return Duel.IsExistingMatchingCard(s.filter,tp,0x73,0,1,nil,e,tp,mft,sft)
 end
 function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local mft={Duel.GetLocationCount(tp,LOCATION_MZONE),Duel.GetLocationCountFromEx(tp),Duel.GetUsableMZoneCount(tp)}
 	local sft=Duel.GetLocationCount(tp,LOCATION_SZONE)
-	--Create card
-	local opt1=true
-	--To field
-	local opt2=Duel.IsExistingMatchingCard(s.filter,tp,0x73,0,1,nil,e,tp,mft,sft)
-	if not (opt1 or opt2) then return end
-	local op=Duel.SelectEffect(tp,
-		{opt1,aux.Stringid(id,0)},
-		{opt2,aux.Stringid(id,1)})
-	if op==1 then
-		--나중에 구현!
-		Duel.TossCoin(tp,1)
-	else
+	if Duel.IsExistingMatchingCard(s.filter,tp,0x73,0,1,nil,e,tp,mft,sft) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 		local tc=Duel.SelectMatchingCard(tp,s.filter,tp,0x73,0,1,1,nil,e,tp,mft,sft):GetFirst()
 		local b1=tc:IsMonster() and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and s.mftfilter(tc,table.unpack(mft))
@@ -75,16 +60,16 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		local b3=sft>0 and tc:IsContinuousSpellTrap() and not tc:IsForbidden() and tc:CheckUniqueOnField(tp)
 		local b4=(tc:IsMonster() and tc:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE) and s.mftfilter(tc,table.unpack(mft)))
 			or ((tc:IsFieldSpell() or (sft>0 and tc:IsSpellTrap())) and tc:IsSSetable())
-		local op2=Duel.SelectEffect(tp,
-			{b1,aux.Stringid(id,2)},
-			{b2,aux.Stringid(id,3)},
-			{b3,aux.Stringid(id,4)},
-			{b4,aux.Stringid(id,5)})
-		if op2==1 then
+		local op=Duel.SelectEffect(tp,
+			{b1,aux.Stringid(id,0)},
+			{b2,aux.Stringid(id,1)},
+			{b3,aux.Stringid(id,2)},
+			{b4,aux.Stringid(id,3)})
+		if op==1 then
 			Duel.SpecialSummon(tc,0,tp,tp,true,false,POS_FACEUP)
-		elseif op2==2 then
+		elseif op==2 then
 			Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
-		elseif op2==3 then
+		elseif op==3 then
 			Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 		else
 			if tc:IsMonster() then
