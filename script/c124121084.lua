@@ -54,6 +54,7 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		co(e,tp,eg,ep,ev,re,r,rp,1)
 		e:SetTarget(s.sptg)
 		e:SetOperation(s.spop)
+		e:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	else
 		e:SetTarget(aux.TRUE)
 		e:SetOperation(aux.TRUE)
