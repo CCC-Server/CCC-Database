@@ -17,7 +17,7 @@ function s.flipop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_CARD,tp,id)
 	local c=e:GetHandler()
 	if Duel.GetFlagEffect(tp,id)==0 then
-		--Create catd & To field
+		--To field
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 		e1:SetCode(EVENT_FREE_CHAIN)
@@ -37,7 +37,9 @@ function s.mftfilter(c,mft1,mft2,mft3)
 end
 function s.filter(c,e,tp,mft,sft)
 	if c:IsLocation(LOCATION_REMOVED) and c:IsFacedown() then return false end
-	local b1=c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,true,false) and s.mftfilter(c,table.unpack(mft))
+	local b1=c:IsMonster() and s.mftfilter(c,table.unpack(mft))
+		and ((c:IsSummonableCard() and c:IsCanBeSpecialSummoned(e,0,tp,true,false))
+			or (not c:IsSummonableCard() and c:IsCanBeSpecialSummoned(e,0,tp,true,true)))
 	local b2=(c:IsFieldSpell() or (sft>0 and c:IsContinuousSpellTrap()))
 		and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 	local b3=(c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE) and s.mftfilter(c,table.unpack(mft)))
@@ -55,21 +57,28 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.IsExistingMatchingCard(s.filter,tp,0x73,0,1,nil,e,tp,mft,sft) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 		local tc=Duel.SelectMatchingCard(tp,s.filter,tp,0x73,0,1,1,nil,e,tp,mft,sft):GetFirst()
-		local b1=tc:IsMonster() and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and s.mftfilter(tc,table.unpack(mft))
-		local b2=tc:IsFieldSpell() and not tc:IsForbidden() and tc:CheckUniqueOnField(tp)
-		local b3=sft>0 and tc:IsContinuousSpellTrap() and not tc:IsForbidden() and tc:CheckUniqueOnField(tp)
-		local b4=(tc:IsMonster() and tc:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE) and s.mftfilter(tc,table.unpack(mft)))
+		local b1=tc:IsMonster() and s.mftfilter(tc,table.unpack(mft)) and tc:IsSummonableCard() and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
+		local b2=tc:IsMonster() and s.mftfilter(tc,table.unpack(mft)) and not tc:IsSummonableCard() and tc:IsCanBeSpecialSummoned(e,0,tp,true,true)
+		local b3=tc:IsFieldSpell() and not tc:IsForbidden() and tc:CheckUniqueOnField(tp)
+		local b4=sft>0 and tc:IsContinuousSpellTrap() and not tc:IsForbidden() and tc:CheckUniqueOnField(tp)
+		local b5=(tc:IsMonster() and tc:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE) and s.mftfilter(tc,table.unpack(mft)))
 			or ((tc:IsFieldSpell() or (sft>0 and tc:IsSpellTrap())) and tc:IsSSetable())
 		local op=Duel.SelectEffect(tp,
 			{b1,aux.Stringid(id,0)},
 			{b2,aux.Stringid(id,1)},
 			{b3,aux.Stringid(id,2)},
-			{b4,aux.Stringid(id,3)})
+			{b4,aux.Stringid(id,3)},
+			{b5,aux.Stringid(id,4)})
 		if op==1 then
 			Duel.SpecialSummon(tc,0,tp,tp,true,false,POS_FACEUP)
 		elseif op==2 then
-			Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+			local ct=Duel.SpecialSummon(tc,0,tp,tp,true,true,POS_FACEUP)
+			if ct>0 then
+				tc:CompleteProcedure()
+			end
 		elseif op==3 then
+			Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+		elseif op==4 then
 			Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 		else
 			if tc:IsMonster() then
