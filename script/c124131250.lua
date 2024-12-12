@@ -60,14 +60,17 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
             end
         end
     else
-        local g=Duel.GetDecktopGroup(tp,7)
-        Duel.ConfirmCards(tp,g)
-        if #g>0 then
-            local sg=g:FilterSelect(tp,function(c) return c:IsCode(124131244) or (c:ListsCode(124131244) and c:GetType()==TYPE_SPELL) end,1,1,nil)
-            if #sg>0 then
-                Duel.SSet(tp,sg:GetFirst())
+        if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=7 then
+            Duel.ConfirmDecktop(tp,7)
+            local g=Duel.GetDecktopGroup(tp,7)
+            Duel.ConfirmCards(1-tp,g)
+            if #g>0 then
+                local sg=g:FilterSelect(tp,function(c) return c:IsCode(124131244) or (c:ListsCode(124131244) and c:GetType()==TYPE_SPELL) end,1,1,nil)
+                if #sg>0 then
+                    Duel.SSet(tp,sg:GetFirst())
+                end
+                Duel.ShuffleDeck(tp)
             end
-            Duel.ShuffleDeck(tp)
         end
     end
 end
