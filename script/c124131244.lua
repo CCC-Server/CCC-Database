@@ -78,7 +78,8 @@ function s.banop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.GetMatchingGroupCount(Card.IsType,tp,LOCATION_REMOVED,0,nil,TYPE_SPELL)>=7
+    local g=Duel.GetMatchingGroup(Card.IsType,tp,LOCATION_REMOVED,0,nil,TYPE_SPELL)
+    return g:GetClassCount(Card.GetCode)==7
 end
 
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
