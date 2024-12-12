@@ -1,4 +1,3 @@
---앙크의 목걸이
 local s,id=GetID()
 function s.initial_effect(c)
     -- Activate
@@ -28,8 +27,14 @@ end
 s.listed_names={124131244}
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_DECK,0,1,nil) end
-    local op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    local deckCount = Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)
+    if chk==0 then return deckCount >= 3 end
+    local op
+    if deckCount < 7 then
+        op=0
+    else
+        op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    end
     e:SetLabel(op)
     if op==0 then
         Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,3,tp,LOCATION_DECK)
@@ -40,7 +45,8 @@ end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    if e:GetLabel()==0 then
+    local op = e:GetLabel()
+    if op==0 then
         if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=3 then
             Duel.ConfirmDecktop(tp,3)
             local g=Duel.GetDecktopGroup(tp,3)

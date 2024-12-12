@@ -28,8 +28,14 @@ end
 s.listed_names={124131244}
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,2) or Duel.IsPlayerCanDiscardDeck(tp,7) end
-    local op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    local deckCount = Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)
+    if chk==0 then return deckCount > 1 end
+    local op=0
+    if deckCount < 7 then
+        op=0
+    else
+        op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    end
     e:SetLabel(op)
     if op==0 then
         Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,2,tp,LOCATION_DECK)
@@ -39,26 +45,29 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-    if e:GetLabel()==0 then
+    local c=e:GetHandler()
+    local op = e:GetLabel()
+    if op==0 then
         if Duel.DiscardDeck(tp,2,REASON_EFFECT) then
-            if Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_FZONE,0,1,nil,124131244) and Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_GRAVE,0,2,nil) then
-                if Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
-                    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-                    local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,LOCATION_GRAVE,0,2,2,nil)
-                    Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
+            if Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_FZONE,0,1,nil,124131244) then
+                if Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_GRAVE,0,2,nil) then
+                    if Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+                        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+                        local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,LOCATION_GRAVE,0,2,2,nil)
+                        Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
+                    end
                 end
             end
         end
     else
-        if Duel.DiscardDeck(tp,7,REASON_EFFECT) then
-            local g=Duel.GetDecktopGroup(tp,7)
-            if #g>0 then
-                local sg=g:FilterSelect(tp,function(c) return c:IsCode(124131244) or (c:ListsCode(124131244) and c:GetType()==TYPE_SPELL) end,1,1,nil)
-                if #sg>0 then
-                    Duel.SSet(tp,sg:GetFirst())
-                end
-                Duel.ShuffleDeck(tp)
+        local g=Duel.GetDecktopGroup(tp,7)
+        Duel.ConfirmCards(tp,g)
+        if #g>0 then
+            local sg=g:FilterSelect(tp,function(c) return c:IsCode(124131244) or (c:ListsCode(124131244) and c:GetType()==TYPE_SPELL) end,1,1,nil)
+            if #sg>0 then
+                Duel.SSet(tp,sg:GetFirst())
             end
+            Duel.ShuffleDeck(tp)
         end
     end
 end

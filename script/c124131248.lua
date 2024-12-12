@@ -28,8 +28,17 @@ end
 s.listed_names={124131244}
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND,0,1,nil) end
-    local op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    local b1=Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND,0,1,nil) and Duel.GetFieldGroupCount(tp,0,LOCATION_HAND)>0
+    local b2=Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=7
+    if chk==0 then return b1 or b2 end
+    local op=0
+    if b1 and b2 then
+        op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    elseif b1 then
+        op=Duel.SelectOption(tp,aux.Stringid(id,0))
+    else
+        op=Duel.SelectOption(tp,aux.Stringid(id,1))+1
+    end
     e:SetLabel(op)
     if op==0 then
         Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,1,1-tp,LOCATION_HAND)
@@ -46,12 +55,10 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         local g=Duel.GetFieldGroup(tp,0,LOCATION_HAND):RandomSelect(tp,ct)
         if #g>0 then
             Duel.ConfirmCards(tp,g)
-            if Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_FZONE,0,1,nil,124131244) then
+            local tg=Duel.GetMatchingGroup(Card.IsFacedown,tp,0,LOCATION_ONFIELD,nil)
+            if Duel.IsExistingMatchingCard(Card.IsCode,tp,LOCATION_FZONE,0,1,nil,124131244) and #tg>0 then
                 if Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
-                    local tg=Duel.GetMatchingGroup(Card.IsFacedown,tp,0,LOCATION_ONFIELD,nil)
-                    if #tg>0 then
-                        Duel.ConfirmCards(tp,tg)
-                    end
+                    Duel.ConfirmCards(tp,tg)
                 end
             end
         end

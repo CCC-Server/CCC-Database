@@ -1,4 +1,3 @@
---앙크의 링
 local s,id=GetID()
 function s.initial_effect(c)
     -- Activate
@@ -26,8 +25,13 @@ function s.initial_effect(c)
 end
 s.listed_names={124131244, 124131252}
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_DECK,0,1,nil) end
-    local op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_DECK,0,1,nil) and Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>0 end
+    local op=0
+    if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)<7 then
+        op=0
+    else
+        op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    end
     e:SetLabel(op)
     if op==0 then
         Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,tp,LOCATION_DECK)

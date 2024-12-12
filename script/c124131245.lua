@@ -32,30 +32,31 @@ function s.fusfilter(c)
     return c:IsCanBeFusionMaterial() and c:IsAbleToGrave()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil) end
+    local b1=Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,e:GetHandler())
+    local b2=Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=7
+    if chk==0 then return b1 or b2 end
+    if not b1 and not b2 then return false end
+    if not b1 then
+        e:SetLabel(1)
+    elseif not b2 then
+        e:SetLabel(0)
+    else
+        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EFFECT)
+        e:SetLabel(Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1)))
+    end
+    if e:GetLabel()==0 then
+        Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_HAND+LOCATION_ONFIELD)
+        Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
+    else
+        Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,7,tp,LOCATION_DECK)
+    end
 end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
-    local c=e:GetHandler()
-    local b1=Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil)
-    local b2=Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=7
-    if not (b1 or b2) then return end
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EFFECT)
-    local sel=0
-    if b1 and b2 then
-        sel=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
-    elseif b1 then
-        sel=Duel.SelectOption(tp,aux.Stringid(id,0))
-    else
-        sel=Duel.SelectOption(tp,aux.Stringid(id,1))+1
-    end
-    if sel==0 then
-        -- 자신의 패 / 필드에서 카드를 1장 묘지로 보내고, 자신은 1장 드로우한다.
-        if Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,e:GetHandler())
-            and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-            Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-            local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,e:GetHandler())
-            if Duel.SendtoGrave(g,REASON_EFFECT)~=0 and Duel.Draw(tp,1,REASON_EFFECT)~=0
-                and Duel.IsExistingMatchingCard(function(c) return c:IsCode(124131244) and c:IsFaceup() end,tp,LOCATION_FZONE,0,1,nil) then
+    if e:GetLabel()==0 then
+        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+        local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,e:GetHandler())
+        if Duel.SendtoGrave(g,REASON_EFFECT)~=0 and Duel.Draw(tp,1,REASON_EFFECT)~=0 then
+            if Duel.IsExistingMatchingCard(function(c) return c:IsCode(124131244) and c:IsFaceup() end,tp,LOCATION_FZONE,0,1,nil) then
                 if Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
                     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
                     local sg=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
@@ -66,8 +67,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
                 end
             end
         end
-    elseif sel==1 then
-        -- 자신의 덱 위에서 카드를 7장 넘긴다. 그 중에서 "앙크의 석판" 또는 그 카드명이 쓰여진 일반 마법 카드 1장을 자신 필드에 세트할 수 있다.
+    elseif e:GetLabel()==1 then
         if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=7 then
             Duel.ConfirmDecktop(tp,7)
             local g=Duel.GetDecktopGroup(tp,7)
@@ -91,5 +91,4 @@ function s.banop(e,tp,eg,ep,ev,re,r,rp)
     if c:IsRelateToEffect(e) then
         Duel.Remove(c,POS_FACEUP,REASON_EFFECT)
     end
-
 end

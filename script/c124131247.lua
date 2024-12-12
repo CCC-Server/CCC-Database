@@ -1,4 +1,3 @@
---앙크의 지팡이
 local s,id=GetID()
 function s.initial_effect(c)
     -- Activate
@@ -28,12 +27,23 @@ end
 s.listed_names={124131244}
 
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,nil) end
-    local op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,LOCATION_DECK,0,1,nil) and Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>0 end
+    local b1=Duel.IsExistingMatchingCard(aux.NecroValleyFilter(Card.IsAbleToRemove),tp,LOCATION_GRAVE,LOCATION_GRAVE,1,nil)
+    local b2=Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)>=7
+    local op=0
+    if not b1 and not b2 then
+        return false
+    elseif not b1 then
+        op=1
+    elseif not b2 then
+        op=0
+    else
+        op=Duel.SelectOption(tp,aux.Stringid(id,0),aux.Stringid(id,1))
+    end
     e:SetLabel(op)
     if op==0 then
         Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,tp,LOCATION_GRAVE)
-    else
+    elseif op==1 then
         Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,7,tp,LOCATION_DECK)
     end
 end
@@ -45,10 +55,12 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(Card.IsAbleToRemove),tp,LOCATION_GRAVE,LOCATION_GRAVE,1,1,nil)
         if #g>0 and Duel.Remove(g,POS_FACEUP,REASON_EFFECT)~=0 
             and Duel.IsExistingMatchingCard(function(c) return c:IsCode(124131244) and c:IsFaceup() end,tp,LOCATION_FZONE,0,1,nil) then
-            if Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
-                local tg=Duel.SelectMatchingCard(tp,s.filter2,tp,0,LOCATION_MZONE,1,1,nil)
-                if #tg>0 then
-                    Duel.GetControl(tg,tp,PHASE_END,1)
+            local tg=Duel.GetMatchingGroup(s.filter2,tp,0,LOCATION_MZONE,nil)
+            if #tg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+                Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
+                local sg=tg:Select(tp,1,1,nil)
+                if #sg>0 then
+                    Duel.GetControl(sg,tp,PHASE_END,1)
                 end
             end
         end
