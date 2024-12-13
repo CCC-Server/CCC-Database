@@ -83,7 +83,7 @@ function s.immval(e,te)
 end
 
 function s.adval(e,c)
-    local g=Duel.GetMatchingGroup(Card.IsListCode,c:GetControler(),LOCATION_REMOVED,0,nil,124131244)
+    local g=Duel.GetMatchingGroup(Card.ListsCode,c:GetControler(),LOCATION_REMOVED,0,nil,124131244)
     return g:GetClassCount(Card.GetCode)*1000
 end
 
