@@ -41,7 +41,7 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.RegisterEffect(e1,tp)
 end
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return re and re:GetHandler():IsSetCard(0xc03)
+	return re and re:GetHandler():IsSetCard(0xc03) and r&REASON_EFFECT==REASON_EFFECT
 end
 function s.setfilter(c)
 	return c:IsSetCard(0xc03) and c:IsSpellTrap()
