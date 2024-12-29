@@ -20,6 +20,9 @@ function s.initial_effect(c)
 	e2:SetCondition(s.immcon)
 	e2:SetOperation(s.immop)
 	c:RegisterEffect(e2)
+	local e3=e2:Clone()
+	e3:SetOperation(s.immop2)
+	c:RegisterEffect(e3)
 end
 s.listed_series={0xc03}
 function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -47,7 +50,7 @@ function s.immop(e,tp,eg,ep,ev,re,r,rp)
 	local rc=c:GetReasonCard()
 	--Unaffected by spell effects
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(3102|3103)
+	e1:SetDescription(3102)
 	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_IMMUNE_EFFECT)
@@ -56,5 +59,21 @@ function s.immop(e,tp,eg,ep,ev,re,r,rp)
 	rc:RegisterEffect(e1)
 end
 function s.efilter(e,te)
-	return te:IsActiveType(TYPE_SPELL|TYPE_TRAP)
+	return te:IsActiveType(TYPE_SPELL)
+end
+function s.immop2(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local rc=c:GetReasonCard()
+	--Unaffected by spell effects
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(3103)
+	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_IMMUNE_EFFECT)
+	e1:SetValue(s.efilter2)
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	rc:RegisterEffect(e1)
+end
+function s.efilter2(e,te)
+	return te:IsActiveType(TYPE_TRAP)
 end
