@@ -1,4 +1,6 @@
--- 저승사자 기안 (Reaper Draft)
+-- 저승사자 기안
+-- Draft the Emissary of Darkness
+Duel.LoadScript("archetype_seonalae.lua")
 local s,id=GetID()
 function s.initial_effect(c)
     -- Level Change
@@ -25,7 +27,7 @@ function s.initial_effect(c)
     e2:SetOperation(s.tgop)
     c:RegisterEffect(e2)
 end
-
+s.listed_series={ARCHETYPE_EMISSARY_OF_DARKNESS}
 function s.lvtg(e,tp,eg,ep,ev,re,r,rp,chk)
     local c=e:GetHandler()
     if chk==0 then return c:HasLevel() end
@@ -54,7 +56,7 @@ function s.tgcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.tgfilter(c)
-    return c:IsSetCard(0x823) and c:IsAbleToGrave()
+    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsAbleToGrave()
 end
 
 function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)

@@ -1,8 +1,8 @@
 --저승사자의 분신
---Nether Reaper's Clone
+--Emissary of Darkness' Double
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Special Summon "저승사자 토큰"
+    -- Special Summon "Emissary of Darkness' Double Token"
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN+CATEGORY_DAMAGE)
@@ -13,7 +13,7 @@ function s.initial_effect(c)
     e1:SetTarget(s.sptg)
     e1:SetOperation(s.spop)
     c:RegisterEffect(e1)
-    -- Normal Summon "사신 아바타", "사신 이레이저", "사신 드레드루트"
+    -- Normal Summon "The Wicked Avater", "The Wicked Eraser", "The Wicked Dreadroot"
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_SUMMON)
@@ -25,13 +25,12 @@ function s.initial_effect(c)
     e2:SetOperation(s.nsop)
     c:RegisterEffect(e2)
 end
-
+-- Special Summon "Emissary of Darkness' Double Token"
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.CheckReleaseGroupCost(tp,Card.IsType,1,false,nil,nil,TYPE_SYNCHRO) end
     local g=Duel.SelectReleaseGroupCost(tp,Card.IsType,1,1,false,nil,nil,TYPE_SYNCHRO)
     Duel.Release(g,REASON_COST)
 end
-
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>3
         and Duel.IsPlayerCanSpecialSummonMonster(tp,124131270,0x823,TYPES_TOKEN,0,0,1,RACE_FIEND,ATTRIBUTE_DARK) end
@@ -39,7 +38,6 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,4,tp,0)
     Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,tp,800)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<4 or not Duel.IsPlayerCanSpecialSummonMonster(tp,124131270,0x823,TYPES_TOKEN,0,0,1,RACE_FIEND,ATTRIBUTE_DARK) then return end
     for i=1,4 do
@@ -59,20 +57,17 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
     e1:SetReset(RESET_PHASE+PHASE_END)
     Duel.RegisterEffect(e1,tp)
 end
-
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
     return c:IsLocation(LOCATION_EXTRA) and not (c:IsAttribute(ATTRIBUTE_DARK) and c:IsType(TYPE_SYNCHRO))
 end
-
+-- Normal Summon "The Wicked Avater", "The Wicked Eraser", "The Wicked Dreadroot"
 function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_SUMMON,nil,1,0,0)
 end
-
 function s.nsfilter(c)
     return c:IsCode(62180201) or c:IsCode(21208154) or c:IsCode(57793869)
 end
-
 function s.nsop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
     local g=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)

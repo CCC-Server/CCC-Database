@@ -41,20 +41,17 @@ function s.initial_effect(c)
     e3:SetOperation(s.rmop)
     c:RegisterEffect(e3)
 end
-
+--Inflict damage when Synchro Summoned
 function s.damtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return true end
-    Duel.SetTargetPlayer(1-tp)
-    Duel.SetTargetParam(1000)
-    Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,1000)
-    Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,tp,1000)
+    Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,PLAYER_ALL,1000)
 end
 function s.damop(e,tp,eg,ep,ev,re,r,rp)
-    local p1=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER)
-    Duel.Damage(p1,1000,REASON_EFFECT)
-    Duel.Damage(tp,1000,REASON_EFFECT)
+    Duel.Damage(1-tp,1000,REASON_EFFECT,true)
+	Duel.Damage(tp,1000,REASON_EFFECT,true)
+	Duel.RDComplete()
 end
-
+--Destroy opponent's card when taking damage
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
     return ep==tp
 end
@@ -70,7 +67,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
         Duel.Destroy(g,REASON_EFFECT)
     end
 end
-
+--Banish card from opponent's GY
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
     return not Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 end

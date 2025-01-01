@@ -1,7 +1,9 @@
--- 저승사자 키나 (Reaper Kina)
+-- 저승사자 키나
+-- Kina the Emissary of Darkness
+Duel.LoadScript("archetype_seonalae.lua")
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Add "저승사자" Spell/Trap from Deck to hand
+    -- Add "Emissary of Darkness" Spell/Trap from Deck to hand
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -29,16 +31,15 @@ function s.initial_effect(c)
     e3:SetOperation(s.spop)
     c:RegisterEffect(e3)
 end
-
+s.listed_series={ARCHETYPE_EMISSARY_OF_DARKNESS}
+-- Add "Emissary of Darkness" Spell/Trap from Deck to hand
 function s.thfilter(c)
-    return c:IsSetCard(0x823) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsAbleToHand()
+    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsAbleToHand()
 end
-
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
     Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
-
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
     local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
@@ -47,21 +48,18 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
         Duel.ConfirmCards(1-tp,g)
     end
 end
-
+-- Special Summon from hand or Graveyard
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
     return ep==tp and (r&REASON_BATTLE+REASON_EFFECT)~=0
 end
-
 function s.spfilter(c,e,tp)
-    return c:IsSetCard(0x823) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
-
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
         and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,nil,e,tp) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_GRAVE)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
@@ -80,7 +78,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
         Duel.RegisterEffect(e1,tp)
     end
 end
-
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
     return c:IsLocation(LOCATION_EXTRA) and not (c:IsAttribute(ATTRIBUTE_DARK) and c:IsType(TYPE_SYNCHRO))
 end

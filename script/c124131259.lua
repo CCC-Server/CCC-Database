@@ -26,7 +26,7 @@ function s.initial_effect(c)
     e3:SetOperation(s.nsop)
     c:RegisterEffect(e3)
 end
-
+-- Special Summon from hand
 function s.spcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
@@ -37,19 +37,17 @@ end
 function s.cfilter(c)
 	return c:IsFacedown() or not c:IsRace(RACE_FIEND)
 end
-
-
+-- Cannot attack
 function s.atfilter(c)
 	return c:IsFacedown() or not c:IsRace(RACE_FIEND)
 end
 function s.atcon(e)
 	return Duel.IsExistingMatchingCard(s.atfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
 end
-
+-- Additional Normal Summon
 function s.nscon(e,tp,eg,ep,ev,re,r,rp)
     return ep==tp and (r&REASON_BATTLE+REASON_EFFECT)~=0
 end
-
 function s.nsop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetFlagEffect(tp,id)>0 then return end
     Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,0,1)

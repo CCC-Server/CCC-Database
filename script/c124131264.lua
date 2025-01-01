@@ -38,7 +38,7 @@ function s.initial_effect(c)
     e3:SetOperation(s.rmop)
     c:RegisterEffect(e3)
 end
-
+--Special Summon from graveyard
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter),tp,LOCATION_GRAVE,0,1,nil,e,tp) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
@@ -60,7 +60,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
         Duel.Damage(tp,1000,REASON_EFFECT)
     end
 end
-
+--Increase ATK
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
     return ep==tp and (r&REASON_BATTLE+REASON_EFFECT)~=0
 end
@@ -76,7 +76,7 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
         c:RegisterEffect(e1)
     end
 end
-
+--Banish from graveyard
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
     return not Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 end

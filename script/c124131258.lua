@@ -24,11 +24,10 @@ function s.initial_effect(c)
     e2:SetOperation(s.lvop)
     c:RegisterEffect(e2)
 end
-
+-- Special Summon from Graveyard
 function s.spfilter(c,e,tp)
     return c:IsLevelBelow(4) and c:IsRace(RACE_FIEND) and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE)
 end
-
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.spfilter(chkc,e,tp) end
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
@@ -37,25 +36,22 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     local tc=Duel.GetFirstTarget()
     if tc and tc:IsRelateToEffect(e) then
         Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
     end
 end
-
+-- Level Change
 function s.lvfilter(c)
     return c:IsLevelBelow(4) and c:IsRace(RACE_FIEND) and c:IsFaceup()
 end
-
 function s.lvtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.lvfilter(chkc) end
     if chk==0 then return Duel.IsExistingTarget(s.lvfilter,tp,LOCATION_MZONE,0,1,nil) end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
     Duel.SelectTarget(tp,s.lvfilter,tp,LOCATION_MZONE,0,1,1,nil)
 end
-
 function s.lvop(e,tp,eg,ep,ev,re,r,rp)
     local tc=Duel.GetFirstTarget()
     if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then

@@ -38,7 +38,7 @@ function s.initial_effect(c)
     e3:SetOperation(s.rmop)
     c:RegisterEffect(e3)
 end
-
+--Add Level 7 or higher Fiend monster from GY to hand and Normal Summon
 function s.spfilter(c)
     return c:IsLevelAbove(7) and c:IsRace(RACE_FIEND) and c:IsAbleToHand()
 end
@@ -61,7 +61,7 @@ function s.summonop(e,tp,eg,ep,ev,re,r,rp)
         end
     end
 end
-
+--Add Fiend monster from GY to hand when taking damage
 function s.spfilter2(c)
     return c:IsRace(RACE_FIEND) and c:IsAbleToHand()
 end
@@ -76,7 +76,7 @@ function s.addhandop(e,tp,eg,ep,ev,re,r,rp)
         Duel.ConfirmCards(1-tp,g)
     end
 end
-
+--Banish card from opponent's GY
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
     return not Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 end

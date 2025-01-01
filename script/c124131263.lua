@@ -1,5 +1,5 @@
 -- 저승사자 키시
--- Reaper Kishi
+-- Kishi the Emissary of Darkness
 local s,id=GetID()
 function s.initial_effect(c)
     --synchro summon
@@ -41,7 +41,7 @@ function s.initial_effect(c)
     e3:SetOperation(s.graveop)
     c:RegisterEffect(e3)
 end
-
+--Synchro summon during opponent's main phase
 function s.sccon(e,tp,eg,ep,ev,re,r,rp)
     return Duel.GetTurnPlayer()~=tp and (Duel.GetCurrentPhase()==PHASE_MAIN1 or Duel.GetCurrentPhase()==PHASE_MAIN2)
 end
@@ -59,7 +59,7 @@ function s.scop(e,tp,eg,ep,ev,re,r,rp)
         Duel.SynchroSummon(tp,sg:GetFirst(),c)
     end
 end
-
+--Banish up to 3 cards from opponent's graveyard
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
     return ep==tp and (r&REASON_BATTLE+REASON_EFFECT)~=0
 end
@@ -76,7 +76,7 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
         Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)
     end
 end
-
+--Banish 1 card from opponent's graveyard
 function s.gravecon(e,tp,eg,ep,ev,re,r,rp)
     return not Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
 end

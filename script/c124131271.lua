@@ -1,5 +1,5 @@
 --저승사자의 낫
---Nether Reaper's Scythe
+--Emissary of Darkness' Scythe
 local s,id=GetID()
 function s.initial_effect(c)
     --Banish cards from opponent's Graveyard
@@ -25,6 +25,7 @@ function s.initial_effect(c)
     e2:SetOperation(s.gyop)
     c:RegisterEffect(e2)
 end
+--Banish cards from opponent's Graveyard
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
     return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsRace,RACE_FIEND),tp,LOCATION_MZONE,0,1,nil)
 end
@@ -46,6 +47,7 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
         Duel.Damage(tp,500,REASON_EFFECT)
     end
 end
+--Prevent activation from Graveyard
 function s.gycon(e,tp,eg,ep,ev,re,r,rp)
     return Duel.IsExistingMatchingCard(s.atchk2,tp,LOCATION_MZONE,0,1,nil)
         and Duel.IsExistingMatchingCard(Card.IsLevelAbove,tp,LOCATION_MZONE,0,1,nil,10)

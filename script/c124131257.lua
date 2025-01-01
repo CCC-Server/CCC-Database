@@ -1,7 +1,8 @@
 -- 저승사자 린
+Duel.LoadScript("archetype_seonalae.lua")
 local s,id=GetID()
 function s.initial_effect(c)
-    -- Add or Special Summon "저승사자" monster from Deck
+    -- Add or Special Summon "Emissary of Darkness" monster from Deck
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON)
@@ -29,17 +30,16 @@ function s.initial_effect(c)
     e3:SetOperation(s.spop)
     c:RegisterEffect(e3)
 end
-
+s.listed_series={ARCHETYPE_EMISSARY_OF_DARKNESS}
+-- Add or Special Summon "Emissary of Darkness" monster from Deck
 function s.filter(c,e,tp)
-    return c:IsSetCard(0x823) and c:IsType(TYPE_MONSTER) and (c:IsAbleToHand() or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)))
+    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsType(TYPE_MONSTER) and (c:IsAbleToHand() or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)))
 end
-
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_DECK,0,1,nil,e,tp) end
     Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
-
 function s.operation(e,tp,eg,ep,ev,re,r,rp)
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SELECT)
     local g=Duel.SelectMatchingCard(tp,s.filter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
@@ -59,16 +59,14 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
         end
     end
 end
-
+-- Special Summon from Graveyard
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
     return ep==tp and (r&REASON_BATTLE+REASON_EFFECT)~=0
 end
-
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
@@ -93,7 +91,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
         Duel.RegisterEffect(e2,tp)
     end
 end
-
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
     return c:IsLocation(LOCATION_EXTRA) and not (c:IsAttribute(ATTRIBUTE_DARK) and c:IsType(TYPE_SYNCHRO))
 end

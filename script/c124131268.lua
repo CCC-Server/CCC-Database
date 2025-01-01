@@ -1,8 +1,9 @@
 --저승사자의 명부
---Nether Reaper's List
+--Emissary of Darkness' List
+Duel.LoadScript("archetype_seonalae.lua")
 local s,id=GetID()
 function s.initial_effect(c)
-    --Add 1 "Nether Reaper" card from your Deck to your hand and take 400 damage
+    --Add 1 "Emissary of Darkness" card from your Deck to your hand and take 400 damage
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DAMAGE)
@@ -24,9 +25,10 @@ function s.initial_effect(c)
     e2:SetOperation(s.atkop)
     c:RegisterEffect(e2)
 end
-s.listed_series={0x10d9} -- assuming "Nether Reaper" series has the set code 0x10d9
+s.listed_series={ARCHETYPE_EMISSARY_OF_DARKNESS}
+--Add 1 "Emissary of Darkness" card from your Deck to your hand and take 400 damage
 function s.thfilter(c)
-    return c:IsSetCard(0x823) and c:IsAbleToHand()
+    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
@@ -41,6 +43,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
         Duel.Damage(tp,400,REASON_EFFECT)
     end
 end
+--Increase the ATK/DEF of 1 DARK Fiend monster you control by 1000, then take 500 damage
 function s.atkfilter(c)
     return c:IsFaceup() and c:IsRace(RACE_FIEND) and c:IsAttribute(ATTRIBUTE_DARK)
 end
