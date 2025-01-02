@@ -9,7 +9,7 @@ s[0]=nil
 s[1]=nil
 function s.flipcon(e,tp,eg,ep,ev,re,r,rp)
 	--opd check
-	if Duel.GetFlagEffect(ep,id)>0 then return end
+	if Duel.GetFlagEffect(tp,id)>0 then return end
 	--condition
 	return Duel.GetCurrentChain()==0
 end
