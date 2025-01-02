@@ -1,0 +1,5 @@
+Duel.LoadScript("proc_skill_links.lua")
+--constants
+SKILL_COVER_ARCHIVE_START    = 301000003
+SKILL_COVER_ARCHIVE_ACTIVATE = 302000003
+SKILL_LP_BOOST               = 124068160

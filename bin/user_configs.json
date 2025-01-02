@@ -74,12 +74,20 @@
 			"type": "field"
 		},
 		{
+			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Pics/main/cover/{}.jpg",
+			"type": "cover"
+		},
+		{
 			"url": "https://raw.githubusercontent.com/CCC-Server/PG-Pics/main/field/{}.png",
 			"type": "field"
 		},
 		{
 			"url": "https://raw.githubusercontent.com/CCC-Server/PG-Pics/main/field/{}.jpg",
 			"type": "field"
+		},
+		{
+			"url": "https://raw.githubusercontent.com/CCC-Server/PG-Pics/main/cover/{}.jpg",
+			"type": "cover"
 		},
 		{
 			"url": "https://raw.githubusercontent.com/CCC-Server/EMP-TY/main/pics/field/{}.png",
