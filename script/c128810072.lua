@@ -5,12 +5,14 @@ function s.initial_effect(c)
 	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0xc03),1,1,Synchro.NonTunerEx(Card.IsSetCard, 0xc03),1,1)
 	c:EnableReviveLimit()
 	--Cannot be destroyed by battle
+	--Cannot be destroyed by battle or card effects
 	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetRange(LOCATION_MZONE)
 	e1:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
-	e1:SetCondition(function(e) return e:GetHandler():GetOverlayCount()>=4 end)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
-	--Cannot be destroyed by card effects
 	local e2=e1:Clone()
 	e2:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
 	c:RegisterEffect(e2)	
