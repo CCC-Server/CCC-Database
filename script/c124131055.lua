@@ -58,5 +58,5 @@ Duel.SpecialSummon(token,0,tp,1-tp,false,false,POS_FACEUP_DEFENSE)
 end
 end
 function s.tgcon(e)
-	return Duel.IsExistingMatchingCard(Card.IsType,e:GetHandlerPlayer(),0,LOCATION_ONFIELD,1,nil,TYPE_TOKEN)
+	return Duel.IsExistingMatchingCard(Card.IsType,e:GetHandlerPlayer(),0,LOCATION_MZONE,1,nil,TYPE_TOKEN) and Duel.IsExistingMatchingCard(Card.IsRace,e:GetHandlerPlayer(),0,LOCATION_MZONE,1,nil,RACE_PLANT)
 end
