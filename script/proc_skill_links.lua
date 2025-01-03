@@ -1,3 +1,6 @@
+-- constants
+LOCATION_SKILL = LOCATION_DECK|LOCATION_HAND|LOCATION_MZONE|LOCATION_SZONE|LOCATION_GRAVE|LOCATION_EXTRA --0x5f
+
 -- coverNum fix
 local aux_setskillop = Auxiliary.SetSkillOp
 Auxiliary.SetSkillOp = function(coverNum,skillcon,skillop,countlimit,efftype)

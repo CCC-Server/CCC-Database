@@ -1,21 +1,20 @@
+Duel.LoadScript("skills_archive.lua")
 --Custom Card Creators
 local s,id=GetID()
 function s.initial_effect(c)
-	aux.AddSkillProcedure(c,2,false,nil,nil)
+	aux.AddSkillProcedure(c,SKILL_COVER_ARCHIVE_START,false,nil,nil)
 	local e1=Effect.CreateEffect(c)
 	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE+EFFECT_FLAG_CANNOT_DISABLE)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_STARTUP)
 	e1:SetCountLimit(1)
-	e1:SetRange(0x5f)
-	e1:SetLabel(0)
+	e1:SetRange(LOCATION_SKILL)
 	e1:SetOperation(s.flipop)
 	c:RegisterEffect(e1)
 end
 function s.flipop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SKILL_FLIP,tp,id|(1<<32))
 	Duel.Hint(HINT_CARD,tp,id)
-	local c=e:GetHandler()
 	if Duel.GetFlagEffect(tp,id)==0 then
 		--To field
 		local e1=Effect.CreateEffect(e:GetHandler())
@@ -55,6 +54,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local mft={Duel.GetLocationCount(tp,LOCATION_MZONE),Duel.GetLocationCountFromEx(tp),Duel.GetUsableMZoneCount(tp)}
 	local sft=Duel.GetLocationCount(tp,LOCATION_SZONE)
 	if Duel.IsExistingMatchingCard(s.filter,tp,0x73,0,1,nil,e,tp,mft,sft) then
+		Duel.Hint(HINT_CARD,tp,id)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 		local tc=Duel.SelectMatchingCard(tp,s.filter,tp,0x73,0,1,1,nil,e,tp,mft,sft):GetFirst()
 		local b1=tc:IsMonster() and s.mftfilter(tc,table.unpack(mft)) and tc:IsSummonableCard() and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
