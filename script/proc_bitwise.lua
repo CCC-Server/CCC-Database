@@ -40,5 +40,12 @@ function Bitwise.GetBitSplitPos(v,return_as_iterator,start_pos,end_pos)
 end
 --Count bits with value 1 (ignores bits with value 0)
 function Bitwise.GetBitSplitCount(v)
-	return #(Bitwise.GetBitSplit(v, false))
+	--return #(Bitwise.GetBitSplit(v, false))
+	local num=v
+	local ct=0
+	while num~=0 do
+		if (num&0x1)~=0 then ct=ct+1 end
+		num=(num>>1)
+	end
+	return ct
 end
