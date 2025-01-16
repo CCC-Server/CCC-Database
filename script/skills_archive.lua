@@ -4,6 +4,9 @@ Duel.LoadScript("proc_skill_links.lua")
 SKILL_COVER_ARCHIVE_START    = 301000003
 SKILL_COVER_ARCHIVE_ACTIVATE = 302000003
 
+-- specified skills
+SKILL_LUCKY_DAY = 300102004
+
 -- proc for memorize starting LP
 Duel.GetStartingLP=nil
 local startinglp_check=false
@@ -19,8 +22,6 @@ Auxiliary.addStartingLPCheck=function()
 end
 
 -- proc for choose dice/coin
-SKILL_LUCKY_DAY = 300102004
-
 local luckyday_check=false
 local addLuckyDayCheck_Phase={}
 Auxiliary.addLuckyDayCheck=function()

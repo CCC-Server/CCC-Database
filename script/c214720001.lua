@@ -35,7 +35,8 @@ function s.flipop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.prdcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetCurrentChain()==0 and Duel.GetTurnPlayer()==tp
-		--and Duel.GetLocationCount(tp,LOCATION_DECK)>Duel.GetDrawCount(tp)
+		and Duel.GetDrawCount(tp)>0 and (Duel.GetTurnCount()>1 or Duel.IsDuelType(DUEL_1ST_TURN_DRAW))
+		and not Duel.GetDrawCount(tp)>Duel.GetLocationCount(tp,LOCATION_DECK)
 end
 function s.prdop(e,tp,eg,ep,ev,re,r,rp)
 	--ask if you want to activate the skill or not
