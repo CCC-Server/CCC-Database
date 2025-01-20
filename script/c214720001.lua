@@ -36,30 +36,18 @@ end
 function s.prdcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetCurrentChain()==0 and Duel.GetTurnPlayer()==tp
 		and Duel.GetDrawCount(tp)>0 and (Duel.GetTurnCount()>1 or Duel.IsDuelType(DUEL_1ST_TURN_DRAW))
-		and not Duel.GetDrawCount(tp)>Duel.GetLocationCount(tp,LOCATION_DECK)
 end
 function s.prdop(e,tp,eg,ep,ev,re,r,rp)
 	--ask if you want to activate the skill or not
-	if not Duel.SelectYesNo(tp,aux.Stringid(id,0)) then return end
-	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1))
 	local ct=Duel.GetDrawCount(tp)
 	local dg=Duel.GetMatchingGroup(aux.TRUE,tp,LOCATION_DECK,0,nil)
-	if ct>=#dg then return end
-	local drg=dg:Select(tp,ct,ct,false,nil)
-	--ask if you want to shuffle the deck and announce skill usage
-	if Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-		Duel.Hint(HINT_CARD,tp,id)
+	if ct>#dg or not Duel.SelectYesNo(tp,aux.Stringid(id,0)) then return end
+	Duel.Hint(HINT_CARD,tp,id)
+	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1))
+	local sg=dg:Select(tp,ct,ct,false,nil)
+	if sg and #sg>0 then
 		Duel.ShuffleDeck(tp)
-		while #drg>0 do
-			local tc=drg:RandomSelect(PLAYER_NONE,1):GetFirst()
-			Duel.MoveSequence(tc,0)
-			drg:Sub(tc)
-		end
-	else
-		Duel.DisableShuffleCheck(true)
-		--To fix later
-		for tc in aux.Next(drg) do
-			Duel.MoveSequence(tc,0)
-		end
+		Duel.MoveToDeckTop(sg)
+		if #sg>1 then Duel.SortDecktop(tp,tp,#sg) end
 	end
 end
