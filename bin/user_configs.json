@@ -28,12 +28,21 @@
 			"should_read": true
 		},
 		{
+			"url": "https://github.com/CCC-Server/CCC-Libraries",
+			"repo_name": "자작 카드용 라이브러리",
+			"repo_path": "./repositories/CCC-Libraries",
+			"data_path": "datas/database",
+			"script_path": "datas/script",
+			"pics_path": "pics/pics",
+			"should_update": true,
+			"should_read": true
+		},
+		{
 			"url": "https://github.com/CCC-Server/CCC-Database",
 			"repo_name": "CCC 서버 확장팩",
 			"repo_path": "./repositories/CCC-Database",
 			"data_path": "database",
 			"script_path": "script",
-			"lflist_path": "lflists",
 			"should_update": true,
 			"should_read": true
 		},
@@ -65,6 +74,18 @@
 		}
 	],
 	"urls": [
+		{
+			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Libraries/main/pics/field/{}.png",
+			"type": "field"
+		},
+		{
+			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Libraries/main/pics/field/{}.jpg",
+			"type": "field"
+		},
+		{
+			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Libraries/main/pics/cover/{}.jpg",
+			"type": "cover"
+		},
 		{
 			"url": "https://raw.githubusercontent.com/CCC-Server/CCC-Pics/main/field/{}.png",
 			"type": "field"
