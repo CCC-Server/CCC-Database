@@ -71,6 +71,13 @@
 			"script_path": "script",
 			"should_update": false,
 			"should_read": true
+		},
+		{
+			"url": "https://github.com/ProjectIgnis/Puzzles",
+			"repo_name": "자작 카드용 튜토리얼",
+			"repo_path": "./puzzles/자작 카드용 튜토리얼",
+			"should_update": true,
+			"should_read": true
 		}
 	],
 	"urls": [
