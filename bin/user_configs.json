@@ -73,7 +73,7 @@
 			"should_read": true
 		},
 		{
-			"url": "https://github.com/ProjectIgnis/Puzzles",
+			"url": "https://github.com/CCC-Server/CCC-Tutorial",
 			"repo_name": "자작 카드용 튜토리얼",
 			"repo_path": "./puzzles/자작 카드용 튜토리얼",
 			"should_update": true,
