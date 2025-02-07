@@ -23,6 +23,7 @@ function s.initial_effect(c)
 	e4:SetCountLimit(1,id)
 	e4:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==1-tp and re:IsMonsterEffect() end)
 	e4:SetCost(s.cost)
+	e4:SetCondition(s.chcon)
 	e4:SetTarget(s.chngtg)
 	e4:SetOperation(s.chngop)
 	c:RegisterEffect(e4)
@@ -37,8 +38,12 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.CheckLPCost(tp,500) end
 	Duel.PayLPCost(tp,1000)
 end
-function s.spfilter(c)
+function s.fairyfilter(c)
 	return c:IsRace(RACE_FAIRY) and c:IsMonster() and (c:IsFaceup() or not c:IsOnField())
+end
+function s.chcon(e,tp,eg,ep,ev,re,r,rp)
+	local rc=re:GetHandler()
+	return rp==1-tp and (re:IsMonsterEffect() or ((rc:IsSpell() or rc:IsTrap()) and re:IsHasType(EFFECT_TYPE_ACTIVATE)))
 end
 function s.chngtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.fairyfilter,tp,LOCATION_GRAVE,0,1,e:GetHandler()) end
@@ -50,7 +55,7 @@ function s.chngop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.repop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_SPSUMMON)
-	local sg=Duel.SelectMatchingCard(1-tp,aux.NecroValleyFilter(s.spfilter),tp,0,LOCATION_GRAVE,1,1,nil,e,1-tp)
+	local sg=Duel.SelectMatchingCard(1-tp,aux.NecroValleyFilter(s.fairyfilter),tp,0,LOCATION_GRAVE,1,1,nil,e,1-tp)
 		local tc=sg:GetFirst() 
 		if tc then
 			Duel.SpecialSummon(tc,0,1-tp,1-tp,false,false,POS_FACEUP)
