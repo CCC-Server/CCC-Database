@@ -41,13 +41,7 @@ function s.fairyfilter(c)
 	return c:IsRace(RACE_FAIRY) and c:IsMonster() and (c:IsFaceup() or not c:IsOnField())
 end
 function s.chngtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local rc=re:GetHandler()
-	if chk==0 then return rc~=e:GetHandler() end
-	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,tp,0)
-	if rc:IsRelateToEffect(re) and rc:IsDestructable() then
-		Duel.SetOperationInfo(0,CATEGORY_DESTROY,eg,1,tp,0)
-	end
-end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.fairyfilter,tp,LOCATION_GRAVE,0,1,e:GetHandler()) end
 end
 function s.chngop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Group.CreateGroup()
