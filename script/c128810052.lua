@@ -37,7 +37,7 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.CheckLPCost(tp,500) end
 	Duel.PayLPCost(tp,1000)
 end
-function s.fairyfilter(c)
+function s.spfilter(c)
 	return c:IsRace(RACE_FAIRY) and c:IsMonster() and (c:IsFaceup() or not c:IsOnField())
 end
 function s.chngtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -50,6 +50,9 @@ function s.chngop(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.repop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(1-tp,s.fairyfilter,1-tp,LOCATION_GRAVE,0,1,1,nil)
-	Duel.SpecialSummon(tc,0,1-tp,1-tp,false,false,POS_FACEUP)
+	local sg=Duel.SelectMatchingCard(1-tp,aux.NecroValleyFilter(s.spfilter),tp,0,LOCATION_GRAVE,1,1,nil,e,1-tp)
+		local tc=sg:GetFirst() 
+		if tc then
+			Duel.SpecialSummon(tc,0,1-tp,1-tp,false,false,POS_FACEUP)
+		end
 end
