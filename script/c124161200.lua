@@ -30,8 +30,8 @@ end
 
 function s.cst1(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(s.cst1filter,tp,LOCATION_HAND,0,nil)
-	if chk==0 then return #g>0 end
+	local g=Duel.GetMatchingGroup(s.cst1filter,tp,LOCATION_HAND,0,c)
+	if chk==0 then return true end
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
 	local sg=aux.SelectUnselectGroup(g,e,tp,0,ft,aux.TRUE,1,tp,HINTMSG_DISCARD)
