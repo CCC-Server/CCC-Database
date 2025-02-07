@@ -34,6 +34,7 @@ function s.cst1(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
+	ft=ft-1
 	local sg=aux.SelectUnselectGroup(g,e,tp,0,ft,aux.TRUE,1,tp,HINTMSG_DISCARD)
 	sg=sg+c
 	e:SetLabel(#sg)
