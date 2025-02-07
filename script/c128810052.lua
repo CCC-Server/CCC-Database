@@ -51,7 +51,7 @@ end
 function s.repop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(1-tp,s.fairyfilter,1-tp,LOCATION_GRAVE,0,1,1,nil)
-	if #g>0 then
+	if tc then
 	Duel.SpecialSummon(tc,0,1-tp,1-tp,false,false,POS_FACEUP)
 	end
 end
