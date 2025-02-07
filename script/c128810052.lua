@@ -41,7 +41,13 @@ function s.fairyfilter(c)
 	return c:IsRace(RACE_FAIRY) and c:IsMonster() and (c:IsFaceup() or not c:IsOnField())
 end
 function s.chngtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.fairyfilter,tp,LOCATION_GRAVE,0,1,e:GetHandler()) end
+	local rc=re:GetHandler()
+	if chk==0 then return rc~=e:GetHandler() end
+	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,tp,0)
+	if rc:IsRelateToEffect(re) and rc:IsDestructable() then
+		Duel.SetOperationInfo(0,CATEGORY_DESTROY,eg,1,tp,0)
+	end
+end
 end
 function s.chngop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Group.CreateGroup()
@@ -51,7 +57,5 @@ end
 function s.repop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(1-tp,s.fairyfilter,1-tp,LOCATION_GRAVE,0,1,1,nil)
-	if tc then
 	Duel.SpecialSummon(tc,0,1-tp,1-tp,false,false,POS_FACEUP)
-	end
 end
