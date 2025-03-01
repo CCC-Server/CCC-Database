@@ -20,15 +20,11 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1a)
 	--effect 2
 	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_TOKEN+CATEGORY_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e2:SetCode(EFFECT_LPCOST_REPLACE)
 	e2:SetRange(LOCATION_FZONE)
-	e2:SetCode(EVENT_PAY_LPCOST)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCountLimit(1,id)
 	e2:SetCondition(s.con2)
-	e2:SetCost(s.cst2)
-	e2:SetTarget(s.tg2)
 	e2:SetOperation(s.op2)
 	c:RegisterEffect(e2)
 	--effect 3
@@ -37,7 +33,6 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e3:SetCode(EFFECT_CANNOT_ACTIVATE)
 	e3:SetRange(LOCATION_FZONE)
-	e3:SetCondition(s.con3)
 	e3:SetTargetRange(0,1)
 	e3:SetValue(s.val3)
 	c:RegisterEffect(e3)
@@ -50,36 +45,24 @@ end
 
 --effect 2
 function s.con2(e,tp,eg,ep,ev,re,r,rp)
-	return ep==tp and re and re:IsActivated() and re:GetHandler():IsSetCard(0xf2b) and not re:GetHandler():IsType(TYPE_FIELD)
-end
-
-function s.cst2(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,300) end
-	Duel.PayLPCost(tp,300)
-end
-
-function s.tg2(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsPlayerCanSpecialSummonMonster(tp,124161168,0xf2b,TYPES_TOKEN,300,300,1,RACE_PLANT,ATTRIBUTE_FIRE) end
-	Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,0)
+	local rc=re:GetHandler()
+	if re and tp==ep and rc:IsSetCard(0xf2b) and not rc:IsType(TYPE_FIELD) and Duel.GetFlagEffect(e:GetHandlerPlayer(),id)==0 then
+		e:GetHandler():RegisterFlagEffect(id,RESET_EVENT,0,0)
+		local res=Duel.CheckLPCost(1-ep,ev//2)
+		e:GetHandler():ResetFlagEffect(id)
+		return res
+	end
+	return false
 end
 
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 or not Duel.IsPlayerCanSpecialSummonMonster(tp,124161168,0xf2b,TYPES_TOKEN,300,300,1,RACE_PLANT,ATTRIBUTE_FIRE) then return end
-	local token=Duel.CreateToken(tp,124161168)
-	Duel.SpecialSummon(token,0,tp,tp,false,false,POS_FACEUP)
+	local c=e:GetHandler()
+	c:RegisterFlagEffect(id,RESET_EVENT,0,0)
+	Duel.PayLPCost(1-ep,ev//2)
+	c:ResetFlagEffect(id)
 end
 
 --effect 3
-function s.con3filter(c)
-	return c:IsSetCard(0xf2b) and c:IsFaceup()
-end
-
-function s.con3(e)
-	local g=Duel.GetMatchingGroupCount(s.con3filter,e:GetHandlerPlayer(),LOCATION_MZONE,0,nil)
-	return g>0
-end
-
 function s.val3(e,re,tp)
 	local tp=e:GetHandlerPlayer()
 	local lp=math.min(Duel.GetLP(tp),Duel.GetLP(1-tp))
