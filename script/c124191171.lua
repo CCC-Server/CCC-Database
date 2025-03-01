@@ -25,7 +25,7 @@ end
 
 --effect 1
 function s.con1(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetFlagEffect(tp,124161180)>0
+	return Duel.GetFlagEffect(tp,124161179)>0
 end
 
 function s.tg1(e,tp,eg,ep,ev,re,r,rp,chk,chkc)

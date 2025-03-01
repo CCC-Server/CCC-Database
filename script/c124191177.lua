@@ -45,7 +45,7 @@ end
 
 --effect 1
 function s.val1(e,c)
-	return Duel.GetFlagEffect(e:GetHandlerPlayer(),124161180)*300
+	return Duel.GetFlagEffect(e:GetHandlerPlayer(),124161179)*300
 end
 
 --effect 2
