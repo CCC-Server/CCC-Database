@@ -1,6 +1,6 @@
 local s,id=GetID()
 function s.initial_effect(c)
-   --summon with 1 tribute
+	--summon with 1 tribute
 	local e1=aux.AddNormalSummonProcedure(c,true,true,1,1,SUMMON_TYPE_TRIBUTE,aux.Stringid(id,0),s.otfilter)
 	local e2=aux.AddNormalSetProcedure(c,true,true,1,1,SUMMON_TYPE_TRIBUTE,aux.Stringid(id,0),s.otfilter)
 	--todeck
@@ -20,10 +20,18 @@ function s.initial_effect(c)
 	e4:SetValue(s.valcheck)
 	e4:SetLabelObject(e3)
 	c:RegisterEffect(e4)
---Change opponent's effect to "Advance Summon a U.K monster"
-   
---Banish monster destroyed by battle
-   --Banish destroyed monster
+	--Change opponent's effect to "Advance Summon a U.K monster"
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,0))
+	e5:SetType(EFFECT_TYPE_QUICK_O)
+	e5:SetCode(EVENT_CHAINING)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCountLimit(1,id)
+	e5:SetCondition(s.chcon)
+	e5:SetTarget(s.chtg)
+	e5:SetOperation(s.chop)
+	c:RegisterEffect(e5)
+	--Banish monster(s) it destroyed by battle
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetCategory(CATEGORY_REMOVE)
@@ -34,6 +42,8 @@ function s.initial_effect(c)
 	e6:SetOperation(s.rmop)
 	c:RegisterEffect(e6)
 end
+
+--
 function s.otfilter(c)
 	return c:IsSummonType(SUMMON_TYPE_TRIBUTE)
 end
@@ -48,6 +58,8 @@ function s.otop(e,tp,eg,ep,ev,re,r,rp,c)
 	c:SetMaterial(sg)
 	Duel.Release(sg,REASON_SUMMON+REASON_MATERIAL)
 end
+
+--
 function s.tdcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_TRIBUTE)
 end
@@ -97,6 +109,32 @@ function s.valcheck(e,c)
 		e:GetLabelObject():SetLabel(0)
 	end
 end
+
+--
+function s.chcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsBattlePhase() and rp==1-tp and (re:IsActiveType(TYPE_MONSTER) or re:IsHasType(EFFECT_TYPE_ACTIVATE))
+end
+function s.sumfilter(c)
+	return c:IsSummonable(true,nil,1) and c:IsSetCard(0x42d)
+end
+function s.chtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.sumfilter,tp,LOCATION_HAND,0,1,nil) end
+end
+function s.chop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Group.CreateGroup()
+	Duel.ChangeTargetCard(ev,g)
+	Duel.ChangeChainOperation(ev,s.repop)
+end
+function s.repop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetMatchingGroup(s.sumfilter,1-tp,LOCATION_HAND,0,nil)
+	if #g>0 then
+		Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_SUMMON)
+		local tc=g:Select(1-tp,1,1,nil)
+		Duel.Summon(1-tp,tc:GetFirst(),true,nil,1)
+	end
+end
+
+--
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsStatus(STATUS_BATTLE_DESTROYED) then return false end

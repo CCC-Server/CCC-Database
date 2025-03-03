@@ -79,18 +79,14 @@ end
 
 -- Grant "U.K" monsters on your field the ability to attack directly
 function s.fusion_material_operation(e, tp, eg, ep, ev, re, r, rp)
-	local g = Duel.GetMatchingGroup(s.uk_filter, tp, LOCATION_MZONE, 0, nil)
 	local c = e:GetHandler()
-	local tc = g:GetFirst()
-	while tc do
-		-- Allow direct attack
-		local e1 = Effect.CreateEffect(c)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_DIRECT_ATTACK)
-		e1:SetReset(RESET_EVENT + RESETS_STANDARD + RESET_PHASE + PHASE_END)
-		tc:RegisterEffect(e1)
-		tc = g:GetNext()
-	end
+	local ge1 = Effect.CreateEffect(c)
+	ge1:SetType(EFFECT_TYPE_FIELD)
+	ge1:SetCode(EFFECT_DIRECT_ATTACK)
+	ge1:SetTarget(aux.TargetBoolFunction(s.uk_filter))
+	ge1:SetTargetRange(LOCATION_ONFIELD, 0)
+	ge1:SetReset(RESET_EVENT + RESETS_STANDARD + RESET_PHASE + PHASE_END)
+	Duel.RegisterEffect(ge1, tp)
 end
 
 -- Filter for "U.K" monsters
@@ -100,7 +96,9 @@ end
 
 -- Condition for fusion material (added this function)
 function s.fusion_material_condition(e, tp, eg, ep, ev, re, r, rp)
-	-- Example condition: this can be adjusted based on your needs
-	return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
+	-- 조건 예시: 필요에 따라 변경할 것
+	-- return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
+
+	return true
 end
 
