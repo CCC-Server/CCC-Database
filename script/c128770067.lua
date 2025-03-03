@@ -2,7 +2,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- 융합 소환
 	c:EnableReviveLimit()
-	Fusion.AddProcMixN(c,true,true,s.fusfilter,1,aux.FilterBoolFunction(Card.IsLevelAbove,6))
+	Fusion.AddProcMixRep(c,true,true,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_DARK|ATTRIBUTE_WATER|ATTRIBUTE_FIRE),1,99,s.fusfilter)
 
 	-- (1) 융합 소환 시 효과 적용
 	local e1=Effect.CreateEffect(c)
@@ -40,23 +40,32 @@ function s.initial_effect(c)
 	c:RegisterEffect(e5)
 
 	-- (3) 배틀 페이즈 중 융합 소환
+	local params = {nil,nil,function(e,tp,mg) return nil,s.fcheck end}
+	local params = {nil,Fusion.CheckWithHandler(aux.FALSE),s.fextra,nil,Fusion.ForcedHandler}
+	local params = {function(e,c) return c:IsSetCard(0x42d) and not c:IsCode(id) end,
+		Fusion.OnFieldMat,
+		function(e,tp,mg) return Duel.GetMatchingGroup(Fusion.IsMonsterFilter(Card.IsFaceup),tp,0,LOCATION_ONFIELD,nil) end,
+		nil,
+		Fusion.ForcedHandler
+	}
+	--function(fusfilter,matfilter,extrafil,extraop,gc2,stage2,exactcount,value,location,chkf,preselect,nosummoncheck,extratg)
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
 	e6:SetType(EFFECT_TYPE_QUICK_O)
 	e6:SetCode(EVENT_FREE_CHAIN)
 	e6:SetRange(LOCATION_MZONE)
-	e6:SetCountLimit(1,id)
+	e6:SetCountLimit(1)
 	e6:SetHintTiming(TIMING_BATTLE_PHASE)
 	e6:SetCondition(s.fuscon)
-	e6:SetTarget(s.fustg)
-	e6:SetOperation(s.fusop)
+	e6:SetTarget(Fusion.SummonEffTG(table.unpack(params)))
+	e6:SetOperation(Fusion.SummonEffOP(table.unpack(params)))
 	c:RegisterEffect(e6)
 end
 
--- 융합 소재 필터 (물 / 어둠 / 화염 속성 중 하나라도 있으면 통과)
-function s.fusfilter(c)
-	return c:IsAttribute(ATTRIBUTE_WATER+ATTRIBUTE_DARK+ATTRIBUTE_FIRE)
+-- 융합 소재 필터 (레벨 6 이상의 "U.K" 몬스터)
+function s.fusfilter(c,fc,sumtype,tp)
+	return c:IsSetCard(0x42d,fc,st,tp) and c:IsLevelAbove(6)
 end
 
 
@@ -76,13 +85,10 @@ function s.fuscon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsBattlePhase()
 end
 
-function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local mg=Duel.GetFusionMaterial(tp):Filter(Card.IsOnField,nil)+Duel.GetFusionMaterial(1-tp):Filter(Card.IsOnField,nil)
-	if chk==0 then return Duel.IsExistingMatchingCard(Fusion.SummonEff(tp,nil,mg,nil,nil,nil,true),tp,LOCATION_EXTRA,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
+function s.fcheck(tp,sg,fc)
+	return sg:FilterCount(aux.AND(Card.IsControler,Card.IsOnField),nil,tp)==1
 end
 
-function s.fusop(e,tp,eg,ep,ev,re,r,rp)
-	local mg=Duel.GetFusionMaterial(tp):Filter(Card.IsOnField,nil)+Duel.GetFusionMaterial(1-tp):Filter(Card.IsOnField,nil)
-	Fusion.SummonEff(tp,nil,mg,nil,nil,nil,true)
+function s.fextra(e,tp,mg)
+	return Duel.GetMatchingGroup(Fusion.IsMonsterFilter(Card.IsFaceup),tp,0,LOCATION_ONFIELD,nil),s.fcheck
 end

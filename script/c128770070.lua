@@ -1,7 +1,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
-	Fusion.AddProcMixN(c,true,true,s.fusfilter,1,aux.FilterBoolFunction(Card.IsLevelAbove,6))
+	Fusion.AddProcMixRep(c,true,true,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_LIGHT|ATTRIBUTE_EARTH|ATTRIBUTE_WIND),1,99,s.fusfilter)
 
 	-- (1) 융합 소환 시 효과 적용
 	local e1=Effect.CreateEffect(c)
@@ -31,30 +31,33 @@ function s.initial_effect(c)
 	e4:SetCondition(s.indcon)
 	c:RegisterEffect(e4)
 
-	-- (2) 추가 공격 효과
+	-- (2) 전체 공격 효과
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_SINGLE)
-	e5:SetCode(EFFECT_EXTRA_ATTACK_MONSTER)
-	e5:SetValue(s.extraatk)
+	e5:SetCode(EFFECT_ATTACK_ALL)
+	e5:SetValue(1)
 	c:RegisterEffect(e5)
 
-	-- (3) 배틀 페이즈 중 융합 소환
+	-- (3) 배틀 페이즈 중 어드밴스 소환 (차후 작업)
+	--[[
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
 	e6:SetType(EFFECT_TYPE_QUICK_O)
 	e6:SetCode(EVENT_FREE_CHAIN)
 	e6:SetRange(LOCATION_MZONE)
-	e6:SetCountLimit(1,id)
+	e6:SetCountLimit(1)
 	e6:SetHintTiming(TIMING_BATTLE_PHASE)
-	e6:SetCondition(s.fuscon)
-	e6:SetTarget(s.fustg)
-	e6:SetOperation(s.fusop)
+	e6:SetCondition(s.advcon)
+	e6:SetTarget(s.advtg)
+	e6:SetOperation(s.advop)
 	c:RegisterEffect(e6)
+	--]]
 end
 
+-- 융합 소재 필터 (레벨 6 이상의 "U.K" 몬스터)
 function s.fusfilter(c,fc,sumtype,tp)
-	return c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_EARTH) or c:IsAttribute(ATTRIBUTE_WIND)
+	return c:IsSetCard(0x42d,fc,st,tp) and c:IsLevelAbove(6)
 end
 
 function s.indcon(e)
@@ -62,11 +65,7 @@ function s.indcon(e)
 end
 
 function s.efilter(e,te)
-	return te:IsActiveType(TYPE_TRAP)
-end
-
-function s.extraatk(e,c)
-	return c:GetMaterialCount()-1
+	return te:IsActiveType(TYPE_MONSTER)
 end
 
 function s.fuscon(e,tp,eg,ep,ev,re,r,rp)
