@@ -64,7 +64,7 @@ function s.initial_effect(c)
 end
 
 -- 융합 소재 필터 (레벨 6 이상의 "U.K" 몬스터)
-function s.fusfilter(c,fc,sumtype,tp)
+function s.fusfilter(c,fc,st,tp)
 	return c:IsSetCard(0x42d,fc,st,tp) and c:IsLevelAbove(6)
 end
 
