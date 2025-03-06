@@ -2,7 +2,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- 융합 소환
 	c:EnableReviveLimit()
-	Fusion.AddProcMixRep(c,true,true,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_DARK|ATTRIBUTE_WATER|ATTRIBUTE_FIRE),1,99,s.fusfilter)
+	Fusion.AddProcMixRep(c,true,true,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_LIGHT|ATTRIBUTE_EARTH|ATTRIBUTE_WIND),1,99,s.fusfilter)
 
 	-- (1) 융합 소환 시 효과 적용
 	--[[
