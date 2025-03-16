@@ -19,6 +19,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_RELEASE)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetCondition(function(e,tp) return not Duel.HasFlagEffect(tp,id) end)
 	e2:SetCountLimit(1, {id, 1})
 	e2:SetOperation(s.eflimop)
 	c:RegisterEffect(e2)
@@ -76,18 +77,23 @@ end
 
 -- 릴리스된 경우 효과 발동 제한 적용
 function s.eflimop(e, tp, eg, ep, ev, re, r, rp)
-	local e1 = Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_ACTIVATE)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetTargetRange(0, 1)
-	e1:SetValue(s.aclimit)
-	e1:SetReset(RESET_PHASE + PHASE_END)
-	Duel.RegisterEffect(e1, tp)
+   if Duel.HasFlagEffect(tp,id) then return end
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
+	local c=e:GetHandler()
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e1:SetCode(EVENT_CHAINING)
+	e1:SetOperation(s.actop)
+	e1:SetReset(RESET_PHASE|PHASE_END)
+	Duel.RegisterEffect(e1,tp)
+	aux.RegisterClientHint(c,nil,tp,1,0,aux.Stringid(id,2))
 end
 
 function s.aclimit(e, re, tp)
-	return re:IsActiveType(TYPE_MONSTER) and re:GetHandler():IsSetCard(0x42d)
+   local rc=re:GetHandler()
+	if re:IsMonsterEffect() and rc:IsSetCard(0x42d) and ep==tp then
+		Duel.SetChainLimit(function(e,rp,tp) return tp==rp end)
+	end
 end
 
 -- 묘지에서 제외하고 일반 소환 실행
