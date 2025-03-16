@@ -97,6 +97,5 @@ end
 -- Condition for fusion material (added this function)
 function s.fusion_material_condition(e, tp, eg, ep, ev, re, r, rp)
 	return e:GetHandler():IsLocation(LOCATION_GRAVE) and (r&REASON_FUSION)==REASON_FUSION
-	return true
 end
 
