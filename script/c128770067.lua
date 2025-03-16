@@ -4,14 +4,11 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	Fusion.AddProcMixRep(c,true,true,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_LIGHT|ATTRIBUTE_EARTH|ATTRIBUTE_WIND),1,99,s.fusfilter)
 
-	-- (1) 융합 소환 시 효과 적용
-	--[[
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
 	c:RegisterEffect(e1)
-	--]]
 
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
@@ -34,15 +31,14 @@ function s.initial_effect(c)
 	e4:SetCondition(s.indcon)
 	c:RegisterEffect(e4)
 
-	-- (2) 추가 공격 효과
+   --Fusion Materials check
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_SINGLE)
-	e5:SetCode(EFFECT_EXTRA_ATTACK_MONSTER)
-	e5:SetValue(s.extraatk)
+	e5:SetCode(EFFECT_MATERIAL_CHECK)
+	e5:SetValue(s.matcheck)
 	c:RegisterEffect(e5)
 
-	-- (3) 배틀 페이즈 중 융합 소환
-	local params = {nil,nil,function(e,tp,mg) return nil,s.fcheck end}
+  local params = {nil,nil,function(e,tp,mg) return nil,s.fcheck end}
 	local params = {nil,Fusion.CheckWithHandler(aux.FALSE),s.fextra,nil,Fusion.ForcedHandler}
 	local params = {function(e,c) return c:IsSetCard(0x42d) and not c:IsCode(id) end,
 		Fusion.OnFieldMat,
@@ -50,7 +46,6 @@ function s.initial_effect(c)
 		nil,
 		Fusion.ForcedHandler
 	}
-	--function(fusfilter,matfilter,extrafil,extraop,gc2,stage2,exactcount,value,location,chkf,preselect,nosummoncheck,extratg)
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
@@ -79,8 +74,15 @@ function s.efilter(e,te)
 	return te:IsActiveType(TYPE_TRAP)
 end
 
-function s.extraatk(e,c)
-	return c:GetMaterialCount()-1
+function s.matcheck(e,c)
+	local g=c:GetMaterial()  
+	--Multiple attacks
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_EXTRA_ATTACK_MONSTER)
+	e1:SetValue(g:FilterCount(Card.IsType,nil,TYPE_FUSION)-1)
+	e1:SetReset(RESET_EVENT|RESETS_STANDARD_DISABLE&~RESET_TOFIELD)
+	c:RegisterEffect(e1)
 end
 
 function s.fuscon(e,tp,eg,ep,ev,re,r,rp)
