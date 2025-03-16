@@ -26,7 +26,7 @@ function s.initial_effect(c)
 	-- Grant direct attack ability when used as Fusion Material
 	local e4 = Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
-	e4:SetCode(EVENT_TO_GRAVE)
+	e4:SetCode(EVENT_BE_MATERIAL)
 	e4:SetProperty(EFFECT_FLAG_DELAY)
 	e4:SetCondition(s.fusion_material_condition)
 	e4:SetOperation(s.fusion_material_operation)
@@ -96,9 +96,7 @@ end
 
 -- Condition for fusion material (added this function)
 function s.fusion_material_condition(e, tp, eg, ep, ev, re, r, rp)
-	-- 조건 예시: 필요에 따라 변경할 것
-	-- return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
-
+	return e:GetHandler():IsLocation(LOCATION_GRAVE) and (r&REASON_FUSION)==REASON_FUSION
 	return true
 end
 
