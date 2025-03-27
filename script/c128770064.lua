@@ -1,4 +1,4 @@
--- U.K 카드 스크립트
+-- U.K 원시괴조 리트라
 local s, id = GetID()
 function s.initial_effect(c)
 	-- ① 효과: 덱에서 "U.K" 카드를 2장까지 패에 넣는다.

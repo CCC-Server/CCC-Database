@@ -1,4 +1,4 @@
--- U.K 카드 예제
+-- U.K 소진수 루나
 local s, id = GetID()
 function s.initial_effect(c)
 	-- ① 덱에서 "U.K" 몬스터 서치/특수 소환
