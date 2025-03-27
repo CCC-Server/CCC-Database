@@ -4,12 +4,7 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 	Fusion.AddProcMixRep(c,true,true,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_LIGHT|ATTRIBUTE_EARTH|ATTRIBUTE_WIND),1,99,s.fusfilter)
 
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCode(EFFECT_SPSUMMON_CONDITION)
-	c:RegisterEffect(e1)
-
+	-- (1) 융합 소환 시 효과 적용
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
@@ -31,14 +26,15 @@ function s.initial_effect(c)
 	e4:SetCondition(s.indcon)
 	c:RegisterEffect(e4)
 
-	--Fusion Materials check
+	-- Fusion Materials check
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_SINGLE)
 	e5:SetCode(EFFECT_MATERIAL_CHECK)
 	e5:SetValue(s.matcheck)
 	c:RegisterEffect(e5)
 
-	local params = {function(e,c) return c:IsSetCard(0x42d) and not c:IsCode(id) end,
+	local params = {
+		function(c,tp) return c:IsSetCard(0x42d) and not c:IsCode(id) end,
 		Fusion.OnFieldMat,
 		function(e,tp,mg) return Duel.GetMatchingGroup(Fusion.IsMonsterFilter(Card.IsFaceup),tp,0,LOCATION_ONFIELD,nil) end,
 		nil,

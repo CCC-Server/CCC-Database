@@ -1,4 +1,4 @@
--- U.K 우주구체체 스피어
+-- U.K 우주구체 스피어
 local s,id=GetID()
 function s.initial_effect(c)
 	--(1) Special Summon
