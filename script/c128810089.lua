@@ -44,9 +44,12 @@ end
 
 -- 무효화 조건
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	local re=re:GetHandler()
-	return Duel.IsChainNegatable(ev) and re:IsOnField() or re:IsActiveType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP)
+	local rc=re:GetHandler()
+	return Duel.IsChainNegatable(ev) and 
+	(re:IsHasType(EFFECT_TYPE_ACTIVATE) -- 마법/함정 카드의 발동
+	or (re:IsActiveType(TYPE_MONSTER) and rc:IsOnField())) -- 필드 몬스터 효과 발동
 end
+
 
 -- 무효화 대상 설정
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
