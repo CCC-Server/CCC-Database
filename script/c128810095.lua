@@ -17,6 +17,7 @@ function s.initial_effect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_DESTROY+CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:Setproperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetRange(LOCATION_SZONE) -- 지속 마법이라 필드에서만 효과 적용
 	e2:SetCountLimit(1,{id,1}) -- 1턴에 1번 제한
 	e2:SetTarget(s.destg)
