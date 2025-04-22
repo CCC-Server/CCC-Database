@@ -14,10 +14,13 @@ function s.initial_effect(c)
 end
 --천사족밖에 일반 소환 / 특수 소환 불가 맹세 효과
 function s.splimit(e,c)
-    return not c:IsRace(RACE_FAIRY)
+	return not c:IsRace(RACE_FAIRY)
 end
 
 s.listed_series={0xc02}
+function s.tgfilter(c,e,tp)
+	return c:IsFaceup() and c:IsSetCard(0xc02) and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp,c:GetAttribute())
+end
 function s.spfilter(c,e,tp,attr)
 	return c:IsSetCard(0xc02) and not c:IsCode(cd) and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE)
 end
