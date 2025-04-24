@@ -52,7 +52,7 @@ function s.tgcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_SYNCHRO)
 end
 function s.tgfilter(c)
-   return c:IsSetCard(0xc02) and c:IsType(TYPE_SPELL+TYPE_CONTINUOUS) and c:IsAbleToGrave()
+   return c:IsRace(RACE_FAIRY) and c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsAbleToGrave()
 end
 function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end

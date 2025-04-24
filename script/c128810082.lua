@@ -1,67 +1,120 @@
---셀레스티얼 타이탄 저지먼트
+--제 10사도-성안의 미카엘라
 local s,id=GetID()
 function s.initial_effect(c)
-	--Activate
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_ACTIVATE)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	c:RegisterEffect(e1)
-	--Send to the GY
+	--Synchro summon
+	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsType,TYPE_SYNCHRO),1,1,Synchro.NonTunerEx(Card.IsType,TYPE_SYNCHRO),1,99)
+	c:EnableReviveLimit()
+
+	--Banish 1 monster and inflict 1200 Damage
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetCategory(CATEGORY_TOGRAVE)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetCountLimit(1,id)
-	e2:SetCost(s.tgcost)
-	e2:SetRange(LOCATION_SZONE)
-	e2:SetTarget(s.tgtg)
-	e2:SetOperation(s.tgop)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_REMOVE+CATEGORY_DAMAGE)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetCode(EVENT_CUSTOM+id)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCountLimit(1,{id,1})
+	e2:SetCondition(function() return Duel.GetCurrentPhase()~=PHASE_DAMAGE and Duel.GetCurrentPhase()~=PHASE_DAMAGE_CAL end)
+	e2:SetTarget(s.rmtg)
+	e2:SetOperation(s.rmop)
 	c:RegisterEffect(e2)
+	local g=Group.CreateGroup()
+	g:KeepAlive()
+	e2:SetLabelObject(g)
+	--Register summons
+	local e2a=Effect.CreateEffect(c)
+	e2a:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e2a:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2a:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e2a:SetRange(LOCATION_MZONE)
+	e2a:SetLabelObject(e2)
+	e2a:SetOperation(s.regop)
+	c:RegisterEffect(e2a)
+	--Banish Spell/Trap and inflict 1200 Damage
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetCategory(CATEGORY_REMOVE+CATEGORY_DAMAGE)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetCode(EVENT_CHAINING)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetCountLimit(1,{id,2})
+	e3:SetCondition(s.rmcon2)
+	e3:SetTarget(s.rmtg2)
+	e3:SetOperation(s.rmop2)
+	c:RegisterEffect(e3)
+	--Cannot be destroyed by battle or card effect
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetValue(1)
+	c:RegisterEffect(e1)
+	local e2=e1:Clone()
+	e2:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	c:RegisterEffect(e2)
+	--Unaffected by spell/trap effects
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetCode(EFFECT_IMMUNE_EFFECT)
+	e4:SetValue(s.efilter)
+	c:RegisterEffect(e4)
 end
-s.listed_series={0xc02}
-function s.cfilter(c)
-	return c:IsRace(RACE_FAIRY) and c:IsLocation(LOCATION_GRAVE) and c:IsAbleToRemoveAsCost()
+
+function s.efilter(e,te)
+	return te:IsSpellTrapEffect()
 end
-function s.tgcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_GRAVE,0,1,nil) end
+
+function s.filter(c,tp,e)
+	return c:IsSummonPlayer(1-tp) and c:IsLocation(LOCATION_MZONE) and c:IsAbleToRemove()
+		and (not e or c:IsRelateToEffect(e))
+end
+function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local g=e:GetLabelObject():Filter(s.filter,nil,tp,nil)
+	if chk==0 then return #g>0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
+	Duel.SetTargetCard(g)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,1200)
+end
+function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	Duel.Remove(g,POS_FACEUP,REASON_COST)
-end
-function s.tgfilter(c)
-   return c:IsAbleToGrave() and c:IsRace(RACE_FAIRY)
-end
-function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
-end
-function s.tgop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local tc=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
-	if tc and Duel.SendtoGrave(tc,REASON_EFFECT)~=0 and tc:IsLocation(LOCATION_GRAVE) then
-		--Cannot activate cards or effects with the same name as sent monster
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetDescription(aux.Stringid(id,0))
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-		e1:SetCode(EFFECT_CANNOT_ACTIVATE)
-		e1:SetTargetRange(1,0)
-		e1:SetValue(s.aclimit)
-		e1:SetLabelObject(tc)
-		e1:SetReset(RESET_PHASE+PHASE_END)
-		Duel.RegisterEffect(e1,tp)
-		local e2=Effect.CreateEffect(e:GetHandler())
-		e2:SetDescription(3302)
-		e2:SetProperty(EFFECT_FLAG_CLIENT_HINT)
-		e2:SetType(EFFECT_TYPE_SINGLE)
-		e2:SetCode(EFFECT_CANNOT_TRIGGER)
-		e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-		tc:RegisterEffect(e2)
+	local g=e:GetLabelObject()
+	if #g==0 then return end
+	local bg=g:FilterSelect(tp,s.filter,1,1,nil,tp,e)
+	if #bg>0 and Duel.Remove(bg,POS_FACEUP,REASON_EFFECT)>0 then
+		Duel.Damage(1-tp,1200,REASON_EFFECT)
 	end
 end
-function s.aclimit(e,re,tp)
-	local tc=e:GetLabelObject()
-	return re:GetHandler():IsCode(tc:GetCode())
+function s.regop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetFlagEffect(tp,id)>0 then return end
+	local c=e:GetHandler()
+	local tg=eg:Filter(s.filter,nil,tp)
+	if #tg>0 then
+		for tc in tg:Iter() do
+			tc:RegisterFlagEffect(id,RESET_CHAIN,0,1)
+		end
+		local g=e:GetLabelObject():GetLabelObject()
+		if Duel.GetCurrentChain()==0 then g:Clear() end
+		g:Merge(tg)
+		g:Remove(function(c) return c:GetFlagEffect(id)==0 end,nil)
+		e:GetLabelObject():SetLabelObject(g)
+		Duel.RaiseSingleEvent(e:GetHandler(),EVENT_CUSTOM+id,e,0,tp,tp,0)
+	end
+end
+function s.rmcon2(e,tp,eg,ep,ev,re,r,rp)
+	return ep==1-tp and re:IsSpellTrapEffect() and re:GetHandler():IsRelateToEffect(re)
+end
+function s.rmtg2(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return re:GetHandler():IsAbleToRemove() end
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,rg,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,1200)
+end
+function s.rmop2(e,tp,eg,ep,ev,re,r,rp)
+	if not re:GetHandler():IsRelateToEffect(re) then return end
+	if Duel.Remove(eg,POS_FACEUP,REASON_EFFECT)>0 then
+		Duel.Damage(1-tp,1200,REASON_EFFECT)
+	end
 end

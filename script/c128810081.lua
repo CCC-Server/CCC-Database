@@ -1,41 +1,38 @@
---셀레스티얼 타이탄-조율자 펄크럼
+--셀레스티얼 타이탄 저지먼트
 local s,id=GetID()
 function s.initial_effect(c)
-	--Link Summon
-	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0xc02),2)
-	--Must be properly summoned before being revived
-	c:EnableReviveLimit()
+	--Negate activation
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
-	e1:SetCategory(CATEGORY_TOHAND)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetRange(LOCATION_MZONE)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_NEGATE+CATEGORY_DESTROY)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_CHAINING)
 	e1:SetCountLimit(1,id)
-	e1:SetCost(s.thcost)
-	e1:SetTarget(s.thtg)
-	e1:SetOperation(s.thop)
+	e1:SetCondition(s.negcon)
+	e1:SetTarget(s.negtg)
+	e1:SetOperation(s.negop)
 	c:RegisterEffect(e1)
 end
 s.listed_series={0xc02}
-function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,1000) end
-	Duel.PayLPCost(tp,1000)
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
+	return (re:IsHasType(EFFECT_TYPE_ACTIVATE) or re:IsMonsterEffect()) and Duel.IsChainNegatable(ev)
+		and Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsRace,RACE_FAIRY),tp,LOCATION_MZONE,0,1,nil)
 end
-function s.thfilter(c)
-	return c:IsSetCard(0xc02) and c:IsContinuousSpell() and c:IsAbleToHand()
+function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
+	if re:GetHandler():IsDestructable() and re:GetHandler():IsRelateToEffect(re) then
+		Duel.SetPossibleOperationInfo(0,CATEGORY_DESTROY,eg,1,tp,0)
+	end
 end
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_GRAVE) and s.thfilter(c) end
-	if chk==0 then return Duel.IsExistingTarget(s.thfilter,tp,LOCATION_GRAVE,0,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectTarget(tp,s.thfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,g,1,0,0)
+function s.opfilter(c)
+	return c:IsFaceup() and c:IsMonster() and c:IsSetCard(0xc02) and c:IsType(TYPE_SYNCHRO)
 end
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	if not e:GetHandler():IsRelateToEffect(e) then return end
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.SendtoHand(tc,nil,REASON_EFFECT)
+function s.negop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re)
+		and Duel.IsExistingMatchingCard(s.opfilter,tp,LOCATION_ONFIELD|LOCATION_GRAVE,0,1,nil)
+		and re:GetHandler():IsDestructable() and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+		Duel.BreakEffect()
+		Duel.Destroy(eg,REASON_EFFECT)
 	end
 end
