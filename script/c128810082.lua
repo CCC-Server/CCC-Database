@@ -42,25 +42,14 @@ function s.initial_effect(c)
 	e3:SetTarget(s.rmtg2)
 	e3:SetOperation(s.rmop2)
 	c:RegisterEffect(e3)
-	--Cannot be destroyed by battle or card effect
+	--Unaffected by spell/trap effects
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(1)
+	e1:SetCode(EFFECT_IMMUNE_EFFECT)
+	e1:SetValue(s.efilter)
 	c:RegisterEffect(e1)
-	local e2=e1:Clone()
-	e2:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	c:RegisterEffect(e2)
-	--Unaffected by spell/trap effects
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetCode(EFFECT_IMMUNE_EFFECT)
-	e4:SetValue(s.efilter)
-	c:RegisterEffect(e4)
 end
 
 function s.efilter(e,te)
