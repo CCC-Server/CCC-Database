@@ -24,7 +24,7 @@ function s.initial_effect(c)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 end
-s.listed_names={69537999}
+s.listed_names={69537999,id}
 s.listed_series={SET_VOLCANIC}
 
 --① 코스트: 자신을 묘지로
