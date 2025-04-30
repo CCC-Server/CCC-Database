@@ -1,31 +1,43 @@
 --Blaze Cannon Bringer
 local s,id=GetID()
 function s.initial_effect(c)
-	--① 패 / 필드에서 자신을 묘지로 → 브레이즈 캐논 지속 마법/함정 덱에서 앞면 세트
+	--①-1 (필드 발동용)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	-- e1:SetCategory(CATEGORY_TOFIELD) ← 오류 발생하므로 삭제
 	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_HAND+LOCATION_MZONE)
+	e1:SetRange(LOCATION_MZONE)
 	e1:SetCountLimit(1,id)
 	e1:SetCost(s.setcost)
 	e1:SetTarget(s.settg)
 	e1:SetOperation(s.setop)
 	c:RegisterEffect(e1)
 
-	--② 묘지에서 발동: 상대 필드에 토큰 소환 후 자신 부활
+	--①-2 (패 발동용)
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id+100)
-	e2:SetCondition(s.spcon)
-	e2:SetTarget(s.sptg)
-	e2:SetOperation(s.spop)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetCode(EVENT_FREE_CHAIN)
+	e2:SetRange(LOCATION_HAND)
+	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER + TIMING_MAIN_END)
+	e2:SetCountLimit(1,id)
+	e2:SetCost(s.setcost)
+	e2:SetTarget(s.settg)
+	e2:SetOperation(s.setop)
 	c:RegisterEffect(e2)
+
+	--② 묘지에서 발동: 상대 필드에 토큰 소환 후 자신 부활
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
+	e3:SetType(EFFECT_TYPE_IGNITION)
+	e3:SetRange(LOCATION_GRAVE)
+	e3:SetCountLimit(1,id+100)
+	e3:SetCondition(s.spcon)
+	e3:SetTarget(s.sptg)
+	e3:SetOperation(s.spop)
+	c:RegisterEffect(e3)
 end
-s.listed_names={69537999} -- 브레이즈 캐논
+s.listed_names={69537999}
 s.listed_series={SET_VOLCANIC}
 
 --① 비용: 자신 묘지로
