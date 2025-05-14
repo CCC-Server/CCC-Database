@@ -1,9 +1,8 @@
---볼캐닉 데블건
 --Volcanic Devilgun
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
-	-- 특수 소환 조건
+	-- 특수 소환 조건 (일반 소환 불가)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
 	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
@@ -22,17 +21,18 @@ function s.initial_effect(c)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	--①: 특수 소환 성공시 전개+데미지
+	-- ①: 특수 소환 성공시 전개+데미지 (타이밍 보정)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_DESTROY+CATEGORY_DAMAGE)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetProperty(EFFECT_FLAG_DELAY) -- 핵심 수정: 타이밍 놓치지 않게
 	e2:SetTarget(s.destg)
 	e2:SetOperation(s.desop)
 	c:RegisterEffect(e2)
 
-	--②: 전투 실행시 효과 봉인
+	-- ②: 전투 실행시 상대 효과 발동 봉인
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
 	e3:SetCode(EFFECT_CANNOT_ACTIVATE)
@@ -42,7 +42,7 @@ function s.initial_effect(c)
 	e3:SetValue(1)
 	c:RegisterEffect(e3)
 
-	--③: 빠른 효과로 브레이즈 캐논 덤핑하고 공격력 상승
+	-- ③: 브레이즈 캐논 덤핑 후 전 몬스터 ATK 증가
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
 	e4:SetCategory(CATEGORY_TOGRAVE)
@@ -57,7 +57,7 @@ end
 
 s.listed_series={SET_VOLCANIC,SET_BLAZE_ACCELERATOR}
 
--- 특수 소환 조건: 일반 소환 불가
+-- 특수 소환 제한
 function s.splimit(e,se,sp,st)
 	return e:GetHandler():IsLocation(LOCATION_HAND+LOCATION_GRAVE)
 end
@@ -78,7 +78,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp,c)
 	Duel.Release(g,REASON_COST)
 end
 
---①: 특수 소환 성공시 → 상대 필드 전부 파괴 + 1000 데미지
+-- ①: 특수 소환 성공시 파괴 + 데미지
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_MZONE,nil)
 	if chk==0 then return #g>0 end
@@ -93,14 +93,15 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---②: 이 카드가 전투를 실행할 경우, 상대는 데미지 스텝 종료시까지 카드 효과 발동 불가
+-- ②: 전투 실행시 효과 봉쇄
 function s.actcon(e)
 	local ph=Duel.GetCurrentPhase()
 	local c=e:GetHandler()
-	return Duel.GetAttacker()==c or Duel.GetAttackTarget()==c and ph>=PHASE_DAMAGE and ph<=PHASE_DAMAGE_CAL
+	return (Duel.GetAttacker()==c or Duel.GetAttackTarget()==c)
+		and ph>=PHASE_DAMAGE and ph<=PHASE_DAMAGE_CAL
 end
 
---③: 브레이즈 캐논 덤핑하고 볼캐닉 몬스터 공격력 상승
+-- ③: 브레이즈 캐논 덤핑 + 공격력 증가
 function s.tgfilter(c)
 	return c:IsSetCard(SET_BLAZE_ACCELERATOR) and c:IsAbleToGrave()
 end
@@ -109,20 +110,16 @@ function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g>0 and Duel.SendtoGrave(g,REASON_EFFECT)>0 then
 		local g2=Duel.GetMatchingGroup(aux.FaceupFilter(Card.IsSetCard,SET_VOLCANIC),tp,LOCATION_MZONE,0,nil)
-		local c=e:GetHandler()
-		local tc=g2:GetFirst()
-		while tc do
-			local e1=Effect.CreateEffect(c)
+		for tc in g2:Iter() do
+			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetCode(EFFECT_UPDATE_ATTACK)
 			e1:SetValue(500)
 			e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
 			tc:RegisterEffect(e1)
-			tc=g2:GetNext()
 		end
 	end
 end
