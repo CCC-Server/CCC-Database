@@ -36,12 +36,14 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 	--Activate self from Banished
 	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+	e5:SetDescription(aux.Stringid(id,2))
+	e5:SetType(EFFECT_TYPE_SINGLE)
+	e5:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e5:SetCode(EFFECT_ACT_IN_RANGE)
 	e5:SetRange(LOCATION_REMOVED)
+	e5:SetCondition(newEffect.ActInRange.LimitCon())
+	e5:SetValue(newEffect.ActInRange.LimitOp())
 	e5:SetCountLimit(1,{id,1})
-	e5:SetCode(EVENT_PHASE+PHASE_STANDBY)
-	e5:SetCondition(s.fscon)
-	e5:SetOperation(s.fsop)
 	c:RegisterEffect(e5)
 end
 s.listed_series={ARCHETYPE_SPIRITUAL_ART}
@@ -52,20 +54,6 @@ end
 --Redirect
 function s.rmcon(e)
 	local c=e:GetHandler()
-	if c:IsLocation(LOCATION_FZONE) then
-		c:RegisterFlagEffect(id,RESET_EVENT+RESET_TODECK+RESET_TOGRAVE+RESET_TOFIELD+RESET_TOHAND,0,1)
-		return true
-	else
-		return false
-	end
+	return c:IsFaceup() and c:IsLocation(LOCATION_FZONE)
 end
 --Activate self from Banished
-function s.fscon(e,tp)
-	return Duel.IsTurnPlayer(tp) and e:GetHandler():HasFlagEffect(id)
-end
-function s.fsop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if c:GetActivateEffect():IsActivatable(tp,true,true) then
-		Duel.ActivateFieldSpell(c,e,tp,eg,ep,ev,re,r,rp)
-	end
-end
