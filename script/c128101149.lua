@@ -1,15 +1,16 @@
 -- A・O・J 트랙터
 local s,id=GetID()
 function s.initial_effect(c)
-    -- ① 패에서 특수 소환
+    -- ① 발동하고 자신을 특수 소환
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
-    e1:SetType(EFFECT_TYPE_FIELD)
-    e1:SetCode(EFFECT_SPSUMMON_PROC)
-    e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
+    e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+    e1:SetType(EFFECT_TYPE_IGNITION)
     e1:SetRange(LOCATION_HAND)
     e1:SetCountLimit(1,id)
     e1:SetCondition(s.spcon1)
+    e1:SetTarget(s.sptg1)
+    e1:SetOperation(s.spop1)
     c:RegisterEffect(e1)
 
     -- ② 릴리스하고 덱/패에서 A.O.J 2장까지 특수 소환
@@ -45,14 +46,23 @@ function s.initial_effect(c)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE}
 
--- ■ ① 패에서 특수 소환
-function s.spcon1(e,c)
-    if c==nil then return true end
-    return Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
-        and Duel.IsExistingMatchingCard(s.light_or_machine,c:GetControler(),LOCATION_MZONE,LOCATION_MZONE,1,nil)
+-- ■ ① 발동하고 자신을 특수 소환
+function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.IsExistingMatchingCard(s.light_or_machine,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 end
 function s.light_or_machine(c)
     return c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsRace(RACE_MACHINE)
+end
+function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk)
+    local c=e:GetHandler()
+    if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+        and c:IsCanBeSpecialSummoned(e,0,tp,false,false) end
+    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
+end
+function s.spop1(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    if not c:IsRelateToEffect(e) then return end
+    Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 end
 
 -- ■ ② 릴리스하고 A.O.J 2장까지 특수 소환
