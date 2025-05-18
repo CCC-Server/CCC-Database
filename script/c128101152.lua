@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.rmop)
 	c:RegisterEffect(e1)
 
-	-- ② 필드 효과 무효 + 덱에서 A.O.J 특수 소환 (정밀 판정 적용)
+	-- ✅ ② 필드 효과 무효 + 덱에서 A.O.J 특수 소환 (수정됨)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_NEGATE+CATEGORY_SPECIAL_SUMMON)
@@ -74,9 +74,11 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ■ ② 필드 효과 무효 + A.O.J 덱 특소 (정밀화)
+-- ✅ ② 필드 효과 무효 + A.O.J 덱 특소 (정밀 조건으로 수정)
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)&LOCATION_ONFIELD>0
+	local rc = re:GetHandler()
+	return re:IsActivated()
+		and rc and rc:IsOnField()
 		and Duel.IsChainNegatable(ev)
 end
 function s.aojfilter(c,e,tp)
