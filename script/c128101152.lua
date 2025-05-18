@@ -18,10 +18,10 @@ function s.initial_effect(c)
 	e1:SetOperation(s.rmop)
 	c:RegisterEffect(e1)
 
-	-- ② 필드 효과 무효 + 덱에서 A.O.J 특수 소환 (수정된 부분 포함)
+	-- ② 필드 효과 무효 + 덱에서 A.O.J 특수 소환 (정밀 판정 적용)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_DISABLE+CATEGORY_SPECIAL_SUMMON)
+	e2:SetCategory(CATEGORY_NEGATE+CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
@@ -74,11 +74,10 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ■ ② 수정된 조건: 필드 효과 발동 시 → 무효 + A.O.J 덱 특소
+-- ■ ② 필드 효과 무효 + A.O.J 덱 특소 (정밀화)
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	return re:IsActivated()
-		and bit.band(re:GetActivateLocation(),LOCATION_ONFIELD)~=0
-		and Duel.IsChainDisablable(ev)
+	return Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)&LOCATION_ONFIELD>0
+		and Duel.IsChainNegatable(ev)
 end
 function s.aojfilter(c,e,tp)
 	return c:IsSetCard(SET_ALLY_OF_JUSTICE) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
@@ -87,7 +86,7 @@ function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.IsExistingMatchingCard(s.aojfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_DISABLE,eg,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
