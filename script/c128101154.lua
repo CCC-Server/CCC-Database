@@ -13,7 +13,7 @@ function s.initial_effect(c)
     e1:SetOperation(s.spop1)
     c:RegisterEffect(e1)
 
-    -- ② 특수 소환 성공 시 상대 묘지 몬스터 전부 빛 속성으로 변경
+    -- ② 특수 소환 성공 시, 상대 묘지 몬스터 전부 빛 속성으로 간주 (잔존 효과)
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
@@ -54,20 +54,19 @@ function s.spop1(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- ■ ②: 특수 소환 성공 시, 상대 묘지 몬스터 전부 빛 속성으로 변경
+-- ■ ②: 잔존 효과 - 상대 턴 종료시까지 상대 묘지 몬스터는 빛 속성으로 간주
 function s.attrchange(e,tp,eg,ep,ev,re,r,rp)
-    local g=Duel.GetMatchingGroup(Card.IsLocation,tp,0,LOCATION_GRAVE,nil)
-    for tc in g:Iter() do
-        local e1=Effect.CreateEffect(e:GetHandler())
-        e1:SetType(EFFECT_TYPE_SINGLE)
-        e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-        e1:SetValue(ATTRIBUTE_LIGHT)
-        e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END+RESET_OPPO_TURN)
-        tc:RegisterEffect(e1)
-    end
+    local e1=Effect.CreateEffect(e:GetHandler())
+    e1:SetType(EFFECT_TYPE_FIELD)
+    e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+    e1:SetTargetRange(0,LOCATION_GRAVE)
+    e1:SetTarget(function(e,c) return c:IsLocation(LOCATION_GRAVE) end)
+    e1:SetValue(ATTRIBUTE_LIGHT)
+    e1:SetReset(RESET_PHASE+PHASE_END+RESET_OPPO_TURN)
+    Duel.RegisterEffect(e1,tp)
 end
 
--- ■ ③ 퀵 싱크로: 이 카드 + 필드 몬스터 대상으로 기계족 싱크로 몬스터 소환
+-- ■ ③ 퀵 싱크로: 이 카드 + 필드 몬스터로 기계족 싱크로 소환 (시트리 방식)
 function s.synfilter1(c,e,tp,mc)
     local mg=Group.FromCards(c,mc)
     return c:IsControler(tp) and c:IsLocation(LOCATION_MZONE)
