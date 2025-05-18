@@ -5,7 +5,7 @@ function s.initial_effect(c)
 	Xyz.AddProcedure(c,nil,5,2)
 	c:EnableReviveLimit()
 
-	-- 대체 엑시즈 소환 (랭크 4 RR 엑시즈 위에)
+	-- 대체 엑시즈 소환 (랭크 4 RR 엑시즈 위에) - 1턴 1회
 	local e0=Effect.CreateEffect(c)
 	e0:SetDescription(aux.Stringid(id,0))
 	e0:SetType(EFFECT_TYPE_FIELD)
@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e0:SetOperation(s.xyzop)
 	c:RegisterEffect(e0)
 
-	-- ① 무효 & 파괴
+	-- ① 무효 & 파괴 - 1턴 1회 (공용 제한)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetCategory(CATEGORY_DISABLE+CATEGORY_DESTROY)
@@ -32,10 +32,10 @@ function s.initial_effect(c)
 	e1:SetOperation(s.negop)
 	c:RegisterEffect(e1)
 
-	-- ② 묘지에서 부활 + 소재화
+	-- ② 자가 부활 + 오버레이 - 1턴 1회 (공용 제한)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,2))
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_OVERLAY)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e2:SetRange(LOCATION_GRAVE)
@@ -49,7 +49,9 @@ end
 
 -- 대체 엑시즈 소환 조건
 function s.matfilter(c,tp)
-	return c:IsFaceup() and c:IsSetCard(0xba) and c:IsType(TYPE_XYZ) and c:GetRank()==4 and c:IsControler(tp) and Duel.GetLocationCountFromEx(tp,tp,c)>0
+	return c:IsFaceup() and c:IsSetCard(0xba) and c:IsType(TYPE_XYZ)
+		and c:GetRank()==4 and c:IsControler(tp)
+		and Duel.GetLocationCountFromEx(tp,tp,c)>0
 end
 function s.xyzcon(e,c)
 	if c==nil then return true end
@@ -69,11 +71,10 @@ function s.xyzop(e,tp,eg,ep,ev,re,r,rp,c)
 	local tc=e:GetLabelObject()
 	local mg=tc:GetOverlayGroup()
 	if #mg>0 then
-		Duel.Overlay(c,mg)
+		Duel.Overlay(tc,mg) -- 기존 몬스터가 그 소재를 흡수 (안전)
 	end
+	Duel.Overlay(c,Group.FromCards(tc)) -- 기존 몬스터 자체를 겹침
 	c:SetMaterial(Group.FromCards(tc))
-	Duel.Overlay(c,Group.FromCards(tc))
-	Duel.SendtoGrave(tc,REASON_MATERIAL+REASON_XYZ)
 end
 
 -- ① 무효 & 파괴
@@ -88,7 +89,7 @@ function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	Duel.SetOperationInfo(0,CATEGORY_DISABLE,eg,1,0,0)
 	local rc=re:GetHandler()
-	if rc:IsDestructable() and rc:IsRelateToEffect(re) then
+	if rc:IsRelateToEffect(re) and rc:IsDestructable() then
 		Duel.SetOperationInfo(0,CATEGORY_DESTROY,rc,1,0,0)
 	end
 end
@@ -98,7 +99,7 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ② 자가 부활 + 특소 몬스터를 소재화
+-- ② 자가 부활 + 대상 몬스터를 오버레이
 function s.spfilter(c,tp)
 	return c:IsControler(1-tp) and c:IsFaceup() and c:IsLocation(LOCATION_MZONE)
 end
@@ -106,8 +107,10 @@ function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.spfilter,1,nil,tp)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsControler(1-tp) and chkc:IsLocation(LOCATION_MZONE) end
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) and eg:IsExists(s.spfilter,1,nil,tp) end
+	if chkc then return s.spfilter(chkc,tp) end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and eg:IsExists(s.spfilter,1,nil,tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	local g=eg:FilterSelect(tp,s.spfilter,1,1,nil,tp)
 	Duel.SetTargetCard(g)
@@ -116,7 +119,8 @@ end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 and tc and tc:IsRelateToEffect(e) and tc:IsControler(1-tp) and tc:IsFaceup() then
+	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0
+		and tc and tc:IsRelateToEffect(e) and tc:IsControler(1-tp) and tc:IsFaceup() then
 		Duel.BreakEffect()
 		Duel.Overlay(c,Group.FromCards(tc))
 	end
