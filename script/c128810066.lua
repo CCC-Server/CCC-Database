@@ -18,10 +18,10 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
 	e2:SetCode(EVENT_BE_MATERIAL)
 	e2:SetCondition(s.immcon)
-	e2:SetOperation(s.immop)
+	e2:SetValue(s.immval)
 	c:RegisterEffect(e2)
 	local e3=e2:Clone()
-	e3:SetOperation(s.immop2)
+	e2:SetValue(s.immval2)
 	c:RegisterEffect(e3)
 end
 s.listed_series={0xc03}
@@ -45,35 +45,13 @@ end
 function s.immcon(e,tp,eg,ep,ev,re,r,rp)
 	return r==REASON_SYNCHRO
 end
-function s.immop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local rc=c:GetReasonCard()
-	--Unaffected by spell effects
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(3102)
-	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_IMMUNE_EFFECT)
-	e1:SetValue(s.efilter)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	rc:RegisterEffect(e1)
+function s.immval(e,te)
+	local tc=te:GetOwner()
+	return te:GetOwnerPlayer()~=e:GetHandlerPlayer()
+		and te:IsActiveType(TYPE_SPELL) and te:IsActivated() and te:GetActivateLocation()==LOCATION_SZONE
 end
-function s.efilter(e,te)
-	return te:IsActiveType(TYPE_SPELL)
-end
-function s.immop2(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local rc=c:GetReasonCard()
-	--Unaffected by spell effects
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(3103)
-	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_IMMUNE_EFFECT)
-	e1:SetValue(s.efilter2)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	rc:RegisterEffect(e1)
-end
-function s.efilter2(e,te)
-	return te:IsActiveType(TYPE_TRAP)
+function s.immval2(e,te)
+	local tc=te:GetOwner()
+	return te:GetOwnerPlayer()~=e:GetHandlerPlayer()
+		and te:IsActiveType(TYPE_TRAP) and te:IsActivated() and te:GetActivateLocation()==LOCATION_SZONE
 end
