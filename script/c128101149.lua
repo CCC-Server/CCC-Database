@@ -1,7 +1,7 @@
--- A・O・J 트랙터
+--A.O.J Prototype
 local s,id=GetID()
 function s.initial_effect(c)
-    -- ① 발동하고 자신을 특수 소환
+    -- 1: 특수 소환 (패에서)
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -13,100 +13,114 @@ function s.initial_effect(c)
     e1:SetOperation(s.spop1)
     c:RegisterEffect(e1)
 
-    -- ② 릴리스하고 덱/패에서 A.O.J 2장까지 특수 소환
+    -- 2: 릴리스 후 A.O.J 특수 소환
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
     e2:SetType(EFFECT_TYPE_IGNITION)
     e2:SetRange(LOCATION_MZONE)
-    e2:SetCountLimit(1,{id,1})
-    e2:SetCost(s.cost2)
-    e2:SetTarget(s.target2)
-    e2:SetOperation(s.operation2)
+    e2:SetCountLimit(1,id+100)
+    e2:SetCondition(s.spcon2)
+    e2:SetCost(s.spcost2)
+    e2:SetTarget(s.sptg2)
+    e2:SetOperation(s.spop2)
     c:RegisterEffect(e2)
-    -- 상대 턴에도 발동 가능 (빛 속성 존재 시)
+
+    -- 2-퀵: 상대 턴에도 발동 가능 (상대 필드에 빛 몬스터 있을 경우)
     local e2q=e2:Clone()
     e2q:SetType(EFFECT_TYPE_QUICK_O)
     e2q:SetCode(EVENT_FREE_CHAIN)
-    e2q:SetCondition(s.quickcon2)
+    e2q:SetCondition(s.spcon2q)
     c:RegisterEffect(e2q)
 
-    -- ③ 묘지에서 특수 소환
+    -- ✅ 3: 묘지에서 자가부활 (EVENT_CHAIN_SOLVED로 수정)
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,2))
     e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
     e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-    e3:SetCode(EVENT_CHAINING)
+    e3:SetCode(EVENT_CHAIN_SOLVED)
     e3:SetRange(LOCATION_GRAVE)
-    e3:SetCountLimit(1,{id,2})
+    e3:SetCountLimit(1,id+200)
     e3:SetCondition(s.spcon3)
     e3:SetTarget(s.sptg3)
     e3:SetOperation(s.spop3)
     c:RegisterEffect(e3)
 end
-s.listed_series={SET_ALLY_OF_JUSTICE}
 
--- ■ ① 발동하고 자신을 특수 소환
-function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.IsExistingMatchingCard(s.light_or_machine,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
+-- [1] 패 특수 소환 조건
+function s.cfilter1(c)
+    return c:IsFaceup() and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsRace(RACE_MACHINE))
 end
-function s.light_or_machine(c)
-    return c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsRace(RACE_MACHINE)
+function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.IsExistingMatchingCard(s.cfilter1,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 end
 function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk)
-    local c=e:GetHandler()
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-        and c:IsCanBeSpecialSummoned(e,0,tp,false,false) end
-    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
+        and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 function s.spop1(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    if not c:IsRelateToEffect(e) then return end
-    Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+    if c:IsRelateToEffect(e) then
+        Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+    end
 end
 
--- ■ ② 릴리스하고 A.O.J 2장까지 특수 소환
-function s.cost2(e,tp,eg,ep,ev,re,r,rp,chk)
+-- [2] 릴리스 후 특수 소환
+function s.spcon2(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.GetTurnPlayer()==tp
+end
+function s.spcon2q(e,tp,eg,ep,ev,re,r,rp)
+    return Duel.GetTurnPlayer()~=tp and Duel.IsExistingMatchingCard(Card.IsAttribute,tp,0,LOCATION_MZONE,1,nil,ATTRIBUTE_LIGHT)
+end
+function s.spcost2(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return e:GetHandler():IsReleasable() end
     Duel.Release(e:GetHandler(),REASON_COST)
 end
 function s.filter2(c,e,tp)
-    return c:IsSetCard(SET_ALLY_OF_JUSTICE) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+    return c:IsSetCard(0x1) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
-function s.target2(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then
-        return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+        return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
             and Duel.IsExistingMatchingCard(s.filter2,tp,LOCATION_DECK+LOCATION_HAND,0,1,nil,e,tp)
     end
-    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_HAND)
+    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK+LOCATION_HAND)
 end
-function s.operation2(e,tp,eg,ep,ev,re,r,rp)
+function s.spop2(e,tp,eg,ep,ev,re,r,rp)
     local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
     if ft<=0 then return end
-    local g=Duel.SelectMatchingCard(tp,s.filter2,tp,LOCATION_DECK+LOCATION_HAND,0,1,math.min(2,ft),nil,e,tp)
+    if ft>2 then ft=2 end
+    local g=Duel.SelectMatchingCard(tp,s.filter2,tp,LOCATION_DECK+LOCATION_HAND,0,1,ft,nil,e,tp)
     if #g>0 then
         Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
     end
 end
-function s.quickcon2(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.IsExistingMatchingCard(Card.IsAttribute,tp,0,LOCATION_MZONE,1,nil,ATTRIBUTE_LIGHT)
-end
 
--- ■ ③ 묘지에서 특수 소환 + 필드에서 벗어나면 제외
+-- ✅ [3] 자가부활 조건 (EVENT_CHAIN_SOLVED 기반)
 function s.spcon3(e,tp,eg,ep,ev,re,r,rp)
-    local rc=re:GetHandler()
-    return rc and rc:IsAttribute(ATTRIBUTE_LIGHT)
+    if not re or rp==tp or not re:IsMonsterEffect() then return false end
+    local rc = re:GetHandler()
+    if not rc then return false end
+    -- 현재 속성이 빛인지 확인
+    if rc:IsAttribute(ATTRIBUTE_LIGHT) then
+        return true
+    end
+    -- 필드에서 발동되었고 이전 속성이 빛이면 허용
+    if rc:IsPreviousLocation(LOCATION_ONFIELD) then
+        local prev_attr = rc:GetPreviousAttributeOnField()
+        return prev_attr & ATTRIBUTE_LIGHT ~= 0
+    end
+    return false
 end
 function s.sptg3(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then
-        return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-            and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
-    end
+    if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+        and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 function s.spop3(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
-    if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)~=0 then
+    if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
         -- 필드에서 벗어나면 제외
         local e1=Effect.CreateEffect(c)
         e1:SetType(EFFECT_TYPE_SINGLE)
