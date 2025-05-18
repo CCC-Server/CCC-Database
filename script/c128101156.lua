@@ -51,7 +51,7 @@ function s.tgop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- ■ ②: 묘지에서 발동 → 토큰 특수 소환 (니비루 방식) + 싱크로 외 엑덱 특소 제한
+-- ■ ②: 묘지에서 발동 → 토큰 생성 (스크립트 없이 수동 정의) + 싱크로 외 특소 제한
 function s.rmfilter(c)
     return c:IsSetCard(SET_ALLY_OF_JUSTICE) and c:IsAbleToRemove()
 end
@@ -75,19 +75,31 @@ end
 function s.tkop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
     if not Duel.IsPlayerCanSpecialSummonMonster(tp,128101157,0,TYPES_TOKEN,0,0,2,RACE_MACHINE,ATTRIBUTE_DARK,POS_FACEUP,tp) then return end
-    local token=Duel.CreateToken(tp,128101157)
+
+    -- 직접 토큰 생성 (스크립트 없이)
+    local token=Duel.CreateToken(tp,0) -- 빈 코드 기반 토큰
+    token:SetOriginalCode(128101157)
+
     if Duel.SpecialSummonStep(token,0,tp,tp,false,false,POS_FACEUP) then
+        -- 토큰 타입 적용
+        local e1=Effect.CreateEffect(e:GetHandler())
+        e1:SetType(EFFECT_TYPE_SINGLE)
+        e1:SetCode(EFFECT_CHANGE_TYPE)
+        e1:SetValue(TYPE_TOKEN)
+        e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+        token:RegisterEffect(e1,true)
+
         Duel.SpecialSummonComplete()
 
-        -- 엑스트라 덱 특소 제한 (싱크로 외 불가)
-        local e1=Effect.CreateEffect(e:GetHandler())
-        e1:SetType(EFFECT_TYPE_FIELD)
-        e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-        e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-        e1:SetTargetRange(1,0)
-        e1:SetTarget(s.exlimit)
-        e1:SetReset(RESET_PHASE+PHASE_END)
-        Duel.RegisterEffect(e1,tp)
+        -- 싱크로 외 특수 소환 제한
+        local e2=Effect.CreateEffect(e:GetHandler())
+        e2:SetType(EFFECT_TYPE_FIELD)
+        e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+        e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+        e2:SetTargetRange(1,0)
+        e2:SetTarget(s.exlimit)
+        e2:SetReset(RESET_PHASE+PHASE_END)
+        Duel.RegisterEffect(e2,tp)
     end
 end
 function s.exlimit(e,c)
