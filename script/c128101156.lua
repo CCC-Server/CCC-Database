@@ -18,7 +18,7 @@ function s.initial_effect(c)
     e1:SetOperation(s.tgop)
     c:RegisterEffect(e1)
 
-    -- ② 묘지에서 발동, A.O.J 토큰 생성 + 싱크로 제한
+    -- ② 묘지에서 발동, A.O.J 토큰 생성 + 싱크로 외 특수 소환 제한
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TOKEN)
@@ -51,7 +51,7 @@ function s.tgop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- ■ ②: 묘지에서 발동 → 스크립트 없는 토큰 생성 + 싱크로 외 특수 소환 제한
+-- ■ ②: 묘지에서 발동 → 토큰 생성 + 싱크로 외 특수 소환 제한
 function s.rmfilter(c)
     return c:IsSetCard(SET_ALLY_OF_JUSTICE) and c:IsAbleToRemove()
 end
@@ -68,34 +68,41 @@ function s.tkcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.tktg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-        and Duel.IsPlayerCanSpecialSummonMonster(tp,0,TYPES_TOKEN,0,0,2,RACE_MACHINE,ATTRIBUTE_DARK,POS_FACEUP,tp) end
+        and Duel.IsPlayerCanSpecialSummonMonster(tp,128101157,0,TYPES_TOKEN,0,0,2,RACE_MACHINE,ATTRIBUTE_DARK) end
     Duel.SetOperationInfo(0,CATEGORY_TOKEN,nil,1,tp,0)
     Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,0)
 end
 function s.tkop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-    if not Duel.IsPlayerCanSpecialSummonMonster(tp,0,TYPES_TOKEN,0,0,2,RACE_MACHINE,ATTRIBUTE_DARK,POS_FACEUP,tp) then return end
+    if not Duel.IsPlayerCanSpecialSummonMonster(tp,128101157,0,TYPES_TOKEN,0,0,2,RACE_MACHINE,ATTRIBUTE_DARK) then return end
 
-    local token=Duel.CreateToken(tp,0) -- 빈 스크립트 토큰 생성
+    local token=Duel.CreateToken(tp,128101157) -- 토큰 ID 명확히 지정
+
+    if Duel.SpecialSummonStep(token,0,tp,tp,false,false,POS_FACEUP) then
         local e1=Effect.CreateEffect(e:GetHandler())
+        e1:SetDescription(aux.Stringid(id,2))
         e1:SetType(EFFECT_TYPE_SINGLE)
-        e1:SetCode(EFFECT_CHANGE_TYPE)
-        e1:SetValue(TYPE_TOKEN)
+        e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CLIENT_HINT)
+        e1:SetCode(EFFECT_UNRELEASABLE_SUM)
+        e1:SetValue(1)
         e1:SetReset(RESET_EVENT+RESETS_STANDARD)
         token:RegisterEffect(e1,true)
 
-        Duel.SpecialSummonComplete()
-
-        -- 싱크로 외 특수 소환 제한
-        local e2=Effect.CreateEffect(e:GetHandler())
-        e2:SetType(EFFECT_TYPE_FIELD)
-        e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-        e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-        e2:SetTargetRange(1,0)
-        e2:SetTarget(s.exlimit)
-        e2:SetReset(RESET_PHASE+PHASE_END)
-        Duel.RegisterEffect(e2,tp)
+        local e2=e1:Clone()
+        e2:SetCode(EFFECT_UNRELEASABLE_NONSUM)
+        token:RegisterEffect(e2,true)
     end
+    Duel.SpecialSummonComplete()
+
+    -- 싱크로 외 엑스트라 덱 특수 소환 제한
+    local e3=Effect.CreateEffect(e:GetHandler())
+    e3:SetType(EFFECT_TYPE_FIELD)
+    e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+    e3:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+    e3:SetTargetRange(1,0)
+    e3:SetTarget(s.exlimit)
+    e3:SetReset(RESET_PHASE+PHASE_END)
+    Duel.RegisterEffect(e3,tp)
 end
 function s.exlimit(e,c)
     return c:IsLocation(LOCATION_EXTRA) and not c:IsType(TYPE_SYNCHRO)
