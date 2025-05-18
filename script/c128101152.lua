@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.rmop)
 	c:RegisterEffect(e1)
 
-	-- ② 필드 효과 무효 + 덱에서 A.O.J 특수 소환
+	-- ② 필드 효과 무효 + 덱에서 A.O.J 특수 소환 (수정된 부분 포함)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_DISABLE+CATEGORY_SPECIAL_SUMMON)
@@ -74,9 +74,11 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ■ ② 필드 효과 발동 시 → 무효 + 덱에서 A.O.J 특수 소환
+-- ■ ② 수정된 조건: 필드 효과 발동 시 → 무효 + A.O.J 덱 특소
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	return re:IsActivated() and re:GetHandler():IsOnField() and Duel.IsChainDisablable(ev)
+	return re:IsActivated()
+		and bit.band(re:GetActivateLocation(),LOCATION_ONFIELD)~=0
+		and Duel.IsChainDisablable(ev)
 end
 function s.aojfilter(c,e,tp)
 	return c:IsSetCard(SET_ALLY_OF_JUSTICE) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
@@ -98,7 +100,7 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ■ ③ 파괴되었을 때 묘지에서 기계족 특수 소환
+-- ■ ③ 파괴 시 묘지에서 기계족 특수 소환
 function s.spcon3(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsReason(REASON_BATTLE+REASON_EFFECT)
 end
