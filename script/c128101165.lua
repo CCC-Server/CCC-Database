@@ -18,10 +18,14 @@ function s.initial_effect(c)
 	-- ② 패 이외에서 묘지로 보내졌을 때 회수
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_TOHAND)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_TO_GRAVE)
+	e2:SetProperty(EFFECT_FLAG_DELAY) -- ✅ 딜레이 플래그 추가
 	e2:SetCountLimit(1,{id,2})
-	e2:SetCondition(s.thcon)
+	e2:SetCondition(function(e)
+		return not e:GetHandler():IsPreviousLocation(LOCATION_HAND)
+	end)
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
@@ -88,12 +92,9 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ② 패 이외에서 묘지로 갔을 때 회수
-function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-	return not e:GetHandler():IsPreviousLocation(LOCATION_HAND)
-end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,e:GetHandler(),1,0,0)
+	if chk==0 then return e:GetHandler():IsAbleToHand() end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,e:GetHandler(),1,tp,0)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
