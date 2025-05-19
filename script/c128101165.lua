@@ -1,4 +1,4 @@
---RR-스트래프 블레이커 (가칭)
+--RR-스트래프 블레이커
 local s,id=GetID()
 function s.initial_effect(c)
 	-- ① 패 공개 후 특수 소환 + 엑시즈
@@ -27,16 +27,16 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
--- ① 조건: 메인 페이즈에서만
+-- ① 메인 페이즈에서만 발동 가능
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsMainPhase()
 end
 
--- 레벨 4 RR 몬스터 찾기
+-- RR 레벨 4 몬스터 필터
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xba) and c:IsLevel(4)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsSetCard(0xba) and c:IsLevel(4) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
+
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
@@ -46,6 +46,7 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_HAND)
 end
+
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<2 then return end
@@ -61,24 +62,34 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		and Duel.SpecialSummonStep(rc,0,tp,tp,false,false,POS_FACEUP) then
 		Duel.SpecialSummonComplete()
 
-		-- 즉시 엑시즈 소환 실행
-		local xyzg=Duel.GetMatchingGroup(aux.XyzMaterialFilter,nil,tp,LOCATION_MZONE,0,nil)
-		if xyzg:IsExists(Card.IsControler,2,nil,tp) and Duel.IsExistingMatchingCard(aux.XyzSummonFilter,tp,LOCATION_EXTRA,0,1,nil,xyzg) then
+		local mat=Group.FromCards(c,rc)
+		-- 레벨 체크: 두 몬스터가 동일한 레벨이어야 함
+		local lv=c:GetLevel()
+		if rc:GetLevel()~=lv then return end
+
+		local xyz_candidates=Duel.GetMatchingGroup(function(xc)
+			return xc:IsType(TYPE_XYZ) and xc:IsSetCard(0xba)
+				and xc:GetRank()==lv
+				and xc:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
+		end, tp, LOCATION_EXTRA, 0, nil)
+
+		if #xyz_candidates>0 then
 			Duel.BreakEffect()
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-			local xg=Duel.SelectMatchingCard(tp,aux.XyzSummonFilter,tp,LOCATION_EXTRA,0,1,1,nil,xyzg)
-			local sc=xg:GetFirst()
-			if sc then
-				Duel.XyzSummon(tp,sc,xyzg)
+			local xyz=xyz_candidates:Select(tp,1,1,nil):GetFirst()
+			if xyz then
+				xyz:SetMaterial(mat)
+				Duel.Overlay(xyz,mat)
+				Duel.SpecialSummon(xyz,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)
+				xyz:CompleteProcedure()
 			end
 		end
 	end
 end
 
--- ② 회수 조건: 패 이외에서 묘지로
+-- ② 패 이외에서 묘지로 갔을 때 회수
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	return not c:IsPreviousLocation(LOCATION_HAND)
+	return not e:GetHandler():IsPreviousLocation(LOCATION_HAND)
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
