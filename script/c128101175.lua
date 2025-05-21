@@ -1,10 +1,10 @@
 --어보미네이션 유닛 콜
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 1: 대상 몬스터 → 덱/묘지 특수 소환 → 싱크로 소환
+	-- 1: 대상 기계족 몬스터 → 특수 소환 → 싱크로 소환
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_SYNCHRO_SUMMON)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON) -- 오류 수정: CATEGORY_SYNCHRO_SUMMON 제거
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -13,7 +13,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.syop)
 	c:RegisterEffect(e1)
 
-	-- 2: 묘지 발동 - 무효화
+	-- 2: 묘지 발동 - 어보미네이션 몬스터 대상 효과 무효화
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_DISABLE)
@@ -66,7 +66,7 @@ function s.syop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -----------------------------
--- ② 무효 (묘지 발동)
+-- ② 묘지 발동 - 어보미네이션 보호
 -----------------------------
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	if not re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then return false end
