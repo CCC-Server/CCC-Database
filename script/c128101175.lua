@@ -7,15 +7,15 @@ function s.initial_effect(c)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
 
-	--②: 기계족 몬스터를 튜너로 취급
+	--②: 기계족 몬스터를 튜너로도 취급 (정상 작동 버전)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CHANGE_TYPE)
+	e1:SetCode(EFFECT_ADD_TYPE)
 	e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
 	e1:SetRange(LOCATION_SZONE)
 	e1:SetTargetRange(LOCATION_MZONE,0)
 	e1:SetTarget(s.tunertg)
-	e1:SetValue(TYPE_MONSTER+TYPE_TUNER+TYPE_EFFECT)
+	e1:SetValue(TYPE_TUNER)
 	c:RegisterEffect(e1)
 
 	--③: 어보미네이션 특수소환 시 파괴
@@ -32,9 +32,9 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
--- 기계족 몬스터를 튜너로 취급
+-- 기계족 몬스터를 튜너로도 취급
 function s.tunertg(e,c)
-	return c:IsRace(RACE_MACHINE)
+	return c:IsRace(RACE_MACHINE) and not c:IsType(TYPE_TUNER)
 end
 
 -- 어보미네이션 특수 소환 체크
