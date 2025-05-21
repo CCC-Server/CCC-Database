@@ -15,7 +15,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	-- 2: 서치 효과 (소환 성공 시)
+	-- 2: 서치 효과 (소환 성공 시, 몬스터만)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -27,6 +27,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e3:SetProperty(EFFECT_FLAG_DELAY) -- 🔧 핵심 수정: 체인 이후 발동 보장
 	c:RegisterEffect(e3)
 
 	-- 3: 묘지로 간 턴의 다음 턴 스탠바이 페이즈에 패로 복귀
@@ -80,10 +81,10 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -------------------------
--- ② 어보미네이션 카드 서치
+-- ② 어보미네이션 몬스터 서치
 -------------------------
 function s.thfilter(c)
-	return c:IsSetCard(0xc42) and not c:IsCode(id) and c:IsAbleToHand()
+	return c:IsSetCard(0xc42) and c:IsType(TYPE_MONSTER) and not c:IsCode(id) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
