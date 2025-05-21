@@ -42,26 +42,43 @@ function s.initial_effect(c)
 	e3:SetTarget(s.syntg)
 	e3:SetOperation(s.synop)
 	c:RegisterEffect(e3)
+
+	-- 📌 상대 카드 효과 발동 추적용 (턴 중 플래그 기록)
+	local ge1=Effect.CreateEffect(c)
+	ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	ge1:SetCode(EVENT_CHAINING)
+	ge1:SetOperation(function(e,tp,eg,ep,ev,re,r,rp)
+		if rp~=tp then
+			Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,0,1)
+		end
+	end)
+	Duel.RegisterEffect(ge1,0)
 end
 
--- 조건: 자신 필드에 어보미네이션 카드가 있을 경우
+-- 🔹 조건: 어보미네이션 카드(몬스터/마법/함정) 앞면 상태 존재
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0xc42),tp,LOCATION_MZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(s.abomfilter,tp,LOCATION_ONFIELD,0,1,nil)
+end
+function s.abomfilter(c)
+	return c:IsSetCard(0xc42) and c:IsType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP) and c:IsFaceup()
 end
 
--- 효과 1: 특소 및 덱에서 묘지로 보내기
-function s.tgfilter(c)
-	return c:IsSetCard(0xc42) and not c:IsCode(id) and c:IsType(TYPE_MONSTER) and c:IsAbleToGrave()
+-- 🔹 묘지로 보낼 카드 필터: 상황에 따라 유연하게 조정
+function s.dumpfilter(c,tp)
+	if Duel.GetFlagEffect(tp,id)>0 then
+		return (c:IsSetCard(0xc42) or (c:IsRace(RACE_MACHINE) and c:IsLevelBelow(5)))
+			and c:IsType(TYPE_MONSTER) and c:IsAbleToGrave()
+	else
+		return c:IsSetCard(0xc42) and c:IsType(TYPE_MONSTER) and c:IsAbleToGrave()
+	end
 end
-function s.opt_additional_grave(tp)
-	-- 상대가 효과를 발동했는지 여부 확인
-	return Duel.IsPlayerAffectedByEffect(tp,EFFECT_CHAINING)
-end
+
+-- 🔹 ① 효과: 특수 소환 및 덤핑
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) 
-		and Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and Duel.IsExistingMatchingCard(s.dumpfilter,tp,LOCATION_DECK,0,1,nil,tp) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
@@ -69,21 +86,14 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)~=0 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-		local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,s.dumpfilter,tp,LOCATION_DECK,0,1,1,nil,tp)
 		if #g>0 then
 			Duel.SendtoGrave(g,REASON_EFFECT)
-		end
-		-- 상대가 카드 효과 발동했을 경우, 추가로 레벨5 이하 기계족을 묘지로
-		if Duel.CheckEvent(EVENT_CHAINING) then
-			local add=Duel.SelectMatchingCard(tp,function(c) return c:IsRace(RACE_MACHINE) and c:IsLevelBelow(5) and c:IsAbleToGrave() end,tp,LOCATION_DECK,0,0,1,nil)
-			if #add>0 then
-				Duel.SendtoGrave(add,REASON_EFFECT)
-			end
 		end
 	end
 end
 
--- 효과 2: 기계족 1장 부활
+-- 🔹 ② 효과: 기계족 부활 + 특수 소환 제한
 function s.revive_filter(c,e,tp)
 	return c:IsRace(RACE_MACHINE) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
@@ -98,7 +108,6 @@ function s.revive_op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) then
 		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
-		-- 기계족 특수 소환 제한
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_FIELD)
 		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH)
@@ -110,7 +119,7 @@ function s.revive_op(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- 효과 3: 상대 턴 싱크로 소환
+-- 🔹 ③ 효과: 상대 턴 싱크로 소환
 function s.syncon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetTurnPlayer()~=tp
 end
