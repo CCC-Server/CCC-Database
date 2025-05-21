@@ -14,11 +14,11 @@ function s.initial_effect(c)
 	e1:SetOperation(s.spop1)
 	c:RegisterEffect(e1)
 
-	--2: 상대 효과 발동 시 덱특소 + 싱크로 소환
+	--2: 상대 몬스터 효과 발동 시 덱특소 + 싱크로 소환
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1,id+100)
@@ -41,7 +41,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 
---🔹 효과 ①: 상대가 몬스터 특수 소환한 턴에 패에서 특소
+-- 효과 ①: 상대가 몬스터 특수 소환한 턴에 발동
 function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetTurnPlayer()~=tp or Duel.GetActivityCount(1-tp,ACTIVITY_SPSUMMON)>0
 end
@@ -57,9 +57,9 @@ function s.spop1(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---🔹 효과 ②: 상대가 효과 발동 시 덱에서 특소 + 즉시 싱크로
+-- 효과 ②: 상대 몬스터 효과 발동 시 반응 → 특소 + 싱크로
 function s.spcon2(e,tp,eg,ep,ev,re,r,rp)
-	return ep==1-tp and re:IsActivated()
+	return ep==1-tp and re:IsActiveType(TYPE_MONSTER) and re:IsActivated()
 end
 function s.spfilter2(c,e,tp)
 	return c:IsSetCard(0xc42) and not c:IsCode(id) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
@@ -76,7 +76,6 @@ function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.spop2(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(tp,s.spfilter2,tp,LOCATION_DECK,0,1,1,nil,e,tp)
 	if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)~=0 then
 		local mg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
@@ -88,7 +87,7 @@ function s.spop2(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---🔹 효과 ③: 묘지에서 턴 종료시 자가 부활
+-- 효과 ③: 이 턴에 묘지로 간 경우, 엔드 페이즈에 부활
 function s.spcon3(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():GetTurnID()==Duel.GetTurnCount()
 end
