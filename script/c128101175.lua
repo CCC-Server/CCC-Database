@@ -1,86 +1,63 @@
---어보미네이션 유닛 콜
+--어보미네이션 유닛 콜 (지속 함정)
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 1: 대상 기계족 몬스터 → 특수 소환 → 싱크로 소환
+	--①: 발동 처리 (프리체인)
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_ACTIVATE)
+	e0:SetCode(EVENT_FREE_CHAIN)
+	c:RegisterEffect(e0)
+
+	--②: 기계족 몬스터를 튜너로 취급
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON) -- 오류 수정: CATEGORY_SYNCHRO_SUMMON 제거
-	e1:SetType(EFFECT_TYPE_ACTIVATE)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetCountLimit(1,id)
-	e1:SetTarget(s.sytg)
-	e1:SetOperation(s.syop)
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_CHANGE_TYPE)
+	e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e1:SetRange(LOCATION_SZONE)
+	e1:SetTargetRange(LOCATION_MZONE,0)
+	e1:SetTarget(s.tunertg)
+	e1:SetValue(TYPE_MONSTER+TYPE_TUNER+TYPE_EFFECT)
 	c:RegisterEffect(e1)
 
-	-- 2: 묘지 발동 - 어보미네이션 몬스터 대상 효과 무효화
+	--③: 어보미네이션 특수소환 시 파괴
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_DISABLE)
-	e2:SetType(EFFECT_TYPE_QUICK_O)
-	e2:SetCode(EVENT_CHAINING)
-	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id+100)
-	e2:SetCondition(s.negcon)
-	e2:SetCost(s.negcost)
-	e2:SetTarget(s.negtg)
-	e2:SetOperation(s.negop)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetCategory(CATEGORY_DESTROY)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetRange(LOCATION_SZONE)
+	e2:SetCountLimit(1,id)
+	e2:SetCondition(s.descon)
+	e2:SetTarget(s.destg)
+	e2:SetOperation(s.desop)
 	c:RegisterEffect(e2)
 end
 
------------------------------
--- ① 기계족 → 특소 → 싱크로
------------------------------
-function s.cfilter(c,tp)
-	return c:IsFaceup() and c:IsRace(RACE_MACHINE) and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil,c:GetCode(),tp)
-end
-function s.spfilter(c,code,tp)
-	return c:IsSetCard(0xc42) and not c:IsCode(code) and c:IsCanBeSpecialSummoned(nil,0,tp,false,false)
-end
-function s.synfilter(c,mg)
-	return c:IsRace(RACE_MACHINE) and c:IsSynchroSummonable(nil,mg)
-end
-function s.sytg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and s.cfilter(chkc,tp) end
-	if chk==0 then
-		return Duel.IsExistingTarget(s.cfilter,tp,LOCATION_MZONE,0,1,nil,tp)
-	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local tc=Duel.SelectTarget(tp,s.cfilter,tp,LOCATION_MZONE,0,1,1,nil,tp):GetFirst()
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
-end
-function s.syop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if not tc or not tc:IsFaceup() or not tc:IsRelateToEffect(e) then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,tc:GetCode(),tp)
-	if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)~=0 then
-		local mg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-		Duel.BreakEffect()
-		local sg=Duel.SelectMatchingCard(tp,s.synfilter,tp,LOCATION_EXTRA,0,1,1,nil,mg)
-		if #sg>0 then
-			Duel.SynchroSummon(tp,sg:GetFirst(),nil,mg)
-		end
-	end
+-- 기계족 몬스터를 튜너로 취급
+function s.tunertg(e,c)
+	return c:IsRace(RACE_MACHINE)
 end
 
------------------------------
--- ② 묘지 발동 - 어보미네이션 보호
------------------------------
-function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	if not re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then return false end
-	local tg=Duel.GetChainInfo(ev,CHAININFO_TARGET_CARDS)
-	return tg and tg:IsExists(function(c) return c:IsFaceup() and c:IsSetCard(0xc42) and c:IsControler(tp) end,1,nil)
+-- 어보미네이션 특수 소환 체크
+function s.descon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(function(c) return c:IsControler(tp) and c:IsSetCard(0xc42) end,1,nil)
 end
-function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsAbleToRemoveAsCost() end
-	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_COST)
+
+-- 파괴 대상 선택 (싱크로 몬스터 여부 확인)
+function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local ct=1
+	if Duel.IsExistingMatchingCard(Card.IsType,tp,LOCATION_MZONE,0,1,nil,TYPE_SYNCHRO) then
+		ct=2
+	end
+	if chk==0 then return Duel.IsExistingMatchingCard(nil,tp,0,LOCATION_ONFIELD,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local g=Duel.SelectTarget(tp,nil,tp,0,LOCATION_ONFIELD,1,ct,nil)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
 end
-function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_DISABLE,eg,1,0,0)
-end
-function s.negop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.NegateEffect(ev)
+
+-- 파괴 실행
+function s.desop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetTargetCards(e)
+	if #g>0 then
+		Duel.Destroy(g,REASON_EFFECT)
+	end
 end
