@@ -29,7 +29,7 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e3)
 
-	-- 3: 다음 스탠바이 페이즈에 패로 되돌리기
+	-- 3: 묘지로 간 턴의 다음 턴 스탠바이 페이즈에 패로 복귀
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
@@ -47,9 +47,18 @@ function s.initial_effect(c)
 	ge1:SetCode(EVENT_CHAINING)
 	ge1:SetOperation(s.regop)
 	Duel.RegisterEffect(ge1,0)
+
+	-- 묘지로 갔을 때 턴 수 저장
+	local ge2=Effect.CreateEffect(c)
+	ge2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	ge2:SetCode(EVENT_TO_GRAVE)
+	ge2:SetOperation(s.storeturn)
+	c:RegisterEffect(ge2)
 end
 
--- 🛠 1: 프리체인 특수 소환 조건 (턴 중 기계족 효과 발동했는지)
+-------------------------
+-- ① 프리체인 특수 소환
+-------------------------
 function s.regop(e,tp,eg,ep,ev,re,r,rp)
 	if re:GetHandler():IsRace(RACE_MACHINE) and re:IsActivated() then
 		Duel.RegisterFlagEffect(rp,id,RESET_PHASE+PHASE_END,0,1)
@@ -70,7 +79,9 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- 🧠 2: 어보미네이션 카드 서치
+-------------------------
+-- ② 어보미네이션 카드 서치
+-------------------------
 function s.thfilter(c)
 	return c:IsSetCard(0xc42) and not c:IsCode(id) and c:IsAbleToHand()
 end
@@ -87,9 +98,16 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- 🔁 3: 다음 스탠바이 페이즈에 패로 되돌리기
+-------------------------
+-- ③ 다음 턴 스탠바이 페이즈에 패로 복귀
+-------------------------
+function s.storeturn(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	c:SetTurnCounter(Duel.GetTurnCount())
+end
 function s.retcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetTurnPlayer()==tp
+	local c=e:GetHandler()
+	return Duel.GetTurnCount() > (c:GetTurnCounter() or 0)
 end
 function s.rettg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():IsAbleToHand() end
