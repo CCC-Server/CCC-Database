@@ -1,11 +1,11 @@
 --어보미네이션 임퍼서넌스 드래곤
 local s,id=GetID()
 function s.initial_effect(c)
-	--싱크로 소환 조건
+	-- 싱크로 소환 조건 (튜너 + 튜너 이외 몬스터 자유)
 	c:EnableReviveLimit()
-	Synchro.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_TUNER),1,1,aux.FilterBoolFunction(Card.IsSetCard,0xc42),1,99)
+	Synchro.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_TUNER),1,1,nil,1,99)
 
-	--싱크로 소재 지정: 어보미네이션 몬스터 1장 튜너로 간주
+	-- 어보미네이션 몬스터 1장을 튜너로 간주
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_FIELD)
 	e0:SetCode(EFFECT_CHANGE_TYPE)
@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e0:SetValue(TYPE_MONSTER+TYPE_TUNER+TYPE_EFFECT)
 	c:RegisterEffect(e0)
 
-	--1: 싱크로 소환 성공 시 서치 + 상대 턴이면 파괴
+	-- 1: 싱크로 소환 성공 시 서치 + 상대 턴에 소환 시 파괴
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DESTROY)
@@ -32,7 +32,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
 
-	--2: 묘지에서 자가 부활 (레벨 3 또는 5로 간주, 벗어나면 제외)
+	-- 2: 묘지에서 자가 부활 (레벨 3 또는 5로 간주, 필드 이탈 시 제외)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -46,7 +46,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
--- 1번 효과: 싱크로 소환 성공 시
+-- 1: 싱크로 소환 성공 시 조건
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_SYNCHRO)
 end
@@ -65,7 +65,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoHand(g,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g)
 	end
-	-- 상대 턴에 싱크로 소환되었을 경우 추가 파괴
+	-- 상대 턴에 소환되었을 경우 파괴 추가
 	if Duel.GetTurnPlayer()~=tp then
 		local dg=Duel.SelectMatchingCard(tp,nil,tp,0,LOCATION_ONFIELD,1,1,nil)
 		if #dg>0 then
@@ -75,7 +75,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- 2번 효과: 묘지에서 자가 특수 소환 (레벨 선택, 제외 처리)
+-- 2: 묘지에서 자가 부활
 function s.spcon2(e,tp,eg,ep,ev,re,r,rp)
 	return re and re:IsActivated() and re:IsActiveType(TYPE_MONSTER)
 end
@@ -96,7 +96,7 @@ function s.spop2(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetValue(LOCATION_REMOVED)
 		c:RegisterEffect(e1,true)
 
-		-- 레벨 3 또는 5 중 선택
+		-- 레벨 선택 (3 또는 5)
 		Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
 		local lv=Duel.AnnounceNumber(tp,3,5)
 		local e2=Effect.CreateEffect(c)
