@@ -1,24 +1,24 @@
---어보미네이션 유닛 콜 (지속 함정)
+--어보미네이션 서지 배리어
 local s,id=GetID()
 function s.initial_effect(c)
-	--①: 발동 처리 (프리체인)
+	--① 카드 발동 (프리체인)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
 
-	--②: 기계족 몬스터를 튜너로도 취급 (정상 작동 버전)
+	--①: 어보미넌스 싱크로 소환시 체인 봉쇄
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_ADD_TYPE)
-	e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e1:SetCode(EFFECT_CANNOT_ACTIVATE)
 	e1:SetRange(LOCATION_SZONE)
-	e1:SetTargetRange(LOCATION_MZONE,0)
-	e1:SetTarget(s.tunertg)
-	e1:SetValue(TYPE_TUNER)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e1:SetTargetRange(1,1)
+	e1:SetCondition(s.chainlimit_con)
+	e1:SetValue(s.chainlimit_val)
 	c:RegisterEffect(e1)
 
-	--③: 어보미네이션 특수소환 시 파괴
+	--②: 어보미네이션 몬스터 특수 소환 시 파괴 (1턴 1회)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetCategory(CATEGORY_DESTROY)
@@ -32,29 +32,35 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
--- 기계족 몬스터를 튜너로도 취급
-function s.tunertg(e,c)
-	return c:IsRace(RACE_MACHINE) and not c:IsType(TYPE_TUNER)
+----------------------------
+-- ① 어보미넌스 싱크로 체인 봉쇄
+----------------------------
+function s.chainlimit_con(e)
+	local tp=e:GetHandlerPlayer()
+	local ph=Duel.GetCurrentPhase()
+	return Duel.GetCurrentChain()==0 and ph==PHASE_MAIN1 or ph==PHASE_MAIN2
+end
+function s.chainlimit_val(e,re,tp)
+	local rc=re:GetHandler()
+	return rc:IsType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP) and Duel.GetFlagEffect(tp,id)==1
 end
 
--- 어보미네이션 특수 소환 체크
+----------------------------
+-- ② 어보미네이션 특수 소환 시 파괴
+----------------------------
 function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(function(c) return c:IsControler(tp) and c:IsSetCard(0xc42) end,1,nil)
 end
-
--- 파괴 대상 선택 (싱크로 몬스터 여부 확인)
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local ct=1
-	if Duel.IsExistingMatchingCard(Card.IsType,tp,LOCATION_MZONE,0,1,nil,TYPE_SYNCHRO) then
+	if Duel.IsExistingMatchingCard(function(c) return c:IsFaceup() and c:IsType(TYPE_SYNCHRO) and c:IsSetCard(0xc42) end,tp,LOCATION_MZONE,0,1,nil) then
 		ct=2
 	end
-	if chk==0 then return Duel.IsExistingMatchingCard(nil,tp,0,LOCATION_ONFIELD,1,nil) end
+	if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,nil,tp,0,LOCATION_ONFIELD,1,ct,nil)
+	local g=Duel.SelectTarget(tp,aux.TRUE,tp,0,LOCATION_ONFIELD,1,ct,nil)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
 end
-
--- 파괴 실행
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetTargetCards(e)
 	if #g>0 then
