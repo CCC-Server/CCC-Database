@@ -89,7 +89,7 @@ function s.atkfilter(c)
 end
 
 function s.sfilter(c)
-    return c:IsType(TYPE_SYNCHRO) and c:IsRace(RACE_FAIRY)
+    return c:IsRace(RACE_FAIRY)
 end
 
 function s.skipcost(e,tp,eg,ep,ev,re,r,rp,chk)
