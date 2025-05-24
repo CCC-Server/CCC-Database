@@ -1,9 +1,12 @@
 --灰滅せし都の呪術師
 --Shaman of the Ashened City
 --scripted by 유희왕 덱 제작기
+
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Special Summon from hand if "Obsidim, Ashened City" is on field
+	-------------------------------------
+	-- 특수 소환: "옵시딤"이 필드존에 있을 경우 핸드에서 특수 소환
+	-------------------------------------
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD)
@@ -14,27 +17,26 @@ function s.initial_effect(c)
 	e1:SetCondition(s.spcon)
 	c:RegisterEffect(e1)
 
-	-- Set 1 Continuous Spell/Trap from Deck upon Summon
+	-------------------------------------
+	-- 일반 소환/특수 소환 성공 시: 덱에서 회멸 지속 마법/함정 세트
+	-------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOFIELD)
+	e2:SetCategory(CATEGORY_SEARCH+CATEGORY_TOHAND) -- UI 용도, 유사한 카테고리 사용
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetTarget(s.settg)
 	e2:SetOperation(s.setop)
 	c:RegisterEffect(e2)
+
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e3)
 end
 
--- 카드 참조 코드 (전역 변수)
-CARD_OBSIDIM_ASHENED_CITY = 10000010 -- "회멸의 도시 옵시딤"의 가상 코드
-SET_ASHENED = 0x2e1 -- 회멸 카드군의 시리얼 번호 (예시값)
-
 ------------------------------------------------------
--- 특수 소환 조건: 필드존에 옵시딤 존재 시
+-- 특수 소환 조건: 필드존에 "회멸의 도시 옵시딤"이 앞면 존재할 경우
 ------------------------------------------------------
 function s.spcon(e,c)
 	if c==nil then return true end
@@ -44,11 +46,11 @@ function s.spcon(e,c)
 end
 
 ------------------------------------------------------
--- 서치 대상 필터: 회멸 지속 마법/함정
+-- 덱에서 세트할 대상: 회멸 지속 마법/함정
 ------------------------------------------------------
 function s.setfilter(c)
 	return c:IsSetCard(SET_ASHENED)
-		and (c:IsType(TYPE_CONTINUOUS+TYPE_SPELL) or c:IsType(TYPE_CONTINUOUS+TYPE_TRAP))
+		and c:IsType(TYPE_CONTINUOUS) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP))
 		and not c:IsForbidden()
 end
 
@@ -60,7 +62,7 @@ function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 ------------------------------------------------------
--- 지속 마법/함정 앞면 세트
+-- 효과 실행: 카드 1장을 고르고 앞면 세트
 ------------------------------------------------------
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
