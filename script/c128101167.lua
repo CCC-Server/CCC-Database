@@ -32,14 +32,10 @@ function s.initial_effect(c)
 
 	-- 3: 묘지로 간 턴의 다음 턴 스탠바이 페이즈에 패로 복귀
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,2))
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
-	e4:SetCode(EVENT_PHASE+PHASE_STANDBY)
-	e4:SetRange(LOCATION_GRAVE)
-	e4:SetCountLimit(1,id+200)
-	e4:SetCondition(s.retcon)
-	e4:SetTarget(s.rettg)
-	e4:SetOperation(s.retop)
+	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e4:SetCode(EVENT_TO_GRAVE)
+	e4:SetOperation(s.threg)
 	c:RegisterEffect(e4)
 
 	-- 턴 동안 기계족 몬스터 효과 발동 기록용
@@ -48,13 +44,7 @@ function s.initial_effect(c)
 	ge1:SetCode(EVENT_CHAINING)
 	ge1:SetOperation(s.regop)
 	Duel.RegisterEffect(ge1,0)
-
-	-- 묘지로 갔을 때 턴 수 저장
-	local ge2=Effect.CreateEffect(c)
-	ge2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-	ge2:SetCode(EVENT_TO_GRAVE)
-	ge2:SetOperation(s.storeturn)
-	c:RegisterEffect(ge2)
+	
 end
 
 -------------------------
@@ -102,21 +92,33 @@ end
 -------------------------
 -- ③ 다음 턴 스탠바이 페이즈에 패로 복귀
 -------------------------
-function s.storeturn(e,tp,eg,ep,ev,re,r,rp)
+function s.threg(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	c:SetTurnCounter(Duel.GetTurnCount())
+	if not c:IsLocation(LOCATION_GRAVE) then return end
+	local turn_ct=Duel.GetTurnCount()
+	local ct=Duel.IsPhase(PHASE_STANDBY) and 2 or 1
+	--Add this card from your GY to your hand
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,2))
+	e1:SetCategory(CATEGORY_TOHAND)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+	e1:SetCode(EVENT_PHASE|PHASE_STANDBY)
+	e1:SetRange(LOCATION_GRAVE)
+	e1:SetCountLimit(1,{id,2})
+	e1:SetCondition(function() return ct==1 or Duel.GetTurnCount()~=turn_ct end)
+	e1:SetTarget(s.selfthtg)
+	e1:SetOperation(s.selfthop)
+	e1:SetReset(RESET_EVENT|RESETS_STANDARD|RESET_PHASE|PHASE_STANDBY,ct)
+	c:RegisterEffect(e1)
 end
-function s.retcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	return Duel.GetTurnCount() > (c:GetTurnCounter() or 0)
+function s.selfthtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,e:GetHandler(),1,tp,0)
 end
-function s.rettg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsAbleToHand() end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,e:GetHandler(),1,0,0)
-end
-function s.retop(e,tp,eg,ep,ev,re,r,rp)
+function s.selfthop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) then
 		Duel.SendtoHand(c,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,c)
 	end
 end
