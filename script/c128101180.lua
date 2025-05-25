@@ -32,13 +32,15 @@ end
 
 function s.initial_effect(c)
 	------------------------------------
-	--① 이 턴 중 화염족 몬스터 효과가 발동됐으면 패에서 특수 소환
+	--① 메인페이즈 중 프리체인 특수 소환
 	------------------------------------
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetType(EFFECT_TYPE_QUICK_O)
+	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetRange(LOCATION_HAND)
+	e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_MAIN_END)
 	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.spcon)
 	e1:SetTarget(s.sptg)
@@ -46,12 +48,12 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 
 	------------------------------------
-	--② 소환 성공 시 회멸 몬스터 서치
+	--② 소환 성공 시 회멸 몬스터 서치 (선택 발동)
 	------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O) -- ✅ 선택 발동으로 수정
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetTarget(s.thtg)
@@ -63,7 +65,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2b)
 
 	------------------------------------
-	--③ 특수 소환된 턴 동안 상대 필드 몬스터는 화염족으로 취급
+	--③ 특수 소환된 턴 동안 상대 필드 몬스터는 화염족
 	------------------------------------
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD)
@@ -76,10 +78,10 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------
---① 조건: 이 턴 중 화염족 몬스터 효과가 발동됐는지
+--① 조건: 메인 페이즈 + 이 턴 중 화염족 효과 발동
 --------------------------------------------------
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return s.pyro_activated_this_turn[tp]
+	return Duel.IsMainPhase() and s.pyro_activated_this_turn[tp]
 end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -92,13 +94,14 @@ end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsRelateToEffect(e) then
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	if c:IsRelateToEffect(e) then
 		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
 --------------------------------------------------
---② 서치: "회멸" 몬스터 1장 (자신 제외)
+--② 서치: 회멸 몬스터 1장 (자신 제외)
 --------------------------------------------------
 function s.thfilter(c)
 	return c:IsSetCard(SET_ASHENED) and not c:IsCode(id)

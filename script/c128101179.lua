@@ -3,7 +3,7 @@
 
 local s,id=GetID()
 function s.initial_effect(c)
-	--① 특수 소환 조건
+	--① 특수 소환 조건 (필드존에 옵시딤 존재 시)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
@@ -68,7 +68,7 @@ end
 function s.setfilter(c)
 	return c:IsType(TYPE_SPELL+TYPE_TRAP) and (
 		c:IsSetCard(SET_ASHENED) or c:IsCode(30453613)
-	)
+	) and c:IsSSetable()
 end
 
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -83,7 +83,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=g:GetFirst()
 	if tc then
 		Duel.SSet(tp,tc)
-		-- 세트한 턴에도 발동 가능
+		-- 세트한 턴에도 발동 가능하게 설정
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
@@ -97,7 +97,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ----------------------------------------------------------
---③ 묘지 융합 효과
+--③ 묘지 융합 효과 (내 필드 + 상대 필드)
 ----------------------------------------------------------
 function s.fuscon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsMainPhase()
@@ -112,7 +112,7 @@ end
 
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		local mg=Duel.GetFusionMaterial(tp)
+		local mg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
 		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg,nil)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
@@ -120,7 +120,7 @@ end
 
 function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	local chkf=tp
-	local mg=Duel.GetFusionMaterial(tp)
+	local mg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
 	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,nil)
 	if #sg==0 then return end
 
@@ -128,6 +128,7 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=sg:Select(tp,1,1,nil):GetFirst()
 	if tc then
 		local mat=Duel.SelectFusionMaterial(tp,tc,mg,nil,chkf)
+		if not mat or #mat==0 then return end
 		tc:SetMaterial(mat)
 		Duel.SendtoGrave(mat,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
 		Duel.BreakEffect()
