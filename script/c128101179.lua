@@ -3,7 +3,7 @@
 
 local s,id=GetID()
 function s.initial_effect(c)
-	--① 특수 소환 조건 (조건부 특소)
+	--① 특수 소환 조건
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
@@ -54,7 +54,7 @@ function s.spcon1(e,c)
 end
 
 ----------------------------------------------------------
---② 세트 효과 (자신 릴리스 + 덱/묘지에서 세트)
+--② 릴리스 후 세트 (덱/묘지에서 회멸 마/함 또는 베이도스의 자각)
 ----------------------------------------------------------
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsMainPhase()
@@ -66,7 +66,9 @@ function s.setcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.setfilter(c)
-	return (c:IsSetCard(SET_ASHENED) and c:IsType(TYPE_SPELL+TYPE_TRAP)) or c:IsCode(CARD_AWAKENING_OF_VEIDOS)
+	return c:IsType(TYPE_SPELL+TYPE_TRAP) and (
+		c:IsSetCard(SET_ASHENED) or c:IsCode(30453613)
+	)
 end
 
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -81,7 +83,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=g:GetFirst()
 	if tc then
 		Duel.SSet(tp,tc)
-		-- 세트한 턴에 발동 가능
+		-- 세트한 턴에도 발동 가능
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
@@ -102,7 +104,7 @@ function s.fuscon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.fusfilter(c,e,tp,mg,fcheck)
-	return c:IsRace(RACE_PYRO) and c:IsType(TYPE_FUSION) 
+	return c:IsRace(RACE_PYRO) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
 		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
 		and c:CheckFusionMaterial(mg,nil,fcheck)

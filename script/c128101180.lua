@@ -2,24 +2,51 @@
 --Scripted by 유희왕 덱 제작기
 
 local s,id=GetID()
+-- 🔁 전역 화염족 효과 추적 변수
+if not s.global_check then
+	s.global_check = true
+	s.pyro_activated_this_turn = {[0]=false,[1]=false}
+
+	-- 🔥 화염족 효과 발동 시 체크
+	local ge1=Effect.GlobalEffect()
+	ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	ge1:SetCode(EVENT_CHAINING)
+	ge1:SetOperation(function(_,_,_,_,_,re,_,rp)
+		local rc = re:GetHandler()
+		if rc:IsRace(RACE_PYRO) and rc:IsType(TYPE_MONSTER) then
+			s.pyro_activated_this_turn[rp] = true
+		end
+	end)
+	Duel.RegisterEffect(ge1,0)
+
+	-- 턴 시작 시 리셋
+	local ge2=Effect.GlobalEffect()
+	ge2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	ge2:SetCode(EVENT_PHASE_START+PHASE_DRAW)
+	ge2:SetOperation(function()
+		s.pyro_activated_this_turn[0] = false
+		s.pyro_activated_this_turn[1] = false
+	end)
+	Duel.RegisterEffect(ge2,0)
+end
+
 function s.initial_effect(c)
 	------------------------------------
-	--① 화염족 효과 발동 시, 패에서 특수 소환
+	--① 이 턴 중 화염족 몬스터 효과가 발동됐으면 패에서 특수 소환
 	------------------------------------
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_CHAINING)
+	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_HAND)
 	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.spcon1)
-	e1:SetTarget(s.sptg1)
-	e1:SetOperation(s.spop1)
+	e1:SetCondition(s.spcon)
+	e1:SetTarget(s.sptg)
+	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
 	------------------------------------
-	--② 소환 성공 시 서치
+	--② 소환 성공 시 회멸 몬스터 서치
 	------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
@@ -49,23 +76,23 @@ function s.initial_effect(c)
 end
 
 --------------------------------------------------
---① 조건: 화염족 몬스터의 효과가 발동된 체인
+--① 조건: 이 턴 중 화염족 몬스터 효과가 발동됐는지
 --------------------------------------------------
-function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
-	local rc=re:GetHandler()
-	return rc:IsRace(RACE_PYRO)
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+	return s.pyro_activated_this_turn[tp]
 end
 
-function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+			and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
+	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 
-function s.spop1(e,tp,eg,ep,ev,re,r,rp)
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and c:IsRelateToEffect(e) then
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsRelateToEffect(e) then
 		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
@@ -74,8 +101,8 @@ end
 --② 서치: "회멸" 몬스터 1장 (자신 제외)
 --------------------------------------------------
 function s.thfilter(c)
-	return c:IsSetCard(SET_ASHENED) and not c:IsCode(id) and c:IsType(TYPE_MONSTER)
-		and c:IsAbleToHand()
+	return c:IsSetCard(SET_ASHENED) and not c:IsCode(id)
+		and c:IsType(TYPE_MONSTER) and c:IsAbleToHand()
 end
 
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -99,5 +126,5 @@ end
 function s.racecon(e)
 	local c=e:GetHandler()
 	return c:IsSummonType(SUMMON_TYPE_SPECIAL)
-		and Duel.GetTurnCount()==c:GetTurnID()
+		and Duel.GetTurnCount() == c:GetTurnID()
 end
