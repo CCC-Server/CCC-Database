@@ -122,8 +122,12 @@ end
 
 -- ⑤ related functions
 -- Condition for when it's sent to the GY
+-- Condition for when it's sent to the GY
 function s.spcon5(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
+	-- Check if it was on the field before
+	if not c:IsPreviousLocation(LOCATION_ONFIELD) then return false end
+
 	-- Sent to GY as Synchro Material
 	if bit.band(r, REASON_MATERIAL+REASON_SYNCHRO) == (REASON_MATERIAL+REASON_SYNCHRO) then
 		return true
@@ -138,11 +142,13 @@ end
 -- Condition for when it's banished
 function s.spcon5_removed(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
+	-- Check if it was on the field before
+	if not c:IsPreviousLocation(LOCATION_ONFIELD) then return false end
+
 	-- Banished by a "Fortune Lady" card's effect
-	-- Note: Synchro Material usually goes to GY, not banished.
-	-- So we only check for REASON_EFFECT and Fortune Lady card.
 	return bit.band(r, REASON_EFFECT) ~= 0 and re and re:GetHandler():IsSetCard(0x31)
 end
+
 
 function s.sptg5(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
