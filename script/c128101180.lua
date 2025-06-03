@@ -2,6 +2,7 @@
 --Scripted by 유희왕 덱 제작기
 
 local s,id=GetID()
+
 -- 🔁 전역 화염족 효과 추적 변수
 if not s.global_check then
    s.global_check = true
@@ -45,11 +46,12 @@ function s.initial_effect(c)
    e1:SetOperation(s.spop)
    c:RegisterEffect(e1)
 
-   --② 소환 성공 시 회멸 몬스터 서치 (선택 발동)
+   --② 소환 성공 시 회멸 몬스터 서치 (선택 발동 + 딜레이 보장)
    local e2=Effect.CreateEffect(c)
    e2:SetDescription(aux.Stringid(id,1))
    e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-   e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O) -- 옵션 발동
+   e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+   e2:SetProperty(EFFECT_FLAG_DELAY)
    e2:SetCode(EVENT_SUMMON_SUCCESS)
    e2:SetCountLimit(1,{id,1})
    e2:SetTarget(s.thtg)
@@ -59,14 +61,11 @@ function s.initial_effect(c)
    e2b:SetCode(EVENT_SPSUMMON_SUCCESS)
    c:RegisterEffect(e2b)
 
-   --③ 특수 소환된 턴 동안 상대 필드 몬스터는 화염족
+   --③ 특수 소환된 턴 동안 상대 필드 몬스터는 화염족으로 변경 (벗어나도 유지)
    local e3=Effect.CreateEffect(c)
-   e3:SetType(EFFECT_TYPE_FIELD)
-   e3:SetCode(EFFECT_CHANGE_RACE)
-   e3:SetRange(LOCATION_MZONE)
-   e3:SetTargetRange(0,LOCATION_MZONE)
-   e3:SetValue(RACE_PYRO)
-   e3:SetCondition(s.racecon)
+   e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+   e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+   e3:SetOperation(s.raceop)
    c:RegisterEffect(e3)
 end
 
@@ -118,10 +117,14 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------
---③ 지속 효과: 특소된 턴 동안 상대 필드 몬스터는 화염족
+--③ 효과 처리: 특수 소환된 턴 동안, 상대 필드 몬스터 종족 화염족으로 변경
 --------------------------------------------------
-function s.racecon(e)
-   local c=e:GetHandler()
-   return c:IsSummonType(SUMMON_TYPE_SPECIAL)
-      and Duel.GetTurnCount() == c:GetTurnID()
+function s.raceop(e,tp,eg,ep,ev,re,r,rp)
+   local e1=Effect.CreateEffect(e:GetHandler())
+   e1:SetType(EFFECT_TYPE_FIELD)
+   e1:SetCode(EFFECT_CHANGE_RACE)
+   e1:SetTargetRange(0,LOCATION_MZONE)
+   e1:SetValue(RACE_PYRO)
+   e1:SetReset(RESET_PHASE+PHASE_END)
+   Duel.RegisterEffect(e1,tp)
 end
