@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
     --Xyz Summon (Water Level 5 x2)
-    Xyz.AddProcedure(c,nil,5,2)
+    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_WATER),5,2)
     c:EnableReviveLimit()
 
     --①: 세트된 카드 전부 파괴 (Xyz 소재 1장 제거)

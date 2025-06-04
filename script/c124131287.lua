@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
     --Xyz Summon
-    Xyz.AddProcedure(c,nil,4,2) -- 레벨 4 몬스터 2장
+    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_WATER),4,2) -- 레벨 4 몬스터 2장
     c:EnableReviveLimit()
 
     --①: 엑시즈 소환 성공 시 드로우

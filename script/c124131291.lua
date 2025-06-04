@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
     --Xyz Summon (Water Level 7 x3+)
-    Xyz.AddProcedure(c,nil,7,3,true)
+    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_WATER),7,3,nil,nil,Xyz.InfiniteMats)
     c:EnableReviveLimit()
 
     --①: 엑시즈 소환 성공 시 물 속성 이외의 몬스터 전부 파괴

@@ -18,7 +18,7 @@ function s.initial_effect(c)
     e2:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
     e2:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
     e2:SetCondition(s.immcon)
-    e2:SetValue(aux.tgoval)
+    e2:SetValue(function(e,re,rp) return true end)
     c:RegisterEffect(e2)
 end
 

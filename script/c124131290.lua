@@ -2,7 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
     --Xyz Summon (Water Level 7 x2+)
-    Xyz.AddProcedure(c,nil,7,2,true) -- true = min 2, max ∞
+    Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsAttribute,ATTRIBUTE_WATER),7,2,nil,nil,Xyz.InfiniteMats) -- true = min 2, max ∞
     c:EnableReviveLimit()
 
     --①: 공격 선언 시 필드 1장 파괴 (1턴 1번)

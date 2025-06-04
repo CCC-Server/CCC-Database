@@ -47,7 +47,7 @@ function s.lvop(e,tp,eg,ep,ev,re,r,rp)
     e1:SetType(EFFECT_TYPE_SINGLE)
     e1:SetCode(EFFECT_CHANGE_LEVEL)
     e1:SetValue(lv)
-    e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+    e1:SetReset(RESETS_STANDARD_DISABLE_PHASE_END)
     tc:RegisterEffect(e1)
 
     -- 이 턴 동안 물 속성 엑시즈 몬스터만 특수 소환 가능

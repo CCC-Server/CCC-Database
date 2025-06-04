@@ -14,17 +14,18 @@ function s.initial_effect(c)
     c:RegisterEffect(e1)
 
     --②: 엑시즈 몬스터 효과 부여 - 묘지 발동 무효
-    local e2=Effect.CreateEffect(c)
-    e2:SetDescription(aux.Stringid(id,1))
-    e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-    e2:SetCode(EVENT_CHAINING)
-    e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
-    e2:SetRange(LOCATION_MZONE)
-    e2:SetCondition(s.negcon)
-    e2:SetCost(s.negcost)
-    e2:SetTarget(s.negtg)
-    e2:SetOperation(s.negop)
-    c:RegisterEffect(e2)
+local e2=Effect.CreateEffect(c)
+e2:SetDescription(aux.Stringid(id,1))
+e2:SetCategory(CATEGORY_DISABLE)
+e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_FIELD+EFFECT_TYPE_QUICK_O)
+e2:SetCode(EVENT_CHAINING)
+e2:SetRange(LOCATION_MZONE)
+e2:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
+e2:SetCountLimit(1,{id,1})
+e2:SetCondition(s.negcon)
+e2:SetTarget(s.negtg)
+e2:SetOperation(s.negop)
+c:RegisterEffect(e2)
 end
 
 --①: 패에서 특수 소환 조건: 다른 레벨 2 물 몬스터가 패에 있어야 함
@@ -58,8 +59,11 @@ end
 --②: 소재로 있을 때, 상대 묘지 발동 무효 효과
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
     local rc=e:GetOwner()
-    if not (rc:IsType(TYPE_XYZ) and rc:IsAttribute(ATTRIBUTE_WATER)) then return false end
-    return rp==1-tp and re:IsActivated() and re:GetActivateLocation()==LOCATION_GRAVE
+    return rc:IsType(TYPE_XYZ) and rc:IsAttribute(ATTRIBUTE_WATER)
+        and rp==1-tp
+        and re:IsActivated()
+        and re:GetActivateLocation()==LOCATION_GRAVE
+        and Duel.IsChainDisablable(ev)
 end
 
 -- 1턴 1회 체크 (비용 처리 방식 사용)
@@ -70,7 +74,7 @@ end
 
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return true end
-    Duel.SetOperationInfo(0,CATEGORY_DISABLE,nil,1,0,0)
+    Duel.SetOperationInfo(0,CATEGORY_DISABLE,eg,1,0,0)
 end
 
 function s.negop(e,tp,eg,ep,ev,re,r,rp)

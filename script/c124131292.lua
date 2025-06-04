@@ -60,7 +60,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
         codes[tc:GetCode()] = true
         g:Remove(Card.IsCode,nil,tc:GetCode())
         ct=ct+1
-        if #g==0 or not Duel.SelectYesNo(tp,aux.Stringid(id,1)) then break end
+        if #g==0 or not Duel.SelectYesNo(tp,aux.Stringid(id,2)) then break end
     end
     if #sg>0 then
         Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
