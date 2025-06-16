@@ -74,11 +74,12 @@ end
 function s.actcon(e)
 	return true
 end
-function s.actop(e,c,re)
+function s.actop(e,te,tp)
 	--Duel.Hint(HINT_CARD,0,id)
 	Duel.HintSelection(e:GetHandler(),true)
-	local tp=e:GetHandlerPlayer()
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_HAND,0,1,1,nil,c,e)
+
+	local ep=e:GetHandlerPlayer()
+	Duel.Hint(HINT_SELECTMSG,ep,HINTMSG_TODECK)
+	local g=Duel.SelectMatchingCard(ep,s.costfilter,ep,LOCATION_HAND,0,1,1,nil,te:GetHandler(),e)
 	Duel.SendtoDeck(g,nil,SEQ_DECKBOTTOM,REASON_COST)
 end
