@@ -1,29 +1,25 @@
 --누밸즈 싱크로 펜듈럼 몬스터
 local s,id=GetID()
 function s.initial_effect(c)
-    --펜듈럼 소환
+    -- 펜듈럼 소환
     Pendulum.AddProcedure(c)
-    --싱크로 소환 조건 (튜너 + 튜너 이외 몬스터 1장)
+    -- 싱크로 소환 조건 (튜너 + 튜너 이외 몬스터 1장)
     Synchro.AddProcedure(c,aux.FilterBoolFunction(Card.IsType,TYPE_TUNER),1,1)
     c:EnableReviveLimit()
 
     -------------------------------------
-    -- 펜듈럼 효과: 무효 + 자폭
+    -- 펜듈럼 효과: 필드 발동 몬스터 무효화 + 자폭 (퍼미션)
     -------------------------------------
     local e1=Effect.CreateEffect(c)
-    e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_DISABLE)
-    e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_QUICK_O)
-    e1:SetCode(EVENT_CHAINING)
+    e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+    e1:SetCode(EVENT_CHAIN_SOLVING)
     e1:SetRange(LOCATION_PZONE)
-    e1:SetCountLimit(1,{id,0})
-    e1:SetCondition(s.pcon)
-    e1:SetTarget(s.ptg)
-    e1:SetOperation(s.pop)
+    e1:SetCondition(s.discon)
+    e1:SetOperation(s.disop)
     c:RegisterEffect(e1)
 
     -------------------------------------
-    -- 몬스터 효과 ①: 특수 소환 성공 시 (강제발동) - 원래 주인의 덱에서 특수 소환
+    -- 몬스터 효과 ①: 특수 소환 성공 시 (강제) - 주인의 덱에서 특수 소환
     -------------------------------------
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
@@ -37,15 +33,15 @@ function s.initial_effect(c)
     c:RegisterEffect(e2)
 
     -------------------------------------
-    -- 몬스터 효과 ②: 상대가 의식 몬스터 특소 시, 그 몬스터 대상 지정하고 공격력 +1000 (강제발동)
+    -- 몬스터 효과 ②: 상대가 의식 몬스터 특소 시, 공격력 +1000 (강제, 대상 지정)
     -------------------------------------
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,2))
     e3:SetCategory(CATEGORY_ATKCHANGE)
-    e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F) -- 강제 발동
+    e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
     e3:SetCode(EVENT_SPSUMMON_SUCCESS)
     e3:SetRange(LOCATION_MZONE)
-    e3:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET) -- 대상 지정
+    e3:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
     e3:SetCountLimit(1,{id,2})
     e3:SetCondition(s.atkcon)
     e3:SetTarget(s.atktg)
@@ -53,7 +49,7 @@ function s.initial_effect(c)
     c:RegisterEffect(e3)
 
     -------------------------------------
-    -- 몬스터 효과 ③: 릴리스되어 엑덱 앞면으로 갔을 때 펜듈럼존 이동
+    -- 몬스터 효과 ③: 릴리스되어 엑덱에 앞면으로 갔을 때 펜듈럼존 이동
     -------------------------------------
     local e4=Effect.CreateEffect(c)
     e4:SetDescription(aux.Stringid(id,3))
@@ -69,27 +65,25 @@ end
 s.listed_series={0x197} -- "누밸즈" 시리즈
 
 ---------------------------------------------------
--- 펜듈럼 효과: 필드 발동 몬스터 효과 무효화 + 자폭
-function s.pcon(e,tp,eg,ep,ev,re,r,rp)
-    return Duel.IsChainDisablable(ev) and re:IsActiveType(TYPE_MONSTER)
+-- 펜듈럼 효과: 무효 + 자폭 (퍼미션)
+function s.discon(e,tp,eg,ep,ev,re,r,rp)
+    return rp==1-tp and re:IsActiveType(TYPE_MONSTER)
         and re:GetHandler():IsOnField()
+        and Duel.IsChainDisablable(ev)
         and Duel.IsExistingMatchingCard(function(c)
             return c:IsFaceup() and c:IsSetCard(0x197) and c:IsType(TYPE_RITUAL)
         end,tp,LOCATION_MZONE,0,1,nil)
 end
-function s.ptg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return true end
-    Duel.SetOperationInfo(0,CATEGORY_DISABLE,eg,1,0,0)
-    Duel.SetOperationInfo(0,CATEGORY_DESTROY,e:GetHandler(),1,0,0)
-end
-function s.pop(e,tp,eg,ep,ev,re,r,rp)
-    if Duel.NegateEffect(ev) and e:GetHandler():IsRelateToEffect(e) then
-        Duel.Destroy(e:GetHandler(),REASON_EFFECT)
+function s.disop(e,tp,eg,ep,ev,re,r,rp)
+    local c=e:GetHandler()
+    if Duel.NegateEffect(ev) and c:IsOnField() and c:IsDestructable() then
+        Duel.BreakEffect()
+        Duel.Destroy(c,REASON_EFFECT)
     end
 end
 
 ---------------------------------------------------
--- 몬스터 효과 ①: 특수 소환 성공 시, 주인의 덱에서 "누밸즈" 의식 몬스터 특수 소환
+-- 특수 소환 성공 시: 덱에서 "누밸즈" 의식 몬스터 소환
 function s.spfilter1(c,e,tp)
     return c:IsSetCard(0x197) and c:IsType(TYPE_RITUAL)
         and (c:IsLevel(1) or c:IsLevel(2))
@@ -114,7 +108,7 @@ function s.spop1(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ---------------------------------------------------
--- 몬스터 효과 ②: 상대가 의식 몬스터 특수 소환 시, 해당 몬스터의 공격력 +1000 (강제, 대상지정)
+-- 상대가 의식 몬스터 특소 시: 대상에게 +1000
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
     return eg:IsExists(function(c) return c:IsSummonPlayer(1-tp) and c:IsType(TYPE_RITUAL) end,1,nil)
 end
@@ -138,7 +132,7 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ---------------------------------------------------
--- 몬스터 효과 ③: 릴리스되어 엑덱에 앞면으로 갔을 때 펜듈럼존 이동
+-- 릴리스되어 엑덱 앞면으로 이동 시, 펜듈럼존으로
 function s.pzcon(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     return c:IsPreviousLocation(LOCATION_MZONE) and c:IsLocation(LOCATION_EXTRA)
