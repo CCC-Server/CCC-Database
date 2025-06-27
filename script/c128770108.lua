@@ -85,7 +85,6 @@ function s.lpcon(e)
 	return Duel.GetLP(e:GetHandlerPlayer()) < Duel.GetLP(1-e:GetHandlerPlayer())
 end
 function s.aclimit(e,re,tp)
-   function s.aclimit(e,re,tp)
 	return re:IsActiveType(TYPE_SPELL)
 end
 
