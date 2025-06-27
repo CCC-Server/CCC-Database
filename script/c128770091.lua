@@ -118,12 +118,12 @@ end
 
 -- (C) 실제 특수 소환 수행 후, “변경 안 함 / +1 레벨 / +2 레벨” 중에서 선택지 띄우기
 function s.spop(e, tp, eg, ep, ev, re, r, rp)
-	local tc=Duel.GetFirstTarget()
+   local tc=Duel.GetFirstTarget()
 	if tc and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
 		Duel.SpecialSummonComplete()
-		-- 레벨 증가 처리 (플레이어 선택)
-		if tc:IsFaceup() and tc:IsLevelAbove(1) and tc:IsCanBeEffectTarget(e) then
-			Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,0)) -- 메시지: 레벨을 선택하세요
+		-- 레벨을 올릴지 여부를 먼저 선택
+		if tc:IsFaceup() and tc:IsLevelAbove(1) and tc:IsCanBeEffectTarget(e) and Duel.SelectYesNo(tp, aux.Stringid(id, 0)) then
+			Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1)) -- "레벨을 선택하세요"
 			local lv=Duel.AnnounceLevel(tp,1,2)
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
