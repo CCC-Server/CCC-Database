@@ -1,109 +1,71 @@
 --제 10사도-성안의 미카엘라
 local s,id=GetID()
 function s.initial_effect(c)
-	--Synchro summon
-	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsType,TYPE_SYNCHRO),1,1,Synchro.NonTunerEx(Card.IsType,TYPE_SYNCHRO),1,99)
 	c:EnableReviveLimit()
-
-	--Banish 1 monster and inflict 1200 Damage
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_REMOVE+CATEGORY_DAMAGE)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCode(EVENT_CUSTOM+id)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(function() return Duel.GetCurrentPhase()~=PHASE_DAMAGE and Duel.GetCurrentPhase()~=PHASE_DAMAGE_CAL end)
-	e2:SetTarget(s.rmtg)
-	e2:SetOperation(s.rmop)
-	c:RegisterEffect(e2)
-	local g=Group.CreateGroup()
-	g:KeepAlive()
-	e2:SetLabelObject(g)
-	--Register summons
-	local e2a=Effect.CreateEffect(c)
-	e2a:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e2a:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e2a:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e2a:SetRange(LOCATION_MZONE)
-	e2a:SetLabelObject(e2)
-	e2a:SetOperation(s.regop)
-	c:RegisterEffect(e2a)
-	--Banish Spell/Trap and inflict 1200 Damage
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,2))
-	e3:SetCategory(CATEGORY_REMOVE+CATEGORY_DAMAGE)
-	e3:SetType(EFFECT_TYPE_QUICK_O)
-	e3:SetCode(EVENT_CHAINING)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1,{id,2})
-	e3:SetCondition(s.rmcon2)
-	e3:SetTarget(s.rmtg2)
-	e3:SetOperation(s.rmop2)
-	c:RegisterEffect(e3)
-	--Unaffected by spell/trap effects
+	--Xyz Summon
+	Xyz.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsRace,RACE_FAIRY),5,2)
+	-- E1: 몬스터 효과 내성
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetCode(EFFECT_IMMUNE_EFFECT)
+	e1:SetCondition(s.immcon)
 	e1:SetValue(s.efilter)
 	c:RegisterEffect(e1)
+
+	-- E2: 무효 + 제외 (1턴 1번)
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetCategory(CATEGORY_NEGATE+CATEGORY_REMOVE)
+	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetCode(EVENT_CHAINING)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCountLimit(1,id)
+	e2:SetCondition(s.negcon)
+	e2:SetCost(s.negcost)
+	e2:SetTarget(s.negtg)
+	e2:SetOperation(s.negop)
+	c:RegisterEffect(e2)
 end
 
+-- E1 조건: 엑시즈 소재가 있을 때
+function s.immcon(e)
+	return e:GetHandler():GetOverlayCount()>0
+end
+
+-- E1 내성 조건: 상대가 발동한 몬스터 효과
 function s.efilter(e,te)
-	return te:IsSpellTrapEffect()
+	return te:IsActiveType(TYPE_MONSTER) and te:GetOwnerPlayer()~=e:GetHandlerPlayer()
 end
 
-function s.filter(c,tp,e)
-	return c:IsSummonPlayer(1-tp) and c:IsLocation(LOCATION_MZONE) and c:IsAbleToRemove()
-		and (not e or c:IsRelateToEffect(e))
+-- E2 발동 조건: 묘지에서 효과 발동 시
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
+	return re:IsHasType(EFFECT_TYPE_ACTIVATE+EFFECT_TYPE_TRIGGER_O+EFFECT_TYPE_QUICK_O)
+		and re:GetActivateLocation()==LOCATION_GRAVE
+		and Duel.IsChainDisablable(ev)
 end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=e:GetLabelObject():Filter(s.filter,nil,tp,nil)
-	if chk==0 then return #g>0 end
-	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
-	Duel.SetTargetCard(g)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,1200)
+
+-- E2 비용: 엑시즈 소재 1개 제거
+function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=e:GetLabelObject()
-	if #g==0 then return end
-	local bg=g:FilterSelect(tp,s.filter,1,1,nil,tp,e)
-	if #bg>0 and Duel.Remove(bg,POS_FACEUP,REASON_EFFECT)>0 then
-		Duel.Damage(1-tp,1200,REASON_EFFECT)
-	end
+
+-- E2 타겟: 무효 + 제외할 카드 선택 (선택은 발동 후 처리)
+function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_REMOVE,nil,1,PLAYER_EITHER,LOCATION_GRAVE)
 end
-function s.regop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetFlagEffect(tp,id)>0 then return end
-	local c=e:GetHandler()
-	local tg=eg:Filter(s.filter,nil,tp)
-	if #tg>0 then
-		for tc in tg:Iter() do
-			tc:RegisterFlagEffect(id,RESET_CHAIN,0,1)
+
+-- E2 처리: 효과 무효 + 묘지 카드 1장 제외
+function s.negop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.NegateActivation(ev) and Duel.IsExistingMatchingCard(Card.IsAbleToRemove,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,nil) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+		local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_GRAVE,LOCATION_GRAVE,1,1,nil)
+		if #g>0 then
+			Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
 		end
-		local g=e:GetLabelObject():GetLabelObject()
-		if Duel.GetCurrentChain()==0 then g:Clear() end
-		g:Merge(tg)
-		g:Remove(function(c) return c:GetFlagEffect(id)==0 end,nil)
-		e:GetLabelObject():SetLabelObject(g)
-		Duel.RaiseSingleEvent(e:GetHandler(),EVENT_CUSTOM+id,e,0,tp,tp,0)
-	end
-end
-function s.rmcon2(e,tp,eg,ep,ev,re,r,rp)
-	return ep==1-tp and re:IsSpellTrapEffect() and re:GetHandler():IsRelateToEffect(re)
-end
-function s.rmtg2(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return re:GetHandler():IsAbleToRemove() end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,rg,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,1200)
-end
-function s.rmop2(e,tp,eg,ep,ev,re,r,rp)
-	if not re:GetHandler():IsRelateToEffect(re) then return end
-	if Duel.Remove(eg,POS_FACEUP,REASON_EFFECT)>0 then
-		Duel.Damage(1-tp,1200,REASON_EFFECT)
 	end
 end
