@@ -1,6 +1,7 @@
 --셀레스티얼 타이탄-수집하는 자 가메논
 local s,id=GetID()
 function s.initial_effect(c)
+	Pendulum.AddProcedure(c)
 	-- 1번 효과: 덱에서 카드군 지속 마법 1장 필드에 놓음
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
