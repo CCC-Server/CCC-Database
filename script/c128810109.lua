@@ -8,6 +8,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetRange(LOCATION_GRAVE)
+	e1:SetProperty(EFFECT_FLAG_CARD_TARGET) -- 대상 지정 플래그
 	e1:SetCountLimit(1,id) -- 이 카드명의 효과는 1턴에 1번
 	e1:SetCondition(s.descon)
 	e1:SetCost(aux.bfgcost) -- 묘지의 자신을 제외하는 공통 코스트
