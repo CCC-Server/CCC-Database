@@ -77,7 +77,8 @@ end
 -- ① 묘지로 갔을 때 특소
 -------------------------------------
 function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
+	if not re then return false end
+	local rc=re:GetHandler()
 	return e:GetHandler():IsReason(REASON_EFFECT) and rc:IsSetCard(0xc05) and rc:IsMonster()
 end
 function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk)
