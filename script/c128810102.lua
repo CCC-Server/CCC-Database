@@ -118,11 +118,7 @@ end
 
 --③ 이 카드가 묘지에서 특수 소환된 경우, 튜너로 취급
 function s.tncon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	-- ✅ ②번 효과로 소생된 경우에만 발동
-	return c:IsSummonLocation(LOCATION_GRAVE) 
-		and c:GetFlagEffect(id)>0 
-		and not c:IsType(TYPE_TUNER)
+	return e:GetHandler():GetSummonType()==SUMMON_TYPE_SPECIAL+1
 end
 function s.tnop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
