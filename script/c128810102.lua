@@ -105,13 +105,25 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 end
+--② 묘지에서 자신 특수 소환
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
+		if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)~=0 then
+			-- ✅ 소환 성공 시 플래그 등록
+			c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1)
+		end
 	end
 end
 
+--③ 이 카드가 묘지에서 특수 소환된 경우, 튜너로 취급
+function s.tncon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	-- ✅ ②번 효과로 소생된 경우에만 발동
+	return c:IsSummonLocation(LOCATION_GRAVE) 
+		and c:GetFlagEffect(id)>0 
+		and not c:IsType(TYPE_TUNER)
+end
 function s.tnop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if c:IsRelateToEffect(e) and c:IsFaceup() and not c:IsType(TYPE_TUNER) then

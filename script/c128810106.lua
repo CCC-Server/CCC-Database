@@ -78,7 +78,7 @@ end
 -------------------------------------
 function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	return re and re:GetHandler():IsSetCard(0xc05)
+	return e:GetHandler():IsReason(REASON_EFFECT) and rc:IsSetCard(0xc05) and rc:IsMonster()
 end
 function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
