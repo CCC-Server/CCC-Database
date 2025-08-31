@@ -30,6 +30,7 @@ function s.initial_effect(c)
 	e4:SetRange(LOCATION_MZONE)
 	e4:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e4:SetTargetRange(0,1)
+	e4:SetCondition(s.accon)
 	e4:SetValue(s.aclimit)
 	c:RegisterEffect(e4)
 end
@@ -46,6 +47,10 @@ end
 --특수 소환 조건 제한 : 반드시 지정된 소재를 사용해야 함
 function s.splimit(e,se,sp,st)
 	return not e:GetHandler():IsLocation(LOCATION_EXTRA) or ((st&SUMMON_TYPE_SYNCHRO)==SUMMON_TYPE_SYNCHRO and not se)
+end
+
+function s.accon(e)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,128810121),0,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil)
 end
 
 --② 묘지에서 발동하는 효과 봉인
