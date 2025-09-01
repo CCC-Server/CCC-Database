@@ -114,9 +114,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
---③ 조건: ② 효과로 특소되었을 경우
 function s.tncon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():HasFlagEffect(id)
+    return re and re:GetHandler()==e:GetHandler()
 end
 function s.tnop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
