@@ -116,7 +116,7 @@ end
 
 --③ 조건: ② 효과로 특소되었을 경우
 function s.tncon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():HasFlagEffect(128810102)
+    return e:GetHandler():HasFlagEffect(id)
 end
 function s.tnop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
