@@ -55,6 +55,6 @@ end
 
 --② 묘지에서 발동하는 효과 봉인
 function s.aclimit(e,re,tp)
-	local loc=Duel.GetChainInfo(0,CHAININFO_TRIGGERING_LOCATION)
-	return loc==LOCATION_GRAVE
+    local loc=re:GetActivateLocation()
+    return loc==LOCATION_GRAVE
 end

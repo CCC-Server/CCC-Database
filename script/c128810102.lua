@@ -112,9 +112,9 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---③ 이 카드가 묘지에서 특수 소환된 경우, 튜너로 취급
+--③ 이 카드가 ②의 효과로 묘지에서 특수 소환된 경우, 튜너로 취급
 function s.tncon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():GetSummonType()==SUMMON_TYPE_SPECIAL+1
+	return e:GetHandler():HasFlagEffect(128810102)
 end
 function s.tnop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
