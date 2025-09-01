@@ -34,6 +34,7 @@ function s.initial_effect(c)
 	e3:SetCountLimit(1,{id,2}) -- OPT key 분리: {id,2}
 	-- e3:SetCost(s.cost) ← ❌ 제거 (OATH 코스트는 소생할 때만 걸어야 함)
 	e3:SetCondition(s.tncon)
+	e3:SetTarget(aux.TRUE) -- 목표 없음
 	e3:SetOperation(s.tnop)
 	c:RegisterEffect(e3)
 end
