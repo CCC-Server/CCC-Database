@@ -61,7 +61,7 @@ end
 function s.tgop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local tc=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
-	if tc and Duel.SendtoGrave(tc,REASON_EFFECT)
+	if #tc>0 then Duel.SendtoGrave(tc,REASON_EFFECT)
 end
 
 function s.lvtg(e,tp,eg,ep,ev,re,r,rp,chk)
