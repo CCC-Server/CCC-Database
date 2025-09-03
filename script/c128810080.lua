@@ -61,21 +61,7 @@ end
 function s.tgop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	local tc=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
-	if tc and Duel.SendtoGrave(tc,REASON_EFFECT)~=0 and tc:IsLocation(LOCATION_GRAVE) then
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-		e1:SetCode(EFFECT_CANNOT_ACTIVATE)
-		e1:SetTargetRange(1,0)
-		e1:SetLabelObject(tc)
-		e1:SetReset(RESET_PHASE+PHASE_END)
-		Duel.RegisterEffect(e1,tp)
-		local e2=Effect.CreateEffect(e:GetHandler())
-		e2:SetType(EFFECT_TYPE_SINGLE)
-		e2:SetCode(EFFECT_CANNOT_TRIGGER)
-		e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-		tc:RegisterEffect(e2)
-	end
+	if tc and Duel.SendtoGrave(tc,REASON_EFFECT)
 end
 
 function s.lvtg(e,tp,eg,ep,ev,re,r,rp,chk)
