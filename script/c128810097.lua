@@ -1,4 +1,4 @@
---올마이티 셀레스티얼 타이탄-초월신 이터니티 원네스
+--올마이티 셀레스티얼 타이탄-이터니티 원네스
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
@@ -9,7 +9,7 @@ function s.initial_effect(c)
 	--Special Summon this card (from your Extra Deck) by banishing the above materials from your field and/or GY
 	Fusion.AddContactProc(c,s.contactfil,s.contactop,false)
 	c:AddMustBeFusionSummoned()
-	--You can only Fusion Summon or Special Summon by its alternate procedure "올마이티 셀레스티얼 타이탄-초월신 이터니티 원네스" once per turn
+	--You can only Fusion Summon or Special Summon by its alternate procedure "올마이티 셀레스티얼 타이탄-이터니티 원네스" once per turn
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
 	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
@@ -82,14 +82,14 @@ function s.regop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.atkval(e,c)
-    return Duel.GetMatchingGroupCount(s.atkfilter,c:GetControler(),LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED|LOCATION_EXTRA,0,nil)*200
+	return Duel.GetMatchingGroupCount(s.atkfilter,c:GetControler(),LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED|LOCATION_EXTRA,0,nil)*200
 end
 function s.atkfilter(c)
-    return c:IsFaceup() and c:IsRace(RACE_FAIRY)
+	return c:IsFaceup() and c:IsRace(RACE_FAIRY)
 end
 
 function s.sfilter(c)
-    return c:IsRace(RACE_FAIRY)
+	return c:IsRace(RACE_FAIRY)
 end
 
 function s.skipcost(e,tp,eg,ep,ev,re,r,rp,chk)
