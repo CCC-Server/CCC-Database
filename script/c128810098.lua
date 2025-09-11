@@ -1,122 +1,101 @@
---올마이티 셀레스티얼 타이탄-초월신 이터니티 원네스
+--올마이티 셀레스티얼 타이탄-원더 크로스 이터니티
 local s,id=GetID()
 function s.initial_effect(c)
-	c:EnableReviveLimit()
-	--Pendulum Summon procedure
-	Pendulum.AddProcedure(c,false)
-	--Fusion Materials: 4 Fairy monsters (1 Fusion, 1 Synchro, 1 Xyz, 1 Pendulum)
-	Fusion.AddProcMix(c,true,true,s.matfilter(TYPE_FUSION),s.matfilter(TYPE_SYNCHRO),s.matfilter(TYPE_XYZ),s.matfilter(TYPE_PENDULUM))
-	--Special Summon this card (from your Extra Deck) by banishing the above materials from your field and/or GY
-	Fusion.AddContactProc(c,s.contactfil,s.contactop,false)
-	c:AddMustBeFusionSummoned()
-	--You can only Fusion Summon or Special Summon by its alternate procedure "올마이티 셀레스티얼 타이탄-초월신 이터니티 원네스" once per turn
+    c:EnableReviveLimit()
+    --싱크로 소환 절차
+    Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(s.matfilter),1,1,Synchro.NonTunerEx(s.matfilter),2,99)
+    --싱크로 소환으로만 소환 가능
 	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
-	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e0:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e0:SetCondition(s.regcon)
-	e0:SetOperation(s.regop)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE+EFFECT_FLAG_SINGLE_RANGE)
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetRange(LOCATION_EXTRA)
+	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
+	e0:SetValue(aux.synlimit)
 	c:RegisterEffect(e0)
-	--atk/def
+    --Count the number of non-Tuner materials
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetCode(EFFECT_UPDATE_ATTACK)
-	e1:SetValue(s.atkval)
+	e1:SetCode(EFFECT_MATERIAL_CHECK)
+	e1:SetValue(s.valcheck)
 	c:RegisterEffect(e1)
-	local e2=e1:Clone()
-	e2:SetCode(EFFECT_UPDATE_DEFENSE)
-	c:RegisterEffect(e2)
-	--Immune
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_SINGLE)
+    --① 효과: 효과 파괴 내성 + 대상 지정 불가
+    local e2=Effect.CreateEffect(c)
+    e2:SetType(EFFECT_TYPE_SINGLE)
+    e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+    e2:SetRange(LOCATION_MZONE)
+    e2:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+    e2:SetValue(1)
+    c:RegisterEffect(e2)
+	local e3=e2:Clone()
 	e3:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
-	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetValue(1)
-	c:RegisterEffect(e3)
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e4:SetValue(1)
-	c:RegisterEffect(e4)
-	--Skip the opponent turn
-	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,1))
-	e5:SetType(EFFECT_TYPE_IGNITION)
-	e5:SetRange(LOCATION_MZONE)
-	e5:SetCost(s.skipcost)
-	e5:SetTarget(s.skiptg)
-	e5:SetOperation(s.skipop)
-	c:RegisterEffect(e5)
+    e3:SetValue(1)
+    c:RegisterEffect(e3)
+    --② 효과: 상대 필드에 몬스터가 공격 표시로 소환될 때마다 발동
+    local e4=Effect.CreateEffect(c)
+    e4:SetDescription(aux.Stringid(id,0))
+    e4:SetCategory(CATEGORY_ATKCHANGE+CATEGORY_DESTROY)
+    e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+    e4:SetCode(EVENT_SUMMON_SUCCESS)
+    e4:SetRange(LOCATION_MZONE)
+    e4:SetCondition(s.atkcon)
+    e4:SetTarget(s.atktg)
+    e4:SetOperation(s.atkop)
+    c:RegisterEffect(e4)
+    local e5=e4:Clone()
+    e5:SetCode(EVENT_SPSUMMON_SUCCESS)
+    c:RegisterEffect(e5)
+    -- material count 라벨 연결
+    e1:SetLabelObject({e4,e5})
 end
-s.listed_series={0xc02}
-s.miracle_synchro_fusion=true
-function s.matfilter(typ)
-	return function(c,fc,sumtype,tp)
-		return c:IsRace(RACE_FAIRY,fc,sumtype,tp) and c:IsType(typ,fc,sumtype,tp)
-	end
+s.synchro_tuner_required=1
+s.synchro_nt_required=2
+
+function s.matfilter(c,val,scard,sumtype,tp)
+	return c:IsRace(RACE_FAIRY,scard,sumtype,tp) and c:IsType(TYPE_SYNCHRO,scard,sumtype,tp)
 end
-function s.contactfil(tp)
-	local loc=LOCATION_ONFIELD|LOCATION_GRAVE
-	if Duel.IsPlayerAffectedByEffect(tp,CARD_SPIRIT_ELIMINATION) then loc=LOCATION_ONFIELD end
-	return Duel.GetMatchingGroup(Card.IsAbleToRemoveAsCost,tp,loc,0,nil)
+
+--싱크로 소환 시 사용된 모든 싱크로 몬스터 수 저장 (튜너 + 비튜너 포함)
+function s.valcheck(e,c)
+    local ct=c:GetMaterial():FilterCount(Card.IsType,nil,TYPE_SYNCHRO)
+    local objs=e:GetLabelObject()
+    if type(objs)=="table" then
+        for _,eff in ipairs(objs) do
+            eff:SetLabel(ct)
+        end
+    end
 end
-function s.contactop(g)
-	Duel.Remove(g,POS_FACEUP,REASON_COST|REASON_MATERIAL)
+
+function s.atkfilter(c,tp)
+	return c:IsControler(1-tp) and c:IsPosition(POS_FACEUP_ATTACK)
 end
-function s.regcon(e)
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+	return not eg:IsContains(e:GetHandler()) and eg:IsExists(s.atkfilter,1,nil,tp)
+end
+function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+    local ct=e:GetLabel()
+    local c=e:GetHandler()
+    if chkc then return eg:IsContains(chkc) and chkc:IsAttackPos() end
+	if chk==0 then return e:GetHandler():IsRelateToEffect(e) and eg:IsExists(Card.IsAttackPos,1,nil) and c:GetFlagEffect(id)<ct end
+	Duel.SetTargetCard(eg:Filter(s.atkfilter,nil,tp))
+    --발동 횟수 카운트
+    c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
+end
+function s.atkop(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetTargetCards(e):Match(Card.IsFaceup,nil)
+	if #g==0 then return end
+	local dg=Group.CreateGroup()
 	local c=e:GetHandler()
-	return c:IsFusionSummoned() or c:IsSummonType(SUMMON_TYPE_SPECIAL+1)
-end
-function s.regop(e,tp,eg,ep,ev,re,r,rp)
-	--Prevent another Fusion Summon or Special Summon by its alternate procedure of "Dark Magician of Destruction" that turn
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e1:SetTargetRange(1,0)
-	e1:SetTarget(function(e,c,sump,sumtype) return c:IsOriginalCode(id) and (sumtype&SUMMON_TYPE_FUSION==SUMMON_TYPE_FUSION or sumtype&SUMMON_TYPE_SPECIAL+1==SUMMON_TYPE_SPECIAL+1) end)
-	e1:SetReset(RESET_PHASE|PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-end
-
-function s.atkval(e,c)
-    return Duel.GetMatchingGroupCount(s.atkfilter,c:GetControler(),LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED|LOCATION_EXTRA,0,nil)*200
-end
-function s.atkfilter(c)
-    return c:IsFaceup() and c:IsRace(RACE_FAIRY)
-end
-
-function s.sfilter(c)
-    return c:IsRace(RACE_FAIRY)
-end
-
-function s.skipcost(e,tp,eg,ep,ev,re,r,rp,chk)
-local dg=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_MZONE,nil)
-	if chk==0 then return Duel.CheckReleaseGroupCost(tp,s.sfilter,2,false,aux.ReleaseCheckMMZ,nil) end
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetProperty(EFFECT_FLAG_OATH)
-	e1:SetCode(EFFECT_CANNOT_ATTACK_ANNOUNCE)
-	e1:SetReset(RESETS_STANDARD_PHASE_END)
-	e:GetHandler():RegisterEffect(e1)
-	local g=Duel.SelectReleaseGroupCost(tp,s.sfilter,2,2,false,aux.ReleaseCheckMMZ,nil)
-	Duel.Release(g,REASON_COST)
-end
-function s.skiptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return not Duel.IsPlayerAffectedByEffect(1-tp,EFFECT_SKIP_TURN) end
-end
-function s.skipop(e,tp,eg,ep,ev,re,r,rp)
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetCode(EFFECT_SKIP_TURN)
-	e1:SetTargetRange(0,1)
-	e1:SetReset(RESET_PHASE|PHASE_END|RESET_OPPO_TURN)
-	e1:SetCondition(s.skipcon)
-	Duel.RegisterEffect(e1,tp)
-end
-function s.skipcon(e)
-	return Duel.GetTurnPlayer()~=e:GetHandlerPlayer()
+	for tc in g:Iter() do
+		local preatk=tc:GetAttack()
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_UPDATE_ATTACK)
+		e1:SetValue(-2000)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		tc:RegisterEffect(e1)
+		if preatk~=0 and tc:GetAttack()==0 then dg:AddCard(tc) end
+	end
+	if #dg==0 then return end
+	Duel.BreakEffect()
+	Duel.Destroy(dg,REASON_EFFECT)
 end
