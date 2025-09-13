@@ -52,11 +52,12 @@ function s.initial_effect(c)
     e6:SetTarget(s.atktg)
     e6:SetOperation(s.atkop)
     c:RegisterEffect(e6)
+	-- material count 라벨 연결
+    e6:SetLabelObject(e1)
     local e7=e6:Clone()
     e7:SetCode(EVENT_SPSUMMON_SUCCESS)
     c:RegisterEffect(e7)
-    -- material count 라벨 연결
-    e1:SetLabelObject({e6,e7})
+	e7:SetLabelObject(e1)
 end
 
 s.listed_series={0xc02}
