@@ -93,7 +93,7 @@ function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():IsRelateToEffect(e) end
-	Duel.SetTargetCard(eg:Filter(s.atkfilter,nil,tp))
+	Duel.SetTargetCard(eg:Filter(s.posfilter,nil,tp))
 end
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
     local ct=e:GetLabel()
