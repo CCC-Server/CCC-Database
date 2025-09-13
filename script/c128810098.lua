@@ -80,7 +80,7 @@ function s.mfilter(c)
 	return c:IsType(TYPE_SYNCHRO)
 end
 function s.valcheck(e,c)
-    local ct=c:GetMaterial():FilterCount(Card.IsType,nil,TYPESYNCHRO)
+    local ct=c:GetMaterial():FilterCount(Card.IsType,nil,TYPE_SYNCHRO)
     local objs=e:GetLabelObject()
     if type(objs)=="table" then
         for _,eff in ipairs(objs) do
@@ -111,7 +111,7 @@ function s.atkop(e,tp,eg,ep,ev,re,r,rp)
 		local e1=Effect.CreateEffect(c)
 		e1:SetType(EFFECT_TYPE_SINGLE)
 		e1:SetCode(EFFECT_UPDATE_ATTACK)
-		e1:SetValue(-ct*700)
+		e1:SetValue(ct*(-700))
 		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
 		tc:RegisterEffect(e1)
 		if preatk~=0 and tc:GetAttack()==0 then dg:AddCard(tc) end
