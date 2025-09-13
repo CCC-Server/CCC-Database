@@ -64,7 +64,7 @@ function s.initial_effect(c)
     c:RegisterEffect(e7)
 
     -- material count 라벨 전달용 (emc -> {e6,e7})
-    emc:SetLabelObject({e6,e7})
+    e1:SetLabelObject({e6,e7})
 
     -- (선택) 카드 텍스트의 '1턴에 1번' 특수 소환 제한은 소환 효과 쪽에 SetCountLimit을 추가하세요.
 end
