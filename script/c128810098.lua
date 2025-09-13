@@ -80,9 +80,13 @@ function s.mfilter(c)
 	return c:IsType(TYPE_SYNCHRO)
 end
 function s.valcheck(e,c)
-	local g=c:GetMaterial()
-	local ct=g:FilterCount(s.mfilter,nil)
-	e:GetLabelObject():SetLabel(ct)
+    local ct=c:GetMaterial():FilterCount(Card.IsType,nil,TYPESYNCHRO)
+    local objs=e:GetLabelObject()
+    if type(objs)=="table" then
+        for _,eff in ipairs(objs) do
+            eff:SetLabel(ct)
+        end
+    end
 end
 
 function s.posfilter(c,tp)
