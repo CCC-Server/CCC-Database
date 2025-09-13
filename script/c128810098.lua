@@ -112,18 +112,16 @@ function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- ③ 타겟 지정: 소환된 공격 표시 몬스터 전부를 타겟으로 등록
--- 또한 발동 횟수 제한 체크(발동한 횟수 < 소재 수)
 function s.atktg(e,tp,eg,ep,ev,re,r,rp,chk)
     local c=e:GetHandler()
     local ct=e:GetLabel() or 0
     if chk==0 then
-        return c:IsRelateToEffect(e) and ct>0 and c:GetFlagEffect(id) < ct and eg:IsExists(s.posfilter,1,nil,tp)
+        return c:IsRelateToEffect(e) and ct>0 and eg:IsExists(s.posfilter,1,nil,tp)
     end
     local tg=eg:Filter(s.posfilter,nil,tp)
     Duel.SetTargetCard(tg)
-    -- 발동 카운트 증가 (이 발동을 1회 사용한 것으로 카운트)
-    c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,0,1)
 end
+
 
 -- ③ 처리: 대상 전부에 대해 ATK 감소 적용, 0이면 파괴
 function s.atkop(e,tp,eg,ep,ev,re,r,rp)
