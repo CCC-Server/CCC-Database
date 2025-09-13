@@ -76,14 +76,13 @@ function s.atkfilter(c)
 end
 
 --싱크로 소환 시 사용된 모든 싱크로 몬스터 수 저장 (튜너 + 비튜너 포함)
+function s.mfilter(c)
+	return c:IsType(TYPE_SYNCHRO)
+end
 function s.valcheck(e,c)
-    local ct=c:GetMaterial():FilterCount(Card.IsType,nil,TYPE_SYNCHRO)
-    local objs=e:GetLabelObject()
-    if type(objs)=="table" then
-        for _,eff in ipairs(objs) do
-            eff:SetLabel(ct)
-        end
-    end
+	local g=c:GetMaterial()
+	local ct=g:FilterCount(s.mfilter,nil)
+	e:GetLabelObject():SetLabel(ct)
 end
 
 function s.posfilter(c,tp)
