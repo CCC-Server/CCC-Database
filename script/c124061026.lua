@@ -41,7 +41,7 @@ function s.initial_effect(c)
 	e5:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e5:SetCode(EFFECT_ACT_IN_RANGE)
 	e5:SetRange(LOCATION_REMOVED)
-	e5:SetCondition(newEffect.ActInRange.LimitCon())
+	e5:SetCondition(aux.AND(newEffect.ActInRange.LimitCon(),s.actcon))
 	e5:SetValue(newEffect.ActInRange.LimitOp())
 	e5:SetCountLimit(1,{id,1})
 	c:RegisterEffect(e5)
@@ -57,3 +57,9 @@ function s.rmcon(e)
 	return c:IsFaceup() and c:IsLocation(LOCATION_FZONE)
 end
 --Activate self from Banished
+function s.filter(c)
+	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and c:IsFieldSpell() and c:IsFaceup()
+end
+function s.actcon(e)
+	return Duel.IsExistingMatchingCard(s.filter,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil)
+end

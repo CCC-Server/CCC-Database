@@ -49,7 +49,7 @@ function s.attval(e,c)
 	return Duel.GetMatchingGroup(aux.FaceupFilter(Card.IsArchetype,ARCHETYPE_SPIRITUAL_ART),e:GetHandlerPlayer(),LOCATION_MZONE+LOCATION_GRAVE,0,nil):GetBitwiseOr(Card.GetOriginalAttribute)
 end
 --Activate from Deck
-function s.costfilter(c,tc,e)
+function s.costfilter1(c,tc,e)
 	if not c:IsAbleToDeckAsCost() then return false end
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_SINGLE)
@@ -67,9 +67,30 @@ function s.costfilter(c,tc,e)
 	e1:Reset()
 	return res
 end
+function s.costfilter2(c,te,e)
+	if not c:IsAbleToDeckAsCost() then return false end
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
+	e1:SetValue(1)
+	e1:SetReset(RESET_CHAIN)
+	c:RegisterEffect(e1,true)
+	local e2=e1:Clone()
+	e2:SetCode(EFFECT_CANNOT_USE_AS_COST)
+	c:RegisterEffect(e2,true)
+	local cost=te:GetCost()
+	local tg=te:GetTarget()
+	local eg,ep,ev,re,r,rp=Duel.GetChainInfo(Duel.GetCurrentChain())
+	local res=(not cost or cost(te,te:GetHandlerPlayer(),eg,ep,ev,re,r,rp,0))
+			and (not tg or tg(te,te:GetHandlerPlayer(),eg,ep,ev,re,r,rp,0))
+	e2:Reset()
+	e1:Reset()
+	return res
+end
 function s.acttg(e,c)
 	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap())
-		and Duel.IsExistingMatchingCard(s.costfilter,e:GetHandlerPlayer(),LOCATION_HAND,0,1,nil,c,e)
+		and (not c:IsLocation(LOCATION_DECK) or Duel.IsExistingMatchingCard(s.costfilter1,e:GetHandlerPlayer(),LOCATION_HAND,0,1,nil,c,e))
 end
 function s.actcon(e)
 	return true
@@ -78,8 +99,8 @@ function s.actop(e,te,tp)
 	--Duel.Hint(HINT_CARD,0,id)
 	Duel.HintSelection(e:GetHandler(),true)
 
-	local ep=e:GetHandlerPlayer()
+	local ep=te:GetHandlerPlayer()
 	Duel.Hint(HINT_SELECTMSG,ep,HINTMSG_TODECK)
-	local g=Duel.SelectMatchingCard(ep,s.costfilter,ep,LOCATION_HAND,0,1,1,nil,te:GetHandler(),e)
+	local g=Duel.SelectMatchingCard(ep,s.costfilter2,ep,LOCATION_HAND,0,1,1,nil,te,e)
 	Duel.SendtoDeck(g,nil,SEQ_DECKBOTTOM,REASON_COST)
 end
