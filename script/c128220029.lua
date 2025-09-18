@@ -75,7 +75,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 	if gc==0 then return end
 		local e0=Effect.CreateEffect(c)
 		e0:SetType(EFFECT_TYPE_SINGLE)
-		e0:SetCode(EFFECT_EXTRA_ATTACK_MONSTER)
+		e0:SetCode(EFFECT_EXTRA_ATTACK)
 		e0:SetValue(gc)
 		e0:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_BATTLE)
 		c:RegisterEffect(e0)
