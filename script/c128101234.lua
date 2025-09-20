@@ -13,13 +13,14 @@ function s.initial_effect(c)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	--② 덱 1장 묘지 → 다른 이름 1장 패
+	--② 덱 1장 '코스트'로 묘지 → 그와 다른 이름 1장 패에
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOGRAVE+CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH) -- 코스트로 GY 보내므로 카테고리에서 TOGRAVE 제거
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1,{id,1})
+	e2:SetCost(s.thcost)       -- ★ 코스트로 덱에서 보내기
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
@@ -55,29 +56,43 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------
---② 묘지 → 다른 이름 패
+--② 코스트로 GY → 다른 이름 서치
 --------------------------------------
+-- 코스트로 보낼 카드(덱)
 function s.tgfilter(c)
-	return c:IsSetCard(SET_SALAMANGREAT) and c:IsAbleToGrave()
+	return c:IsSetCard(SET_SALAMANGREAT) and c:IsAbleToGraveAsCost()
 end
+-- 서치 대상(덱) : 코스트로 보낸 코드와 다른 이름
 function s.thfilter(c,code)
-	return c:IsSetCard(SET_SALAMANGREAT) and not c:IsCode(code) and c:IsAbleToHand()
+	return c:IsSetCard(SET_SALAMANGREAT) and (code==nil or not c:IsCode(code)) and c:IsAbleToHand()
 end
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil)
+
+-- ★ 코스트: 덱에서 "샐러맨그레이트" 1장 GY로 (REASON_COST), 그리고 그 코드 저장
+function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
+	local tc=g:GetFirst()
+	e:SetLabel(0)
+	if tc then
+		local code=tc:GetCode()
+		e:SetLabel(code) -- 이후 타겟/오퍼레이션에서 다른 이름을 강제
+		Duel.SendtoGrave(tc,REASON_COST)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
+end
+
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local code=e:GetLabel()
+	if chk==0 then
+		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,code)
+	end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
+
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local tg=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #tg==0 then return end
-	if Duel.SendtoGrave(tg,REASON_EFFECT)==0 then return end
-	local code=tg:GetFirst():GetCode()
+	local code=e:GetLabel()
 	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK,0,nil,code)
-	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+	if #g>0 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 		local sg=g:Select(tp,1,1,nil)
 		if #sg>0 then

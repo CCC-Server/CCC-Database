@@ -1,12 +1,15 @@
 --샐러맨그레이트 클라이맥스 라이오 (가칭)
 local s,id=GetID()
 function s.initial_effect(c)
-	--링크 소환
+	-- 링크 소환
 	c:EnableReviveLimit()
-	Link.AddProcedure(c,s.matfilter,2,nil,s.lcheck)
+	-- 화염 속성 효과 몬스터 2장
+	Link.AddProcedure(c,s.matfilter,2,2)
+	-- 재전생 링크 체크(자기 이름을 소재로 링크 소환되었는지 플래그 처리)
+	aux.EnableCheckReincarnation(c)
 
 	-------------------------------------------------------
-	--① 엑덱의 샐러맨 링크 공개 → 이름 복사
+	-- ① 엑덱의 샐러맨 링크 공개 → 이름 복사 (턴 1)
 	-------------------------------------------------------
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
@@ -19,7 +22,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 
 	-------------------------------------------------------
-	--② "클라이맥스 라이오"를 소재로 링크 소환된 경우 : 상대 효과 무효+덱으로
+	-- ② "이 카드가 재전생 링크 소환되었을 때" 퍼미션: 상대 효과 무효 + 그 카드 덱으로
 	-------------------------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
@@ -34,7 +37,8 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 
 	-------------------------------------------------------
-	--③ 상대 몬스터 소환시 : 이 카드만으로 샐러맨 링크 몬스터 링크 소환
+	-- ③ 상대가 몬스터를 소환했을 때: 이 카드만을 소재로
+	--    자기와 같은 이름의 "샐러맨그레이트" 링크 몬스터 링크 소환
 	-------------------------------------------------------
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
@@ -43,6 +47,7 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_SUMMON_SUCCESS)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCountLimit(1,{id,2})
+	e3:SetCondition(s.lkcon)
 	e3:SetTarget(s.lktg)
 	e3:SetOperation(s.lkop)
 	c:RegisterEffect(e3)
@@ -54,17 +59,14 @@ s.listed_names={id}
 s.listed_series={SET_SALAMANGREAT}
 
 -------------------------------------------------------
--- 링크 소재: 화염 속성 효과 몬스터 2장 이상
+-- 링크 소재: 화염 속성 효과 몬스터
 -------------------------------------------------------
 function s.matfilter(c,lc,sumtype,tp)
 	return c:IsAttribute(ATTRIBUTE_FIRE,lc,sumtype,tp) and c:IsType(TYPE_EFFECT,lc,sumtype,tp)
 end
-function s.lcheck(g,lc,sumtype,tp)
-	return #g>=2
-end
 
 -------------------------------------------------------
---① 이름 카피 (엑덱에서 공개)
+-- ① 엑덱 공개 → 이름 복사
 -------------------------------------------------------
 function s.namefilter(c)
 	return c:IsSetCard(SET_SALAMANGREAT) and c:IsType(TYPE_LINK)
@@ -91,17 +93,20 @@ function s.copyop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -------------------------------------------------------
---② 무효 & 덱으로
+-- ② 재전생 링크 소환되었을 때만 발동되는 퍼미션
+--    (상대 효과 체인 무효 + 그 카드 덱으로 되돌림)
 -------------------------------------------------------
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	if rp==tp or not Duel.IsChainNegatable(ev) then return false end
 	local c=e:GetHandler()
-	return c:IsSummonType(SUMMON_TYPE_LINK) and c:GetMaterial():IsExists(Card.IsCode,1,nil,id128101237)
+	return rp==1-tp and Duel.IsChainNegatable(ev)
+		and c:IsLinkSummoned() and c:IsReincarnationSummoned()
 end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,eg,1,0,0)
+	if re:GetHandler():IsRelateToEffect(re) then
+		Duel.SetOperationInfo(0,CATEGORY_TODECK,eg,1,0,0)
+	end
 end
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
@@ -110,28 +115,34 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -------------------------------------------------------
---③ 초전생식 링크 소환 (이 카드만 소재)
+-- ③ 상대 소환 트리거 → 이 카드 1장만 소재, 같은 이름의 샐러맨 링크를 링크 소환
 -------------------------------------------------------
-function s.lkfilter(c,e,tp,mc)
+local function opp_summoned(eg,tp)
+	return eg:IsExists(function(c,pt) return c:IsControler(1-pt) end,1,nil,tp)
+end
+function s.lkcon(e,tp,eg,ep,ev,re,r,rp)
+	return opp_summoned(eg,tp)
+end
+function s.lkfilter(c,mc)
+	-- 같은 이름, 샐러맨그레이트 링크, "이 카드 1장만"으로 링크 소환 가능
 	return c:IsSetCard(SET_SALAMANGREAT) and c:IsLinkMonster()
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_LINK,tp,false,false)
-		and c:IsCode(mc:GetCode()) -- 자기와 같은 이름으로만
-		and Duel.GetLocationCountFromEx(tp,tp,mc,c)>0
+		and c:IsCode(mc:GetCode())
+		and c:IsLinkSummonable(mc) -- mc 단독으로 링크 소환 가능한지(엔진 판단)
 end
 function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.lkfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,e:GetHandler()) end
+	if chk==0 then
+		local c=e:GetHandler()
+		return Duel.IsExistingMatchingCard(s.lkfilter,tp,LOCATION_EXTRA,0,1,nil,c)
+	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 function s.lkop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if not c:IsRelateToEffect(e) or c:IsFacedown() then return end
+	if not (c:IsRelateToEffect(e) and c:IsFaceup()) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local sc=Duel.SelectMatchingCard(tp,s.lkfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,c):GetFirst()
+	local sc=Duel.SelectMatchingCard(tp,function(x) return s.lkfilter(x,c) end,tp,LOCATION_EXTRA,0,1,1,nil):GetFirst()
 	if sc then
-		sc:SetMaterial(Group.FromCards(c))
-		Duel.SendtoGrave(c,REASON_EFFECT+REASON_MATERIAL+REASON_LINK)
-		Duel.BreakEffect()
-		Duel.SpecialSummon(sc,SUMMON_TYPE_LINK,tp,tp,false,false,POS_FACEUP)
-		sc:CompleteProcedure()
+		-- 이 카드 1장만 소재로 링크 소환 강제
+		Duel.LinkSummon(tp,sc,c)
 	end
 end
