@@ -3,7 +3,7 @@ local s,id=GetID()
 function c128220047.initial_effect(c)
 	c:EnableReviveLimit()
 	--Fusion Materials and Special Summon Procedure
-	Fusion.AddProcMix(c,true,true,aux.FilterBoolFunctionEx(Card.IsSetCard,0xc22),s.zombiefilter)
+	Fusion.AddProcMix(c,true,true,aux.FilterBoolFunctionEx(s.sfilter),s.zombiefilter)
 	Fusion.AddContactProc(c,s.contactfil,s.contactop,true)
 		--reflect
 	local e1=Effect.CreateEffect(c)
@@ -14,6 +14,9 @@ function c128220047.initial_effect(c)
 	e1:SetTarget(s.reftg)
 	e1:SetValue(1)
 	c:RegisterEffect(e1)
+end
+function s.sfilter(c)
+	return c:IsSetCard(0xc22) and c:IsMonster()
 end
 function s.zombiefilter(c)
 	return c:IsRace(RACE_ZOMBIE)
