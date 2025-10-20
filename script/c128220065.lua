@@ -56,7 +56,7 @@ function c128220065.initial_effect(c)
 	c:RegisterEffect(e5)
 end
 function s.filter(c)
-	return c:IsSetCard(SET_QLI) and not c:IsCode(id) and c:IsAbleToHand()
+	return c:IsCode(128220064) and not c:IsCode(id) and c:IsAbleToHand()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_DECK,0,1,nil) end

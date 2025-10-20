@@ -53,6 +53,10 @@ function c128220064.initial_effect(c)
 	e5:SetTarget(s.eqtg)
 	e5:SetOperation(s.eqop)
 	c:RegisterEffect(e5)
+	aux.AddEREquipLimit(c,nil,s.eqval,s.equipop,e5)
+end
+function s.eqval(ec,c,tp)
+	return ec:IsControler(tp) and ec:IsType(TYPE_SPIRIT) and ec:IsType(TYPE_UNION)
 end
 function s.rmfilter(c)
 	return c:IsMonster() and c:IsAbleToRemove() and aux.SpElimFilter(c,false,true)
