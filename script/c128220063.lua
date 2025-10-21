@@ -4,7 +4,7 @@ function c128220063.initial_effect(c)
 	c:EnableReviveLimit()
 	Pendulum.AddProcedure(c)
 	--Return this card to the hand during the End Phase of the turn it was Special Summoned
-	Spirit.AddProcedure(c,EVENT_SPSUMMON_SUCCESS)
+	Spirit.AddProcedure(c,EVENT_SPSUMMON_SUCCESS,EVENT_FLIP)
 	aux.AddUnionProcedure(c,aux.FilterBoolFunction(Card.IsCode,128220064),true)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))

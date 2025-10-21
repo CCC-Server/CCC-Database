@@ -3,7 +3,7 @@ local s,id=GetID()
 function c128220065.initial_effect(c)
 	c:EnableReviveLimit()
 	Pendulum.AddProcedure(c)
-	Spirit.AddProcedure(c,EVENT_SPSUMMON_SUCCESS)
+	Spirit.AddProcedure(c,EVENT_SPSUMMON_SUCCESS,EVENT_FLIP)
 	c:AddMustBeRitualSummoned()
 	aux.AddUnionProcedure(c,aux.FilterBoolFunction(Card.IsCode,128220064),true)
 	--Ritual Summon this card, by Tributing monsters from your hand or field whose total Levels equal or exceed 1

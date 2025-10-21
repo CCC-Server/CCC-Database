@@ -3,7 +3,7 @@ local s,id=GetID()
 function c128220064.initial_effect(c)
 	c:EnableReviveLimit()
 	Pendulum.AddProcedure(c)
-	Spirit.AddProcedure(c,EVENT_SPSUMMON_SUCCESS)
+	Spirit.AddProcedure(c,EVENT_SPSUMMON_SUCCESS,EVENT_FLIP)
 	c:AddMustBeRitualSummoned()
 	--Ritual Summon this card, by Tributing monsters from your hand or field whose total Levels equal or exceed 1
 	local e1=Ritual.CreateProc({
