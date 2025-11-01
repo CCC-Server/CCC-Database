@@ -23,14 +23,16 @@ function s.initial_effect(c)
 	e2:SetCondition(s.thcon_link)
 	c:RegisterEffect(e2)
 
-	-- Effect ②: If treated as Equip Spell, return to Extra and Special Summon Link-2 DARK Dragon
+	-- Effect ②: If a "Rokket" monster is destroyed by effect while this card is in GY, Special Summon it
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e3:SetType(EFFECT_TYPE_IGNITION)
-	e3:SetRange(LOCATION_SZONE)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetCode(EVENT_DESTROYED)
+	e3:SetRange(LOCATION_GRAVE)
 	e3:SetCountLimit(1,{id,1})
-	e3:SetCondition(s.eqcon)
+	e3:SetCondition(s.spcon)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
@@ -50,20 +52,16 @@ end
 function s.thfilter(c)
 	return c:IsSetCard(SET_ROKKET) and c:IsAbleToHand()
 end
-
 function s.thcon_link(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_LINK)
 end
-
 function s.thcon_grave(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
 end
-
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
-
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
@@ -74,35 +72,32 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -----------------------------------------------------
--- Effect ②: If this card is treated as Equip Spell
+-- Effect ②: Special Summon from GY if "Rokket" destroyed by effect
 -----------------------------------------------------
-function s.eqcon(e)
-	return e:GetHandler():IsType(TYPE_EQUIP)
+function s.cfilter(c,tp)
+	return c:IsPreviousControler(tp) and c:IsPreviousLocation(LOCATION_MZONE)
+		and c:IsSetCard(SET_ROKKET) and c:IsReason(REASON_EFFECT)
 end
-
-function s.spfilter(c,e,tp)
-	return c:IsRace(RACE_DRAGON) and c:IsAttribute(ATTRIBUTE_DARK)
-		and c:IsType(TYPE_LINK) and c:GetLink()==2
-		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_LINK,tp,false,false)
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.cfilter,1,nil,tp)
 end
-
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,LOCATION_GRAVE)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if not c:IsRelateToEffect(e) then return end
-
-	if Duel.SendtoDeck(c,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) == 0 then return end
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp)
-	local sc=g:GetFirst()
-	if sc then
-		Duel.SpecialSummon(sc,SUMMON_TYPE_LINK,tp,tp,false,false,POS_FACEUP)
-		sc:CompleteProcedure()
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	if c:IsRelateToEffect(e) and Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
+		-- When this card leaves the field, banish it
+		local e1=Effect.CreateEffect(c)
+		e1:SetDescription(3300)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetReset(RESET_EVENT+RESETS_REDIRECT)
+		e1:SetValue(LOCATION_REMOVED)
+		c:RegisterEffect(e1,true)
 	end
 end

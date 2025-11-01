@@ -1,7 +1,7 @@
 --Custom Continuous Spell - Rokket Equip Support
 local s,id=GetID()
 function s.initial_effect(c)
-	--① Activate and search "Rokket"
+	--①: Activate and search "Rokket" monster
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -11,25 +11,26 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 
-	--② Equip DARK Dragon Link from Extra Deck to a DARK Dragon on field
+	--②: If your "Rokket" monster is destroyed by effect, all your Dragon monsters gain 500 ATK
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_EQUIP)
-	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetCode(EVENT_DESTROYED)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetTarget(s.eqtg)
-	e2:SetOperation(s.eqop)
+	e2:SetCondition(s.atkcon)
+	e2:SetOperation(s.atkop)
 	c:RegisterEffect(e2)
 end
-s.listed_series={SET_ROKKET}
+
+s.listed_series={0x102} -- "Rokket"은 0x102 시리즈입니다
 
 -----------------------------------------------------
---① Search "Rokket" monster on activation
+--①: Search 1 "Rokket" monster from Deck
 -----------------------------------------------------
 function s.thfilter(c)
-	return c:IsSetCard(SET_ROKKET) and c:IsMonster() and c:IsAbleToHand()
+	return c:IsSetCard(0x102) and c:IsMonster() and c:IsAbleToHand()
 end
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK,0,nil)
@@ -42,59 +43,22 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -----------------------------------------------------
---② Equip Link DARK Dragon from Extra Deck
+--②: If your "Rokket" monster is destroyed by effect, boost all your Dragon monsters
 -----------------------------------------------------
-function s.monfilter(c)
-	return c:IsFaceup() and c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_DRAGON)
+function s.cfilter(c,tp)
+	return c:IsPreviousControler(tp) and c:IsPreviousLocation(LOCATION_MZONE)
+		and c:IsSetCard(0x102) and c:IsReason(REASON_EFFECT)
 end
-function s.eqfilter(c)
-	return c:IsType(TYPE_LINK) and c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_DRAGON) and not c:IsForbidden()
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.cfilter,1,nil,tp)
 end
-
-function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.monfilter(chkc) end
-	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-			and Duel.IsExistingTarget(s.monfilter,tp,LOCATION_MZONE,0,1,nil)
-			and Duel.IsExistingMatchingCard(s.eqfilter,tp,LOCATION_EXTRA,0,1,nil)
-	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	Duel.SelectTarget(tp,s.monfilter,tp,LOCATION_MZONE,0,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_EQUIP,nil,1,tp,LOCATION_EXTRA)
-end
-
-function s.eqop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
-
-	local tc=Duel.GetFirstTarget()
-	if not tc or not tc:IsRelateToEffect(e) or not tc:IsFaceup() then return end
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
-	local g=Duel.SelectMatchingCard(tp,s.eqfilter,tp,LOCATION_EXTRA,0,1,1,nil)
-	local ec=g:GetFirst()
-	if not ec then return end
-
-	-- Move Extra Deck monster to SZONE face-up (as equip)
-	if not Duel.MoveToField(ec,tp,tp,LOCATION_SZONE,POS_FACEUP,true) then return end
-
-	-- Equip to target
-	Duel.Equip(tp,ec,tc)
-
-	-- Equip limit: must stay equipped to selected monster
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_EQUIP_LIMIT)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	e1:SetValue(function(e,c) return c==tc end)
-	ec:RegisterEffect(e1)
-
-	-- ATK +500
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_EQUIP)
-	e2:SetCode(EFFECT_UPDATE_ATTACK)
-	e2:SetValue(500)
-	e2:SetReset(RESET_EVENT+RESETS_STANDARD)
-	ec:RegisterEffect(e2)
+function s.atkop(e,tp,eg,ep,ev,re,r,rp)
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetTargetRange(LOCATION_MZONE,0)
+	e1:SetTarget(function(_,c) return c:IsRace(RACE_DRAGON) end)
+	e1:SetValue(500)
+	e1:SetReset(RESET_PHASE+PHASE_END)
+	Duel.RegisterEffect(e1,tp)
 end
