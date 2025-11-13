@@ -1,9 +1,9 @@
 --앰포리어스 링크 몬스터 (가칭)
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 링크 소환 조건
+	-- 링크 소환 조건: 몬스터 2장 이상, 그중 1장은 앰포리어스
 	c:EnableReviveLimit()
-	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0xc46),2,99,s.lcheck)
+	Link.AddProcedure(c,nil,2,99,s.lcheck)
 
 	--①: 상대 카드 2장까지 파괴 또는 제외 (Quick Effect)
 	local e1=Effect.CreateEffect(c)
@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.rmop)
 	c:RegisterEffect(e1)
 
-	--②: 상대가 효과를 발동했을 때 → 링크 소환 (Quick Effect)
+	--②: 상대가 효과 발동 → 링크 소환
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -33,12 +33,14 @@ function s.initial_effect(c)
 	e2:SetOperation(s.lkop)
 	c:RegisterEffect(e2)
 end
-s.listed_series={0xc46} -- "앰포리어스"
+
+s.listed_series={0xc46}
 
 --------------------------------------------------
--- 링크 소환 시 조건: 앰포리어스 몬스터 포함
+-- 링크 소재 조건 (핵심 수정 부분)
 --------------------------------------------------
 function s.lcheck(g,lc,sumtype,tp)
+	-- 링크 소재 g 중 “앰포리어스(0xc46)” 몬스터가 1장 이상인지 확인
 	return g:IsExists(Card.IsSetCard,1,nil,0xc46)
 end
 
@@ -86,14 +88,14 @@ function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------
---②: 상대 효과 발동 시 → 링크 소환 (Quick Effect)
+--②: 상대가 효과 발동 → 링크 소환
 --------------------------------------------------
 function s.lkcon(e,tp,eg,ep,ev,re,r,rp)
 	return re and rp==1-tp and re:IsActivated()
 end
 
 function s.lkfilter(c,g)
-	return c:IsType(TYPE_LINK) and c:IsSetCard(0xc46) and c:IsLinkSummonable(nil,g)
+	return c:IsSetCard(0xc46) and c:IsType(TYPE_LINK) and c:IsLinkSummonable(nil,g)
 end
 
 function s.lktg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -106,10 +108,10 @@ end
 
 function s.lkop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-	if #g<1 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	if #g==0 then return end
 	local tg=Duel.GetMatchingGroup(s.lkfilter,tp,LOCATION_EXTRA,0,nil,g)
 	if #tg==0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=tg:Select(tp,1,1,nil):GetFirst()
 	if tc then
 		Duel.LinkSummon(tp,tc,nil,g)

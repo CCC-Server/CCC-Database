@@ -1,8 +1,9 @@
+--앰포리어스 링크 몬스터 예시
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 링크 소환 조건: "앰포리어스" 몬스터 포함한 몬스터 2장
+	-- 링크 소환 조건: "앰포리어스" 몬스터 1장 이상 포함한 몬스터 2장
 	c:EnableReviveLimit()
-	Link.AddProcedure(c,aux.FilterBoolFunctionEx(Card.IsSetCard,0xc46),2,2)
+	Link.AddProcedure(c,nil,2,2,s.lcheck)
 
 	--①: 링크 소환 성공 시, "앰포리어스" 몬스터 1장 특수 소환
 	local e1=Effect.CreateEffect(c)
@@ -34,16 +35,21 @@ end
 s.listed_series={0xc46} -- "앰포리어스"
 
 --------------------------------------------------
+-- 🔹 링크 소환 조건: 최소 1장 "앰포리어스"
+--------------------------------------------------
+function s.lcheck(g,lc,sumtype,tp)
+	return g:IsExists(Card.IsSetCard,1,nil,0xc46)
+end
+
+--------------------------------------------------
 -- ①: 링크 소환 성공 시, 앰포리어스 특수 소환
 --------------------------------------------------
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_LINK)
 end
-
 function s.spfilter(c,e,tp)
 	return c:IsSetCard(0xc46) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
-
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_GRAVE) and s.spfilter(chkc,e,tp) end
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
@@ -52,13 +58,12 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	if tc and tc:IsRelateToEffect(e) then
 		if Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
-			-- Cyberse 이외의 몬스터 특수 소환 제한
+			-- Cyberse 이외 특소 제한
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_FIELD)
 			e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
@@ -73,13 +78,12 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --------------------------------------------------
--- ②: 묘지에서 자신 특소 + 링크 몬스터 장착
+-- ②: 묘지에서 특소 후 링크 몬스터 장착
 --------------------------------------------------
 function s.eqfilter(c,tp)
 	return c:IsSetCard(0xc46) and c:IsType(TYPE_LINK)
 		and not c:IsForbidden() and c:IsCanBeEffectTarget()
 end
-
 function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local c=e:GetHandler()
 	if chkc then return chkc:IsLocation(LOCATION_GRAVE) and s.eqfilter(chkc,tp) end
@@ -94,7 +98,6 @@ function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,g,1,0,0)
 end
-
 function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
@@ -104,7 +107,7 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 
 	if not (tc and tc:IsRelateToEffect(e)) then return end
 
-	-- 링크 몬스터를 장착 마법으로 취급
+	-- 장착 마법 취급
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_CHANGE_TYPE)
@@ -113,7 +116,7 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetValue(TYPE_SPELL+TYPE_EQUIP)
 	tc:RegisterEffect(e1)
 
-	-- 장착 처리
+	-- 장착
 	if Duel.Equip(tp,tc,c) then
 		local e2=Effect.CreateEffect(c)
 		e2:SetType(EFFECT_TYPE_SINGLE)
