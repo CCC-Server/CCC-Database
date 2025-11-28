@@ -39,7 +39,7 @@ function s.spcon(e,c)
 end
 --Set a card and Special summon a token
 function s.stfilter(c)
-	return c:IsRitualSpell() and c:IsArchetype(ARCHETYPE_SUPER_SOLDIER)
+	return c:IsRitualSpell() and c:IsSetCard(ARCHETYPE_SUPER_SOLDIER)
 		and c:IsSSetable()
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)

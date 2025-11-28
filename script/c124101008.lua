@@ -23,7 +23,7 @@ function s.extragroup(e,tp,eg,ep,ev,re,r,rp,chk)
 	return Duel.GetMatchingGroup(s.matfilter1,tp,LOCATION_DECK,0,nil)
 end
 function s.matfilter1(c)
-	return (c:IsSetCard(SET_GAIA_THE_FIERCE_KNIGHT) or c:IsArchetype(ARCHETYPE_SUPER_SOLDIER)) and c:IsAbleToGrave() and c:IsLevelAbove(1)
+	return (c:IsSetCard(SET_GAIA_THE_FIERCE_KNIGHT) or c:IsSetCard(ARCHETYPE_SUPER_SOLDIER)) and c:IsAbleToGrave() and c:IsLevelAbove(1)
 end
 function s.extraop(mat,e,tp,eg,ep,ev,re,r,rp,tc)
 	local mat2=mat:Filter(Card.IsLocation,nil,LOCATION_DECK)

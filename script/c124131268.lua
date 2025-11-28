@@ -28,7 +28,7 @@ end
 s.listed_series={ARCHETYPE_EMISSARY_OF_DARKNESS}
 --Add 1 "Emissary of Darkness" card from your Deck to your hand and take 400 damage
 function s.thfilter(c)
-    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsAbleToHand()
+    return c:IsSetCard(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end

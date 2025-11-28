@@ -40,7 +40,7 @@ s.listed_series={SET_BLACK_LUSTER_SOLDIER,ARCHETYPE_SUPER_SOLDIER}
 function s.indescon(e,tp,eg,ep,ev,re,r,rp)
 	if not re then return false end
 	local rc=re:GetHandler()
-	return rc:IsArchetype(ARCHETYPE_SUPER_SOLDIER) and rc:IsRitualSpell() and e:GetHandler():IsSummonType(SUMMON_TYPE_RITUAL)
+	return rc:IsSetCard(ARCHETYPE_SUPER_SOLDIER) and rc:IsRitualSpell() and e:GetHandler():IsSummonType(SUMMON_TYPE_RITUAL)
 end
 function s.indesop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()

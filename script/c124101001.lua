@@ -68,7 +68,7 @@ end
 --Search
 function s.thfilter(c)
 	return not c:IsCode(id)
-		and (c:IsArchetype(ARCHETYPE_SUPER_SOLDIER) or (c:IsSetCard(SET_BLACK_LUSTER_SOLDIER) and c:IsMonster()))
+		and (c:IsSetCard(ARCHETYPE_SUPER_SOLDIER) or (c:IsSetCard(SET_BLACK_LUSTER_SOLDIER) and c:IsMonster()))
 		and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)

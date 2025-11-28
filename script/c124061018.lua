@@ -26,7 +26,7 @@ function s.initial_effect(c)
 	e4:SetCode(EFFECT_QP_ACT_IN_NTPHAND)
 	e4:SetRange(LOCATION_FZONE)
 	e4:SetTargetRange(LOCATION_HAND,0)
-	e4:SetTarget(aux.TargetBoolFunction(Card.IsArchetype,ARCHETYPE_SPIRITUAL_ART))
+	e4:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,ARCHETYPE_SPIRITUAL_ART))
 	c:RegisterEffect(e4)
 	local e5=e4:Clone()
 	e5:SetCode(EFFECT_TRAP_ACT_IN_HAND)
@@ -46,7 +46,7 @@ end
 s.listed_series={ARCHETYPE_SPIRITUAL_ART}
 --Add attribute
 function s.attval(e,c)
-	return Duel.GetMatchingGroup(aux.FaceupFilter(Card.IsArchetype,ARCHETYPE_SPIRITUAL_ART),e:GetHandlerPlayer(),LOCATION_MZONE+LOCATION_GRAVE,0,nil):GetBitwiseOr(Card.GetOriginalAttribute)
+	return Duel.GetMatchingGroup(aux.FaceupFilter(Card.IsSetCard,ARCHETYPE_SPIRITUAL_ART),e:GetHandlerPlayer(),LOCATION_MZONE+LOCATION_GRAVE,0,nil):GetBitwiseOr(Card.GetOriginalAttribute)
 end
 --Activate from Deck
 function s.costfilter1(c,tc,e)
@@ -89,7 +89,7 @@ function s.costfilter2(c,te,e)
 	return res
 end
 function s.acttg(e,c)
-	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap())
+	return c:IsSetCard(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap())
 		and (not c:IsLocation(LOCATION_DECK) or Duel.IsExistingMatchingCard(s.costfilter1,e:GetHandlerPlayer(),LOCATION_HAND,0,1,nil,c,e))
 end
 function s.actcon(e)

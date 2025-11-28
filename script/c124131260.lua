@@ -56,7 +56,7 @@ function s.tgcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.tgfilter(c)
-    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsAbleToGrave()
+    return c:IsSetCard(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsAbleToGrave()
 end
 
 function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)

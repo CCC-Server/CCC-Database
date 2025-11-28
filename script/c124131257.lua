@@ -33,7 +33,7 @@ end
 s.listed_series={ARCHETYPE_EMISSARY_OF_DARKNESS}
 -- Add or Special Summon "Emissary of Darkness" monster from Deck
 function s.filter(c,e,tp)
-    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsType(TYPE_MONSTER) and (c:IsAbleToHand() or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)))
+    return c:IsSetCard(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsType(TYPE_MONSTER) and (c:IsAbleToHand() or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)))
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.filter,tp,LOCATION_DECK,0,1,nil,e,tp) end

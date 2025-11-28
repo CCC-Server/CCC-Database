@@ -49,7 +49,7 @@ end
 s.listed_series={ARCHETYPE_SPIRITUAL_ART}
 --Activate from Deck/GY
 function s.acttg(e,c)
-	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and not c:IsCode(id) and c:IsFieldSpell()
+	return c:IsSetCard(ARCHETYPE_SPIRITUAL_ART) and not c:IsCode(id) and c:IsFieldSpell()
 end
 --Redirect
 function s.rmcon(e)
@@ -58,7 +58,7 @@ function s.rmcon(e)
 end
 --Activate self from Banished
 function s.filter(c)
-	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and c:IsFieldSpell() and c:IsFaceup()
+	return c:IsSetCard(ARCHETYPE_SPIRITUAL_ART) and c:IsFieldSpell() and c:IsFaceup()
 end
 function s.actcon(e)
 	return Duel.IsExistingMatchingCard(s.filter,e:GetHandlerPlayer(),LOCATION_ONFIELD,0,1,nil)

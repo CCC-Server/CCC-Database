@@ -55,7 +55,7 @@ function s.thcost1(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.ShuffleHand(tp)
 end
 function s.thfilter1(c)
-	return c:IsArchetype(ARCHETYPE_SUPER_SOLDIER) and c:IsRitualSpell() and c:IsAbleToHand()
+	return c:IsSetCard(ARCHETYPE_SUPER_SOLDIER) and c:IsRitualSpell() and c:IsAbleToHand()
 end
 function s.thtg1(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter1,tp,LOCATION_DECK,0,1,nil) end
@@ -70,7 +70,7 @@ function s.thop1(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.cfilter2(c)
-	return c:IsArchetype(ARCHETYPE_SUPER_SOLDIER) and not c:IsPublic()
+	return c:IsSetCard(ARCHETYPE_SUPER_SOLDIER) and not c:IsPublic()
 end
 function s.thcost2(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter2,tp,LOCATION_HAND,0,1,nil) end

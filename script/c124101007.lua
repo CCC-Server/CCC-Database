@@ -49,7 +49,7 @@ end
 --Copy 1 "Super Soldier" Spell/Trap
 function s.cpfilter(c)
 	return c:IsRitualSpell() and c:IsAbleToGraveAsCost() and c:CheckActivateEffect(true,true,false)~=nil
-		and c:IsArchetype(ARCHETYPE_SUPER_SOLDIER)
+		and c:IsSetCard(ARCHETYPE_SUPER_SOLDIER)
 end
 function s.cptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then

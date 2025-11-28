@@ -34,7 +34,7 @@ end
 s.listed_series={ARCHETYPE_EMISSARY_OF_DARKNESS}
 -- Add "Emissary of Darkness" Spell/Trap from Deck to hand
 function s.thfilter(c)
-    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsAbleToHand()
+    return c:IsSetCard(ARCHETYPE_EMISSARY_OF_DARKNESS) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
@@ -53,7 +53,7 @@ function s.spcon(e,tp,eg,ep,ev,re,r,rp)
     return ep==tp and (r&REASON_BATTLE+REASON_EFFECT)~=0
 end
 function s.spfilter(c,e,tp)
-    return c:IsArchetype(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+    return c:IsSetCard(ARCHETYPE_EMISSARY_OF_DARKNESS) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0

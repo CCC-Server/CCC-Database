@@ -105,7 +105,7 @@ function s.attop(e,tp,eg,ep,ev,re,r,rp)
 end
 --Search
 function s.thfilter(c)
-	return c:IsArchetype(ARCHETYPE_SUPER_SOLDIER) and c:IsSpellTrap() and c:IsAbleToHand()
+	return c:IsSetCard(ARCHETYPE_SUPER_SOLDIER) and c:IsSpellTrap() and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end

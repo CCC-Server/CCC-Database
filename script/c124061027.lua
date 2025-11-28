@@ -22,7 +22,7 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.Release(g,REASON_COST)
 end
 function s.spfilter(c,e,tp)
-	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE) 
+	return c:IsSetCard(ARCHETYPE_SPIRITUAL_ART) and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE) 
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then

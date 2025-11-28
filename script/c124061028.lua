@@ -19,7 +19,7 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.Release(g,REASON_COST)
 end
 function s.setfilter(c)
-	return c:IsArchetype(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap()) and c:IsSSetable()
+	return c:IsSetCard(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap()) and c:IsSSetable()
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
