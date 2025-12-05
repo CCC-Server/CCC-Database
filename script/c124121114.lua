@@ -85,28 +85,21 @@ function s.matfilter(c,e)
 		and c:IsCanBeFusionMaterial()
 		and not c:IsImmuneToEffect(e)
 		and c:IsReleasableByEffect(e)
-		and c:IsLocation(LOCATION_HAND+LOCATION_MZONE)
 end
 
--- "요화" 융합 몬스터
-function s.fusfilter(c,e,tp,mg,chkf)
+-- "요화" 융합 몬스터 (CheckFusionMaterial 사용 X, 단순 필터)
+function s.fusfilter(c,e,tp)
 	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		-- 여기만 수정
-		and c:CheckFusionMaterial(mg,chkf)
 end
 
--- 타겟: 융합 소환 가능한지 체크
+-- 타겟: 융합 소환 가능한지 대략 체크
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
 		if #mg==0 then return false end
-		local chkf=tp
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-			chkf=PLAYER_NONE
-		end
-		local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,chkf)
-		return #sg>0
+		-- 엑덱에 소환 가능한 "요화" 융합이 1장 이상 있어야 함
+		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_FUSION_SUMMON,nil,1,tp,LOCATION_EXTRA)
@@ -126,7 +119,8 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 		chkf=PLAYER_NONE
 	end
 
-	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,chkf)
+	-- 소환 가능한 요화 융합 몬스터들
+	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
 	if #sg==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
@@ -143,6 +137,7 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Release(mat,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
 
 	Duel.BreakEffect()
-	Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
-	tc:CompleteProcedure()
+	if Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)>0 then
+		tc:CompleteProcedure()
+	end
 end
