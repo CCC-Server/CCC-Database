@@ -4,13 +4,14 @@ function s.initial_effect(c)
 	-----------------------------------------
 	-- 융합 소환 조건
 	-- "백루의 요화가" + 패의 몬스터 1장 이상
-	-----------------------------------------
+	-----------------------------------------d
 	c:EnableReviveLimit()
 	Fusion.AddProcMixRep(
 		c,true,true,
-		aux.FilterBoolFunctionEx(Card.IsLocation,LOCATION_HAND),1,99,  -- 패의 카드 1장 이상
-		aux.FilterBoolFunctionEx(Card.IsCode,124121114)                -- "백루의 요화가"
+		aux.FilterBoolFunctionEx(Card.IsType,TYPE_MONSTER),1,99, -- 반복 재료 : 몬스터
+		aux.FilterBoolFunction(Card.IsCode,124121114)            -- 고정 재료 : "백루의 요화가"
 	)
+
 
 	-- 사용된 융합 소재 수를 기록 (③ 효과용)
 	local e0=Effect.CreateEffect(c)
