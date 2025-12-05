@@ -53,13 +53,11 @@ function s.matfilter(c,e)
 end
 
 ---------------------------------------------------------
--- ① 융합 몬스터 필터
---    재료 풀(mg)로 융합 가능한지만 체크
+-- ① 융합 몬스터 필터 (단순 조건만 확인)
 ---------------------------------------------------------
-function s.fusfilter(c,e,tp,mg,chkf)
-	return c:IsType(TYPE_FUSION)
+function s.fusfilter(c,e,tp)
+	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,chkf)
 end
 
 ---------------------------------------------------------
@@ -75,16 +73,8 @@ function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 		local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
 		if not mg:IsContains(c) then return false end
 
-		local chkf=tp
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-			chkf=PLAYER_NONE
-		end
-
-		-- 이 재료 풀로 융합 가능한 몬스터가 있어야 함
-		return Duel.IsExistingMatchingCard(
-			s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,
-			e,tp,mg,chkf
-		)
+		-- 엑스트라 덱에 소환 가능한 "요화" 융합 몬스터가 있는지 정도만 확인
+		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
 	end
 
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
@@ -105,17 +95,14 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 		chkf=PLAYER_NONE
 	end
 
-	local sg=Duel.GetMatchingGroup(
-		s.fusfilter,tp,LOCATION_EXTRA,0,nil,
-		e,tp,mg,chkf
-	)
+	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
 	if #sg==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=sg:Select(tp,1,1,nil):GetFirst()
 	if not tc then return end
 
-	-- ★ 반드시 이 카드를 포함한 소재 선택
+	-- 반드시 이 카드를 포함한 소재 선택
 	local mat=Duel.SelectFusionMaterial(tp,tc,mg,c,chkf)
 	if #mat==0 then return end
 
@@ -128,8 +115,9 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Release(mat,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
 
 	Duel.BreakEffect()
-	Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
-	tc:CompleteProcedure()
+	if Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)>0 then
+		tc:CompleteProcedure()
+	end
 end
 
 ---------------------------------------------------------
@@ -206,9 +194,7 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 		if #g>0 then
 			Duel.HintSelection(g)
 			local tc=g:GetFirst()
-			-- 기본적으로는 내 패로 가져온다
 			local p=tp
-			-- 만약 엑스트라 덱으로 되돌아가야 하는 카드면
 			if tc:IsAbleToExtra() then
 				p=nil
 			end
