@@ -78,7 +78,7 @@ function s.val4(e,c)
 	local tp=e:GetHandlerPlayer()
 	return s.vfil4(c,tp)
 end
--- 대신 릴리스할 패의 몬스터
+-- 대신 보낼 패의 몬스터
 function s.tfil4(c)
 	return c:IsMonster() and c:IsAbleToGrave()
 end
@@ -111,9 +111,6 @@ end
 --------------------------------
 
 -- 융합 소재로 쓸 패 / 덱 몬스터
---  · 몬스터 & 융합 소재 가능
---  · 효과 내성 없음
---  · 묘지로 보낼 수 있어야 함 (→ 보낼 때 REASON_RELEASE를 붙여 "릴리스" 취급)
 function s.fusmatfilter(c,e)
 	return c:IsMonster() and c:IsCanBeFusionMaterial()
 		and not c:IsImmuneToEffect(e)
@@ -124,7 +121,7 @@ end
 function s.fusfilter(c,e,tp,mg,chkf)
 	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,nil,chkf)
+		and c:CheckFusionMaterial(mg,chkf)   -- ★ 여기만 수정
 end
 
 -- ③ 타겟: 융합 소환 가능 여부 체크
@@ -144,9 +141,6 @@ function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 -- ③ 실제 융합 처리
--- 선택한 패 / 덱 소재 전부를
---   REASON_EFFECT + REASON_MATERIAL + REASON_FUSION + REASON_RELEASE
--- 로 묘지로 보내서 "융합 소재로서 릴리스" 처리
 function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) or c:IsFacedown() then return end

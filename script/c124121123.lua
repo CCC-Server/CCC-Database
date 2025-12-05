@@ -81,7 +81,7 @@ end
 function s.fusfilter(c,e,tp,mg,chkf)
 	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,nil,chkf)
+		and c:CheckFusionMaterial(mg,chkf)  -- ★ 여기 수정
 end
 
 -- ② 타깃: 융합 소환 가능한지
@@ -102,8 +102,7 @@ end
 -- ② 실제 융합 처리
 function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 and not Duel.IsPlayerAffectedByEffect(tp,59822133) then
-		-- 필드가 가득 찼는데, 특소 제한까지 걸려있으면 실패
-		-- (보통 59822133 체크는 생략해도 되지만 안전용)
+		-- 필드가 가득 찼는데, 특소 제한까지 걸려있으면 실패 (실질적으로는 아래에서 SpecialSummon이 막힐 거라 주석만)
 	end
 
 	local mg=Duel.GetMatchingGroup(s.fusmatfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)

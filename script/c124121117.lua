@@ -54,12 +54,12 @@ end
 
 ---------------------------------------------------------
 -- ① 융합 몬스터 필터
---    ★ 반드시 이 카드(handler)가 포함된 소재로 융합 가능해야 함
+--    재료 풀(mg)로 융합 가능한지만 체크
 ---------------------------------------------------------
-function s.fusfilter(c,e,tp,mg,chkf,handler)
+function s.fusfilter(c,e,tp,mg,chkf)
 	return c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,handler,chkf)
+		and c:CheckFusionMaterial(mg,chkf)
 end
 
 ---------------------------------------------------------
@@ -76,11 +76,15 @@ function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 		if not mg:IsContains(c) then return false end
 
 		local chkf=tp
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then chkf=PLAYER_NONE end
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+			chkf=PLAYER_NONE
+		end
 
-		-- 이 카드를 포함한 융합 가능 몬스터가 있어야 함
-		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,
-			e,tp,mg,chkf,c)
+		-- 이 재료 풀로 융합 가능한 몬스터가 있어야 함
+		return Duel.IsExistingMatchingCard(
+			s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,
+			e,tp,mg,chkf
+		)
 	end
 
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
@@ -97,9 +101,14 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	if #mg==0 or not mg:IsContains(c) then return end
 
 	local chkf=tp
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then chkf=PLAYER_NONE end
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+		chkf=PLAYER_NONE
+	end
 
-	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,chkf,c)
+	local sg=Duel.GetMatchingGroup(
+		s.fusfilter,tp,LOCATION_EXTRA,0,nil,
+		e,tp,mg,chkf
+	)
 	if #sg==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
@@ -192,14 +201,14 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	elseif op==2 then
 		-- 상대 묘지/제외 몬스터 패로
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil22),tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil22),
+			tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
 		if #g>0 then
 			Duel.HintSelection(g)
 			local tc=g:GetFirst()
 			-- 기본적으로는 내 패로 가져온다
 			local p=tp
-			-- 만약 엑스트라 덱으로 되돌아가야 하는 카드면(융합/싱크로/엑시즈/링크 등)
-			-- 원래 주인의 엑스트라 덱으로 보내기 위해 p=nil 처리
+			-- 만약 엑스트라 덱으로 되돌아가야 하는 카드면
 			if tc:IsAbleToExtra() then
 				p=nil
 			end

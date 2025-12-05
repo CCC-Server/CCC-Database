@@ -92,7 +92,8 @@ end
 function s.fusfilter(c,e,tp,mg,chkf)
 	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,nil,chkf)
+		-- 여기만 수정
+		and c:CheckFusionMaterial(mg,chkf)
 end
 
 -- 타겟: 융합 소환 가능한지 체크
