@@ -53,10 +53,12 @@ function s.matfilter(c,e)
 end
 
 ---------------------------------------------------------
--- ① 융합 몬스터 필터 (단순 조건만 확인)
+-- ① 융합 몬스터 필터
+--    레벨 9 이상의 융합 몬스터만
 ---------------------------------------------------------
 function s.fusfilter(c,e,tp)
-	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
+	return c:IsType(TYPE_FUSION)
+		and c:IsLevelAbove(9)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
 end
 
@@ -73,7 +75,7 @@ function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 		local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
 		if not mg:IsContains(c) then return false end
 
-		-- 엑스트라 덱에 소환 가능한 "요화" 융합 몬스터가 있는지 정도만 확인
+		-- 엑스트라 덱에 소환 가능한 레벨 9 이상 융합이 있는지 정도만 확인
 		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
 	end
 
