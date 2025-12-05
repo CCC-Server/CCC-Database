@@ -117,23 +117,18 @@ function s.fusmatfilter(c,e)
 		and c:IsAbleToGrave()
 end
 
--- "요화" 융합 몬스터
-function s.fusfilter(c,e,tp,mg,chkf)
+-- "요화" 융합 몬스터 (간단 필터: CheckFusionMaterial 사용 안 함)
+function s.yofusfilter(c,e,tp)
 	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,chkf)   -- ★ 여기만 수정
 end
 
--- ③ 타겟: 융합 소환 가능 여부 체크
+-- ③ 타겟: 융합 소환 가능 여부 대략 체크
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		local mg=Duel.GetMatchingGroup(s.fusmatfilter,tp,LOCATION_HAND+LOCATION_DECK,0,nil,e)
 		if #mg==0 then return false end
-		local chkf=tp
-		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
-			chkf=PLAYER_NONE
-		end
-		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg,chkf)
+		return Duel.IsExistingMatchingCard(s.yofusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_FUSION_SUMMON,nil,1,tp,LOCATION_EXTRA)
@@ -153,7 +148,7 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 		chkf=PLAYER_NONE
 	end
 
-	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,chkf)
+	local sg=Duel.GetMatchingGroup(s.yofusfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
 	if #sg==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
@@ -169,6 +164,7 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.SendtoGrave(mat,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION+REASON_RELEASE)
 
 	Duel.BreakEffect()
-	Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
-	tc:CompleteProcedure()
+	if Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)>0 then
+		tc:CompleteProcedure()
+	end
 end
