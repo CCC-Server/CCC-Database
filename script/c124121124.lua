@@ -7,13 +7,10 @@ function s.initial_effect(c)
 	-----------------------------------------
 	c:EnableReviveLimit()
 	Fusion.AddProcMix(
-		c,true,true,
-		-- 고정 소재: "백루의 요화가"
-		aux.FilterBoolFunctionEx(Card.IsCode,124121114),
-		-- 고정 소재: 패에 있는 몬스터 1장
-		aux.FilterBoolFunctionEx(Card.IsLocation,LOCATION_HAND)
+    		c,true,true,
+    		aux.FilterBoolFunctionEx(Card.IsSetCard,0xfa7),
+    		aux.FilterBoolFunctionEx(Card.IsLocation,LOCATION_HAND)
 	)
-
 	-----------------------------------------
 	-- ①: 자신 필드의 이 카드를 싱크로 소재로 할 경우,
 	--    이 카드를 튜너 이외의 싱크로 몬스터로 취급
