@@ -5,7 +5,7 @@ function s.initial_effect(c)
 	-- 카드군 정보
 	s.listed_series={0x1003}
 
-	-- (1) 패에서 특소 + 파괴
+	-- (1) 패에서 특소 + 이후에 고르고 파괴
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DESTROY)
@@ -45,7 +45,7 @@ function s.initial_effect(c)
 end
 
 --------------------------------
--- (1) 패에서 특소 + 파괴
+-- (1) 패에서 특소 + 이후에 고르고 파괴
 --------------------------------
 function s.cfilter1(c)
 	return c:IsFaceup() and c:IsSetCard(0x1003) and c:IsType(TYPE_MONSTER)
@@ -54,26 +54,30 @@ function s.spcon1(e,tp,eg,ep,ev,re,r,rp)
 	-- 자신 필드에 "Horus the Black Flame Dragon" 몬스터가 있어야 함
 	return Duel.IsExistingMatchingCard(s.cfilter1,tp,LOCATION_MZONE,0,1,nil)
 end
-function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+function s.sptg1(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
 		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 			and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-			and Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil)
 	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,aux.TRUE,tp,0,LOCATION_ONFIELD,1,1,nil)
+	-- 먼저 이 카드 특소 가능 여부만 체크
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
+	-- 이후 파괴가 있다는 걸 알리는 정보 (실제 선택은 해결 시)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,1-tp,LOCATION_ONFIELD)
 end
 function s.spop1(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	-- ① 먼저 패에서 이 카드 특수 소환
 	if Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)>0 then
-		local tc=Duel.GetFirstTarget()
-		if tc and tc:IsRelateToEffect(e) then
-			Duel.Destroy(tc,REASON_EFFECT)
+		-- ② 이후에 상대 필드 카드가 있으면 그때 골라서 파괴
+		if not Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil) then return end
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+		local g=Duel.SelectMatchingCard(tp,aux.TRUE,tp,0,LOCATION_ONFIELD,1,1,nil)
+		if #g>0 then
+			Duel.HintSelection(g)
+			Duel.Destroy(g,REASON_EFFECT)
 		end
 	end
 end
@@ -91,12 +95,13 @@ end
 --------------------------------
 -- (2) 제외 코스트 & 특소 + 조건부 서치
 --------------------------------
--- 코스트로 제외할 "Horus the Black Flame Dragon" 몬스터 후보
+-- 특소할 상위 레벨 "Horus the Black Flame Dragon" 몬스터
 function s.spfilter2(c,e,tp,lv)
 	return c:IsSetCard(0x1003) and c:IsType(TYPE_MONSTER)
 		and c:IsLevelAbove(lv+1)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
+-- 코스트로 제외할 "Horus the Black Flame Dragon" 몬스터 후보
 function s.costfilter2(c,e,tp)
 	local lv=c:GetLevel()
 	return c:IsSetCard(0x1003) and c:IsType(TYPE_MONSTER)
@@ -131,7 +136,6 @@ function s.thfilter(c)
 	return c:IsSetCard(0x1003) and c:IsAbleToHand()
 end
 function s.spop2(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	local lv=e:GetLabel()
 	-- 상위 레벨 "Horus the Black Flame Dragon" 특소

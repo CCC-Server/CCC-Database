@@ -1,102 +1,90 @@
---호루스 서포트 함정 (가칭)
+--Retribution of Horus the Black Flame Dragon
 local s,id=GetID()
-local SET_HORUS=0x1003  -- "Horus the Black Flame Dragon" 카드군
-
 function s.initial_effect(c)
-	--------------------------------------
-	-- 기본 발동
-	--------------------------------------
+	--발동 (Activate)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-
-	--------------------------------------
-	-- (1) 상대가 카드/효과 발동 시, 체인하여 필드 카드 1장 제외
-	--     (Red Zone의 1번 효과와 같은 타이밍/형식)
-	--------------------------------------
+	
+	--①: 상대가 카드나 효과를 발동했을 때, 필드의 카드 1장을 제외 (Banish)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_REMOVE)
-	e1:SetType(EFFECT_TYPE_QUICK_O)   -- ★ Red Zone과 동일: 퀵 효과
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
+	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_CHAINING)
 	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1,id)            -- (1)(2) 공유 HOPT
+	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.rmcon)
 	e1:SetTarget(s.rmtg)
 	e1:SetOperation(s.rmop)
 	c:RegisterEffect(e1)
-
-	--------------------------------------
-	-- (2) 드래곤 / FIRE 몬스터 특수 소환 (묘지 or 제외존) - 프리체인
-	--------------------------------------
+	
+	--②: 묘지/제외 상태의 화염 속성 / 드래곤족 몬스터 특수 소환 (Special Summon)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_QUICK_O)           -- 프리체인 퀵 효과
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_END_PHASE)
-	e2:SetCountLimit(1,id)                    -- (1)(2) 공유 HOPT
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetCountLimit(1,id+1)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 end
 
---------------------------------------
--- (1) 조건 : 상대가 카드/효과 발동 + 내가 호루스 몬스터 컨트롤
--- Red Zone의 descon을 참고해서 단순하게 구성:
---   rp==1-tp + 내 필드에 특정 몬스터 존재 확인
---------------------------------------
-function s.horusfilter(c)
-	return c:IsFaceup() and c:IsSetCard(SET_HORUS) and c:IsType(TYPE_MONSTER)
-end
-function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==1-tp
-		and Duel.IsExistingMatchingCard(s.horusfilter,tp,LOCATION_MZONE,0,1,nil)
+-- 필터: "호루스의 흑염룡" (SetCode: 0x1003) 몬스터 확인
+function s.cfilter(c)
+	return c:IsFaceup() and c:IsSetCard(0x1003)
 end
 
+-- ① 효과 조건: 상대가 발동 & 내 필드에 "호루스의 흑염룡" 몬스터 존재
+function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
+	return rp==1-tp and Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil)
+end
+
+-- ① 효과 대상 지정: 필드의 카드 1장
 function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsOnField() and chkc:IsAbleToRemove() end
-	if chk==0 then
-		return Duel.IsExistingTarget(Card.IsAbleToRemove,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil)
-	end
+	if chkc then return chkc:IsOnField() end
+	if chk==0 then return Duel.IsExistingTarget(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectTarget(tp,Card.IsAbleToRemove,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
+	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
 end
+
+-- ① 효과 처리: 제외
 function s.rmop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not c:IsRelateToEffect(e) then return end
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) then
 		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
 	end
 end
 
---------------------------------------
--- (2) 드래곤 / FIRE 특소 (프리체인)
---------------------------------------
+-- 필터: 화염 속성 / 드래곤족 (묘지 또는 제외된 상태)
 function s.spfilter(c,e,tp)
-	return c:IsRace(RACE_DRAGON) and c:IsAttribute(ATTRIBUTE_FIRE)
+	return c:IsRace(RACE_DRAGON) and c:IsAttribute(ATTRIBUTE_FIRE) 
+		and (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup())
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
+
+-- ② 효과 대상 지정: 자신의 묘지/제외 존의 해당 몬스터 1장
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then
-		return chkc:IsControler(tp)
-			and chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED)
-			and s.spfilter(chkc,e,tp)
-	end
-	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp)
-	end
+	if chkc then return chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED) and chkc:IsControler(tp) and s.spfilter(chkc,e,tp) end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,e,tp)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
 end
+
+-- ② 효과 처리: 특수 소환
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	local c=e:GetHandler()
+	if not c:IsRelateToEffect(e) then return end
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) then
 		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)

@@ -1,18 +1,14 @@
---호루스 신규 지원 (가칭)
+--Support Monster for Horus the Black Flame Dragon
 local s,id=GetID()
-local SET_HORUS=0x1003	-- "호루스의 흑염룡" 카드군
-
 function s.initial_effect(c)
-	--------------------------------------
-	-- (1) 서치 : 소환 성공시 "호루스의 흑염룡" 카드 서치
-	--------------------------------------
+	--①: 소환 성공 시 서치 (Search)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SEARCH+CATEGORY_TOHAND)
+	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e1:SetCode(EVENT_SUMMON_SUCCESS)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
-	e1:SetCountLimit(1,id)  -- (1)만 1턴 1번
+	e1:SetCountLimit(1,id)
 	e1:SetTarget(s.thtg)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
@@ -20,63 +16,58 @@ function s.initial_effect(c)
 	e1b:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e1b)
 
-	--------------------------------------
-	-- (2) 메인 페이즈 / 마법 발동에 체인해서 릴리스 후 특소 (필드)
-	--------------------------------------
-	-- 메인 페이즈에서 사용하는 버전 (IGNITION)
+	--②: 자신 메인 페이즈에 릴리스하고 특소 (Ignition)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,{id,1})  -- (2)효과 HOPT (필드용 2개가 공유)
-	e2:SetCost(s.spcost_release)
+	e2:SetCountLimit(1,id+1) -- ②번 효과 제약 공유
+	e2:SetCost(s.spcost)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
-	-- 상대가 마법 카드 효과를 발동했을 때 체인하는 버전 (QUICK)
+
+	--②: 상대 마법 발동 시 필드에서 릴리스하고 특소 (Quick - Field)
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetCode(EVENT_CHAINING)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
-	e3:SetCountLimit(1,{id,1}) -- e2와 공유
-	e3:SetCondition(s.spcon_chain)
-	e3:SetCost(s.spcost_release)
+	e3:SetCountLimit(1,id+1) -- ②번 효과 제약 공유
+	e3:SetCondition(s.spcon_magic)
+	e3:SetCost(s.spcost)
 	e3:SetTarget(s.sptg)
 	e3:SetOperation(s.spop)
 	c:RegisterEffect(e3)
 
-	--------------------------------------
-	-- (3) 패에서 자신을 릴리스하고 특소 (퀵)
-	--------------------------------------
+	--③: 상대 마법 효과 발동 "경우" 패에서 릴리스하고 특소 (Trigger - Hand)
+	--타이밍: "때"가 아닌 "경우"이므로 체인 처리가 끝난 후 발동 (EVENT_CHAIN_SOLVED 사용)
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
 	e4:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e4:SetType(EFFECT_TYPE_QUICK_O)
-	e4:SetCode(EVENT_CHAINING)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O) -- 유발 효과로 변경
+	e4:SetProperty(EFFECT_FLAG_DELAY) -- 딜레이 허용 ("경우")
+	e4:SetCode(EVENT_CHAIN_SOLVED)    -- 효과 처리 직후 타이밍 감지
 	e4:SetRange(LOCATION_HAND)
-	e4:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
-	e4:SetCountLimit(1,{id,2}) 
-	e4:SetCondition(s.spcon_chain)
-	e4:SetCost(s.spcost_release)
+	--e4:SetCountLimit(1,id+2) -- ③번 효과 횟수 제약 필요 시 주석 해제
+	e4:SetCondition(s.spcon_magic_trigger)
+	e4:SetCost(s.spcost)
 	e4:SetTarget(s.sptg)
 	e4:SetOperation(s.spop)
 	c:RegisterEffect(e4)
 end
 
---------------------------------------
--- (1) 서치 관련
---------------------------------------
+-- "호루스의 흑염룡" 세트 코드: 0x1003
+s.listed_series={0x1003}
+
+-- ①: 서치 필터
 function s.thfilter(c)
-	return c:IsSetCard(SET_HORUS) and c:IsAbleToHand()
+	return c:IsSetCard(0x1003) and c:IsAbleToHand() and not c:IsCode(id)
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then 
-		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil)
-	end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
@@ -88,37 +79,36 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---------------------------------------
--- (2)(3) 공통 : 체인 조건(상대 마법 효과 발동시)
---------------------------------------
-function s.spcon_chain(e,tp,eg,ep,ev,re,r,rp)
+-- ②: 조건 (상대가 마법 카드의 효과를 발동했을 때 - 체인)
+function s.spcon_magic(e,tp,eg,ep,ev,re,r,rp)
 	return rp==1-tp and re:IsActiveType(TYPE_SPELL)
 end
 
---------------------------------------
--- (2)(3) 공통 코스트 : 자신 릴리스
---------------------------------------
-function s.spcost_release(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return c:IsReleasable() end
-	Duel.Release(c,REASON_COST)
+-- ③: 조건 (상대가 마법 카드의 효과를 발동했을 경우 - 처리 후 유발)
+function s.spcon_magic_trigger(e,tp,eg,ep,ev,re,r,rp)
+	-- re: 처리된 효과, rp: 발동 플레이어
+	return rp==1-tp and re:IsActiveType(TYPE_SPELL)
 end
 
---------------------------------------
--- (2)(3) 공통 : 특소 대상/처리
---  "레벨 6 이하 호루스의 흑염룡"을 패/덱에서 특소
---------------------------------------
-function s.spfilter(c,e,tp)
-	return c:IsSetCard(SET_HORUS) and c:IsLevelBelow(6)
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+-- 공통 코스트 (이 카드를 릴리스)
+function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():IsReleasable() end
+	Duel.Release(e:GetHandler(),REASON_COST)
 end
+
+-- 공통 특수 소환 필터 (레벨 6 이하 "호루스의 흑염룡")
+function s.spfilter(c,e,tp)
+	return c:IsSetCard(0x1003) and c:IsLevelBelow(6) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+
+-- 공통 타겟 지정
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		-- 존 체크를 여기서 안 하고, 처리 시점에서만 함
-		return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil,e,tp)
-	end
+	if chk==0 then return Duel.GetMZoneCount(tp,e:GetHandler())>0
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK,0,1,nil,e,tp) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK)
 end
+
+-- 공통 효과 처리
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
