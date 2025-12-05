@@ -1,0 +1,230 @@
+--백루와 초상의 요화
+local s,id=GetID()
+function s.initial_effect(c)
+	-----------------------------------------
+	-- 융합 소환 조건
+	-- "백루의 요화가" + 패의 몬스터 1장 이상
+	-----------------------------------------
+	c:EnableReviveLimit()
+	-- Dragontail Altharion 방식 참조:
+	-- Fusion.AddProcMixRep(c,true,true, hand_filter, 1~99, fixed_material)
+	Fusion.AddProcMixRep(
+		c,true,true,
+		aux.FilterBoolFunctionEx(Card.IsLocation,LOCATION_HAND),1,99,  -- 패의 카드(실질적으로 몬스터) 1장 이상
+		aux.FilterBoolFunctionEx(Card.IsCode,124121114)				-- "백루의 요화가"
+	)
+
+	-- 사용된 융합 소재 수를 기록 (③ 효과용)
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e0:SetCode(EFFECT_MATERIAL_CHECK)
+	-- 이 카드가 융합 소환될 때 사용된 전체 소재 수를 라벨에 저장
+	e0:SetValue(function(e,cc)
+		e:SetLabel(cc:GetMaterialCount())
+	end)
+	c:RegisterEffect(e0)
+
+	-----------------------------------------
+	-- ①: 싱크로 소재 시 튜너 이외의 싱크로 몬스터로 취급
+	-- (Wheel Synchron 참조)
+	-----------------------------------------
+	-- 필드 위에서 TYPE_SYNCHRO 부여
+	local e1a=Effect.CreateEffect(c)
+	e1a:SetType(EFFECT_TYPE_SINGLE)
+	e1a:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1a:SetCode(EFFECT_ADD_TYPE)
+	e1a:SetRange(LOCATION_MZONE)
+	e1a:SetValue(TYPE_SYNCHRO)
+	c:RegisterEffect(e1a)
+	-- Non-Tuner 취급 (싱크로 소재 판정용)
+	local e1b=Effect.CreateEffect(c)
+	e1b:SetType(EFFECT_TYPE_SINGLE)
+	e1b:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1b:SetCode(EFFECT_NONTUNER)
+	e1b:SetRange(LOCATION_MZONE)
+	c:RegisterEffect(e1b)
+
+	-----------------------------------------
+	-- ②: 묘지/제외 카드 1~3장 되돌리고
+	--	 되돌린 수만큼 레벨 업/다운
+	-----------------------------------------
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetCategory(CATEGORY_TODECK+CATEGORY_LVCHANGE)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCountLimit(1,id) -- 이 카드명의 ②, 1턴에 1번
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetTarget(s.tdtg)
+	e2:SetOperation(s.tdop)
+	c:RegisterEffect(e2)
+
+	-----------------------------------------
+	-- ③: 자신/상대 턴, 융합 소환된 이 카드를 릴리스하고
+	--	 융합 소재 수만큼 덱에서 "요화" 몬스터 특소
+	-----------------------------------------
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetCode(EVENT_FREE_CHAIN)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E) -- 자신/상대 턴 메인/배틀 등
+	e3:SetCountLimit(1,{id,1}) -- 이 카드명의 ③, 1턴에 1번
+	e3:SetCondition(s.spcon)
+	e3:SetCost(s.spcost)
+	e3:SetTarget(s.sptg)
+	e3:SetOperation(s.spop)
+	e3:SetLabelObject(e0) -- e0(소재 수 기록용 효과) 연결
+	c:RegisterEffect(e3)
+end
+
+s.listed_names={124121114} -- "백루의 요화가"
+s.listed_series={0xfa7}	-- "요화"
+
+---------------------------------------------------
+-- ② 공통 필터: 되돌릴 수 있는 카드 (묘지/제외)
+---------------------------------------------------
+function s.tdfilter(c)
+	return c:IsAbleToDeck()
+end
+
+---------------------------------------------------
+-- ② 타겟: 서로의 묘지 + 제외에서 1~3장 선택
+---------------------------------------------------
+function s.tdtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then
+		return chkc:IsLocation(LOCATION_GRAVE+LOCATION_REMOVED) and s.tdfilter(chkc)
+	end
+	if chk==0 then
+		return Duel.IsExistingTarget(
+			s.tdfilter,tp,
+			LOCATION_GRAVE+LOCATION_REMOVED,
+			LOCATION_GRAVE+LOCATION_REMOVED,
+			1,nil
+		)
+	end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local g=Duel.SelectTarget(
+		tp,s.tdfilter,tp,
+		LOCATION_GRAVE+LOCATION_REMOVED,
+		LOCATION_GRAVE+LOCATION_REMOVED,
+		1,3,nil
+	)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,#g,0,0)
+end
+
+---------------------------------------------------
+-- ② 실행: 되돌린 수만큼 레벨 올리거나 내리기
+---------------------------------------------------
+function s.tdop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not (c:IsFaceup() and c:IsRelateToEffect(e)) then return end
+
+	local g=Duel.GetTargetCards(e)
+	if #g==0 then return end
+
+	-- 카드들을 덱/엑덱으로 되돌림
+	local ct=Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
+	if ct==0 then return end
+
+	local lvl=c:GetLevel()
+	local canUp=true
+	local canDown=(lvl>ct) -- 레벨 1 미만이 되지 않게
+
+	if not (canUp or canDown) then return end
+
+	local op
+	if canUp and canDown then
+		-- cdb에서 id,2 = "레벨을 올린다", id,3 = "레벨을 내린다" 식으로 넣어두면 됨
+		op=Duel.SelectOption(tp,aux.Stringid(id,2),aux.Stringid(id,3))
+	elseif canUp then
+		op=0
+	else
+		op=1
+	end
+
+	local value=(op==0) and ct or -ct
+
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e1:SetCode(EFFECT_UPDATE_LEVEL)
+	e1:SetValue(value)
+	e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+	c:RegisterEffect(e1)
+end
+
+---------------------------------------------------
+-- ③ 조건: 융합 소환된 이 카드 + 데미지 스텝 불가
+---------------------------------------------------
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	-- 데미지 스텝에서는 발동 불가
+	if Duel.GetCurrentPhase()==PHASE_DAMAGE and Duel.IsDamageCalculated() then
+		return false
+	end
+	-- "융합 소환한 이 카드" 조건
+	return c:IsSummonType(SUMMON_TYPE_FUSION)
+end
+
+---------------------------------------------------
+-- ③ 코스트: 이 카드를 릴리스하고, 소재 수를 Label에 저장
+---------------------------------------------------
+function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	local e0=e:GetLabelObject()
+	local matct=e0 and e0:GetLabel() or 0
+	if chk==0 then
+		-- 융합 소재가 최소 1장 이상 기록되어 있어야 함 + 릴리스 가능
+		return matct>0 and c:IsReleasable()
+	end
+	-- 이후에 쓸 수 있게 Label에 융합 소재 수를 저장
+	e:SetLabel(matct)
+	Duel.Release(c,REASON_COST)
+end
+
+---------------------------------------------------
+-- ③ 특소할 "요화" 몬스터 필터
+---------------------------------------------------
+function s.yofilter(c,e,tp)
+	return c:IsSetCard(0xfa7)
+		and c:IsMonster()
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+
+---------------------------------------------------
+-- ③ 타겟: 융합 소재 수까지 특소 가능 여부 체크
+---------------------------------------------------
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local ct=e:GetLabel() -- 융합 소재 수
+	if chk==0 then
+		return ct>0
+			and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+			and Duel.IsExistingMatchingCard(s.yofilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+	end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct,tp,LOCATION_DECK)
+end
+
+---------------------------------------------------
+-- ③ 실행: 융합 소재 수까지 "요화" 특수 소환
+---------------------------------------------------
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local ct=e:GetLabel()
+	if ct<=0 then return end
+
+	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
+	if ft<=0 then return end
+	-- 59822133 같은 “1회에 1장만 특소” 제한 고려
+	if Duel.IsPlayerAffectedByEffect(tp,59822133) then
+		ft=1
+	end
+	if ft>ct then ft=ct end
+
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local g=Duel.SelectMatchingCard(tp,s.yofilter,tp,LOCATION_DECK,0,1,ft,nil,e,tp)
+	if #g>0 then
+		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+	end
+end
