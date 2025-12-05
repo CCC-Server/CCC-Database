@@ -125,11 +125,19 @@ function s.op3(e,tp,eg,ep,ev,re,r,rp)
 	else
 		-- 상대 묘지/제외 몬스터 패로
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil32),
+		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil3),
 			tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
 		if #g>0 then
 			Duel.HintSelection(g)
-			Duel.SendtoHand(g,nil,REASON_EFFECT)
+			local tc=g:GetFirst()
+			-- 기본적으로는 내 패로 가져온다
+			local p=tp
+			-- 만약 엑스트라 덱으로 되돌아가야 하는 카드면(융합/싱크로/엑시즈/링크 등)
+			-- 원래 주인의 엑스트라 덱으로 보내기 위해 p=nil 처리
+			if tc:IsAbleToExtra() then
+				p=nil
+			end
+			Duel.SendtoHand(g,p,REASON_EFFECT)
 		end
 	end
 end

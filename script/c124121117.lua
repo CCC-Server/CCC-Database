@@ -42,7 +42,7 @@ function s.con1(e,tp)
 end
 
 ---------------------------------------------------------
--- ① 융합 소재 필터 (요화 몬스터 + 릴리스 가능한 카드)
+-- ① 융합 소재 필터 (요화 몬스터 + 릴리스 가능)
 ---------------------------------------------------------
 function s.matfilter(c,e)
 	return c:IsSetCard(0xfa7)
@@ -54,53 +54,64 @@ end
 
 ---------------------------------------------------------
 -- ① 융합 몬스터 필터
+--    ★ 반드시 이 카드(handler)가 포함된 소재로 융합 가능해야 함
 ---------------------------------------------------------
-function s.fusfilter(c,e,tp,mg,chkf)
+function s.fusfilter(c,e,tp,mg,chkf,handler)
 	return c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,nil,chkf)
+		and c:CheckFusionMaterial(mg,handler,chkf)
 end
 
 ---------------------------------------------------------
--- ① 타겟 설정
+-- ① 타겟 설정: 반드시 이 카드가 융합 소재에 포함되어야 함
 ---------------------------------------------------------
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+
 	if chk==0 then
+		-- 이 카드 자체가 소재로 사용 가능해야 함
+		if not s.matfilter(c,e) then return false end
+
 		local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
-		if #mg==0 then return false end
+		if not mg:IsContains(c) then return false end
+
 		local chkf=tp
 		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then chkf=PLAYER_NONE end
 
-		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg,chkf)
+		-- 이 카드를 포함한 융합 가능 몬스터가 있어야 함
+		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,
+			e,tp,mg,chkf,c)
 	end
+
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_FUSION_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 
 ---------------------------------------------------------
--- ① 실제 융합 처리 (요화 몬스터를 전부 릴리스)
+-- ① 실제 융합 처리 (요화 몬스터 + 반드시 이 카드 포함 → 릴리스)
 ---------------------------------------------------------
 function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 
 	local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
-	if #mg==0 then return end
+	if #mg==0 or not mg:IsContains(c) then return end
 
-	-- Extra 융합체 검색
 	local chkf=tp
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then chkf=PLAYER_NONE end
-	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,chkf)
+
+	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,chkf,c)
 	if #sg==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=sg:Select(tp,1,1,nil):GetFirst()
 	if not tc then return end
 
-	-- 소재 선택
-	local mat=Duel.SelectFusionMaterial(tp,tc,mg,nil,chkf)
+	-- ★ 반드시 이 카드를 포함한 소재 선택
+	local mat=Duel.SelectFusionMaterial(tp,tc,mg,c,chkf)
+	if #mat==0 then return end
+
 	tc:SetMaterial(mat)
 
-	-- 요화 소재를 릴리스 취급 + 융합소재로 묘지로 보내기
 	for mc in mat:Iter() do
 		mc:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD,0,1) -- 릴리스 판정용
 	end
@@ -113,7 +124,7 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ---------------------------------------------------------
--- ② 릴리스되어 묘지/제외로 갔을 경우
+-- ② 릴리스 되어 묘지/제외 갔을 경우
 ---------------------------------------------------------
 function s.relcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
@@ -122,9 +133,10 @@ function s.relcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 ---------------------------------------------------------
--- ② 선택 효과용 필터
+-- ② 선택지 필터
 ---------------------------------------------------------
--- “융합 몬스터가 아닌 요화 몬스터”
+
+-- "융합이 아닌 요화 몬스터"
 function s.tfil21(c,e,tp)
 	return c:IsSetCard(0xfa7)
 		and c:IsMonster()
@@ -132,12 +144,13 @@ function s.tfil21(c,e,tp)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
+-- 상대 몬스터 회수
 function s.tfil22(c)
 	return c:IsMonster() and c:IsFaceup() and c:IsAbleToHand()
 end
 
 ---------------------------------------------------------
--- ② 타겟 설정
+-- ② 타겟
 ---------------------------------------------------------
 function s.tar2(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1=Duel.IsExistingMatchingCard(s.tfil21,tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp)
@@ -147,9 +160,10 @@ function s.tar2(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return b1 or b2 end
 
 	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,0)}, -- 요화 몬스터 특소
-		{b2,aux.Stringid(id,1)}  -- 상대 몬스터 패로 회수
+		{b1,aux.Stringid(id,0)},
+		{b2,aux.Stringid(id,1)}
 	)
+
 	e:SetLabel(op)
 
 	if op==1 then
@@ -165,23 +179,31 @@ end
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	local op=e:GetLabel()
 
-	-- 요화 몬스터 특수 소환
 	if op==1 then
+		-- 요화 몬스터 특수 소환
 		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil21),tp,
-			LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,e,tp)
+		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil21),
+			tp,LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,e,tp)
 		if #g>0 then
 			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 		end
 
-	-- 상대 묘지/제외 몬스터 패로
 	else
+		-- 상대 몬스터를 패로 회수
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil22),tp,
-			0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil22),
+			tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
 		if #g>0 then
-			Duel.SendtoHand(g,tp,REASON_EFFECT)
+			local tc=g:GetFirst()
+			Duel.HintSelection(g)
+
+			-- 기본적으로 내 패로 보내기
+			local p=tp
+			-- 엑덱 몬스터는 원래 주인의 엑덱으로 돌아감
+			if tc:IsAbleToExtra() then p=nil end
+
+			Duel.SendtoHand(g,p,REASON_EFFECT)
 		end
 	end
 end
