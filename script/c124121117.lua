@@ -189,20 +189,20 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 		end
 
-	else
-		-- 상대 몬스터를 패로 회수
+	elseif op==2 then
+		-- 상대 묘지/제외 몬스터 패로
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil22),
-			tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil3),tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
 		if #g>0 then
-			local tc=g:GetFirst()
 			Duel.HintSelection(g)
-
-			-- 기본적으로 내 패로 보내기
+			local tc=g:GetFirst()
+			-- 기본적으로는 내 패로 가져온다
 			local p=tp
-			-- 엑덱 몬스터는 원래 주인의 엑덱으로 돌아감
-			if tc:IsAbleToExtra() then p=nil end
-
+			-- 만약 엑스트라 덱으로 되돌아가야 하는 카드면(융합/싱크로/엑시즈/링크 등)
+			-- 원래 주인의 엑스트라 덱으로 보내기 위해 p=nil 처리
+			if tc:IsAbleToExtra() then
+				p=nil
+			end
 			Duel.SendtoHand(g,p,REASON_EFFECT)
 		end
 	end
