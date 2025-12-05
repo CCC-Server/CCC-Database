@@ -192,7 +192,7 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	elseif op==2 then
 		-- 상대 묘지/제외 몬스터 패로
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil3),tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
+		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tfil22),tp,0,LOCATION_GRAVE+LOCATION_REMOVED,1,1,nil)
 		if #g>0 then
 			Duel.HintSelection(g)
 			local tc=g:GetFirst()
