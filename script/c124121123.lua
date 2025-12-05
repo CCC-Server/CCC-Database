@@ -77,11 +77,10 @@ function s.fusmatfilter(c,e)
 		and c:IsReleasableByEffect(e) -- 릴리스 가능한 상태
 end
 
--- "요화" 융합 몬스터
-function s.fusfilter(c,e,tp,mg,chkf)
+-- "요화" 융합 몬스터 (단순 필터)
+function s.fusfilter(c,e,tp)
 	return c:IsSetCard(0xfa7) and c:IsType(TYPE_FUSION)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
-		and c:CheckFusionMaterial(mg,chkf)  -- ★ 여기 수정
 end
 
 -- ② 타깃: 융합 소환 가능한지
@@ -93,7 +92,8 @@ function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 			chkf=PLAYER_NONE
 		end
-		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg,chkf)
+		-- 엑덱에 소환 가능한 "요화" 융합 몬스터가 있는지만 확인
+		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_FUSION_SUMMON,nil,1,tp,LOCATION_EXTRA)
@@ -101,8 +101,9 @@ end
 
 -- ② 실제 융합 처리
 function s.fusop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 and not Duel.IsPlayerAffectedByEffect(tp,59822133) then
-		-- 필드가 가득 찼는데, 특소 제한까지 걸려있으면 실패 (실질적으로는 아래에서 SpecialSummon이 막힐 거라 주석만)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0
+		and not Duel.IsPlayerAffectedByEffect(tp,59822133) then
+		-- 필드가 가득 찼고 59822133까지 있으면 어차피 실패
 	end
 
 	local mg=Duel.GetMatchingGroup(s.fusmatfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
@@ -113,7 +114,7 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 		chkf=PLAYER_NONE
 	end
 
-	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,chkf)
+	local sg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
 	if #sg==0 then return end
 
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
