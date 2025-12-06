@@ -83,18 +83,25 @@ function s.fusfilter(c,e,tp)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
 end
 
--- ② 타깃: 융합 소환 가능한지
+-- ② 타깃: 실제로 융합 소환 가능한지 완전 체크
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
+		-- 소재 후보
 		local mg=Duel.GetMatchingGroup(s.fusmatfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
 		if #mg==0 then return false end
+
 		local chkf=tp
 		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 			chkf=PLAYER_NONE
 		end
-		-- 엑덱에 소환 가능한 "요화" 융합 몬스터가 있는지만 확인
-		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
+
+		-- 실제 융합 가능한 "요화" 융합 몬스터가 있는지 검사
+		local exg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
+		return exg:IsExists(function(fc)
+			return fc:CheckFusionMaterial(mg,nil,chkf)
+		end,1,nil)
 	end
+
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_FUSION_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end

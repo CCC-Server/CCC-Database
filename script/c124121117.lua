@@ -64,21 +64,32 @@ end
 
 ---------------------------------------------------------
 -- ① 타겟 설정: 반드시 이 카드가 융합 소재에 포함되어야 함
+--     + 실제로 융합 가능한 레벨 9 이상 융합이 있는지 체크
 ---------------------------------------------------------
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 
 	if chk==0 then
-		-- 이 카드 자체가 소재로 사용 가능해야 함
+		-- ① 이 카드 자체가 소재로 사용 가능해야 함
 		if not s.matfilter(c,e) then return false end
 
+		-- ② 패/필드의 요화 몬스터 재료 풀
 		local mg=Duel.GetMatchingGroup(s.matfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil,e)
 		if not mg:IsContains(c) then return false end
 
-		-- 엑스트라 덱에 소환 가능한 레벨 9 이상 융합이 있는지 정도만 확인
-		return Duel.IsExistingMatchingCard(s.fusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
+		-- ③ 레벨 9 이상 융합 몬스터 중 실제로 융합 가능한지 검사
+		local chkf=tp
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+			chkf=PLAYER_NONE
+		end
+
+		local exg=Duel.GetMatchingGroup(s.fusfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
+		return exg:IsExists(function(fc)
+			return fc:CheckFusionMaterial(mg,c,chkf)
+		end,1,nil)
 	end
 
+	-- 발동 가능하면 여기까지 도달함
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_FUSION_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end

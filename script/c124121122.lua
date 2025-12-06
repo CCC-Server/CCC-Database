@@ -123,13 +123,26 @@ function s.yofusfilter(c,e,tp)
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false)
 end
 
--- ③ 타겟: 융합 소환 가능 여부 대략 체크
+------------------------------------------------
+-- ③ 타겟: 실제로 융합 소환 가능한지 체크
+------------------------------------------------
 function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		local mg=Duel.GetMatchingGroup(s.fusmatfilter,tp,LOCATION_HAND+LOCATION_DECK,0,nil,e)
 		if #mg==0 then return false end
-		return Duel.IsExistingMatchingCard(s.yofusfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
+
+		local chkf=tp
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+			chkf=PLAYER_NONE
+		end
+
+		-- 실제 융합 가능한 요화 융합 몬스터가 있는지 확인
+		local exg=Duel.GetMatchingGroup(s.yofusfilter,tp,LOCATION_EXTRA,0,nil,e,tp)
+		return exg:IsExists(function(fc)
+			return fc:CheckFusionMaterial(mg,nil,chkf)
+		end,1,nil)
 	end
+
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_FUSION_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_TOGRAVE,nil,0,tp,LOCATION_HAND+LOCATION_DECK)
