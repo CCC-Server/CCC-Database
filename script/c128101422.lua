@@ -48,6 +48,7 @@ function s.initial_effect(c)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_END_PHASE)
 	e2:SetCountLimit(1,id+1) -- (2) HOPT(①와 분리)
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)  -- ★ 타깃 표시용 플래그 추가
 	e2:SetTarget(s.sptg2)
 	e2:SetOperation(s.spop2)
 	c:RegisterEffect(e2)
