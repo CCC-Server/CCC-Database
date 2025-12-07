@@ -3,6 +3,9 @@ local s,id=GetID()
 local SET_HORUS=0x1003  -- "Horus the Black Flame Dragon" 카드군
 
 function s.initial_effect(c)
+	-- 의식/특소 한정 소생 제약
+	c:EnableReviveLimit()
+
 	--------------------------------------
 	-- (1) 패에서 공개 → 호루스 카드 서치 + 이 카드 덱으로 되돌리기
 	--------------------------------------
