@@ -5,51 +5,51 @@ function s.initial_effect(c)
 
 	----------------------------------------------------------------------
 	-- ① 패에서 버리고 발동
-	--	패에서 이 카드를 코스트로 버리고,
-	--	덱에서 "흑린비갑" 1장 + 레벨6 이하 레드아이즈 몬스터 1장을 서치 후
-	--	패 1장 버린다.
+	--  패에서 이 카드를 코스트로 버리고,
+	--  덱에서 "흑린비갑" 1장 + 레벨6 이하 레드아이즈 몬스터 1장을 서치 후
+	--  패 1장 버린다.
 	----------------------------------------------------------------------
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)  -- 패로 넣는 효과
 	e1:SetType(EFFECT_TYPE_IGNITION)				 -- 자신의 메인 페이즈에 발동
-	e1:SetRange(LOCATION_HAND)					   -- 패에서 발동 가능
-	e1:SetCountLimit(1,id)						   -- ①는 1턴 1번
+	e1:SetRange(LOCATION_HAND)					 -- 패에서 발동 가능
+	e1:SetCountLimit(1,id)						 -- ①는 1턴 1번
 	e1:SetCost(s.lvcost)							 -- 코스트 = 이 카드 버리기
 	e1:SetTarget(s.sptg)							 -- 서치 타겟 지정
-	e1:SetOperation(s.spop)						  -- 서치 처리
+	e1:SetOperation(s.spop)					   -- 서치 처리
 	c:RegisterEffect(e1)
 
 	----------------------------------------------------------------------
 	-- ② 특수 소환 성공 시 발동
-	--	자신 필드의 "붉은 눈" 몬스터 1장을 지정하고,
-	--	패/덱에서 레벨 6 이하의 "붉은 눈" 몬스터 1장을 장착 마법 취급으로 장착.
+	--  자신 필드의 "붉은 눈" 몬스터 1장을 지정하고,
+	--  패/덱에서 레벨 6 이하의 "붉은 눈" 몬스터 1장을 장착 마법 취급으로 장착.
 	----------------------------------------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_EQUIP)				   -- 장착 효과
+	e2:SetCategory(CATEGORY_EQUIP)				 -- 장착 효과
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetCode(EVENT_SPSUMMON_SUCCESS)			   -- 특소 성공 시 트리거
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)			 -- 특소 성공 시 트리거
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
-	e2:SetCountLimit(1,{id,1})					   -- ②도 1턴 1번
+	e2:SetCountLimit(1,{id,1})					 -- ②도 1턴 1번
 	e2:SetTarget(s.eqtg)							 -- 장착 대상 지정
-	e2:SetOperation(s.eqop)						  -- 장착 처리
+	e2:SetOperation(s.eqop)					   -- 장착 처리
 	c:RegisterEffect(e2)
 
 	----------------------------------------------------------------------
 	-- ③ 다른 카드의 효과가 발동했을 때 발동 (Quick Effect)
-	--	자신 필드에 다른 "붉은 눈" 카드가 존재하면,
-	--	자신 필드 카드 1장 + 필드 카드 1장을 파괴한다.
+	--  자신 필드에 다른 "붉은 눈" 카드가 존재하면,
+	--  자신 필드 카드 1장 + 필드 카드 1장을 파괴한다.
 	----------------------------------------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,0))
 	e2:SetCategory(CATEGORY_DESTROY)
-	e2:SetType(EFFECT_TYPE_QUICK_O)				  -- 속공 효과
-	e2:SetCode(EVENT_CHAINING)					  -- 체인이 발생할 때
+	e2:SetType(EFFECT_TYPE_QUICK_O)			   -- 속공 효과
+	e2:SetCode(EVENT_CHAINING)					-- 체인이 발생할 때
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1)							  -- ③ 역시 1턴 1번
+	e2:SetCountLimit(1)						   -- ③ 역시 1턴 1번
 	e2:SetCondition(s.thcon)						 -- 조건: 다른 카드의 효과여야 함
 	e2:SetTarget(s.thtg)							 -- 파괴 대상 지정
-	e2:SetOperation(s.thop)						  -- 파괴 처리
+	e2:SetOperation(s.thop)					   -- 파괴 처리
 	c:RegisterEffect(e2)
 end
 
@@ -91,7 +91,7 @@ end
 
 ----------------------------------------------------------------------
 -- ① 처리: 흑린비갑 1장 + 레드아이즈 몬스터 1장 서치
---		 → 패 1장 버림
+--	   → 패 1장 버림
 ----------------------------------------------------------------------
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	-- 중간에 카드가 없어졌을 수 있으므로 다시 체크
