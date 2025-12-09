@@ -4,7 +4,7 @@ local s,id=GetID()
 -- 세트 상수
 local SET_AEROMANEUVER=0xc49        -- "Aero Maneuver"
 local SET_FIGHTCALL=0xc50           -- "Fight Call"
-local SET_AEROMANEUVER_ACE=0xc51    -- "Aero Maneuver Ace" (있으면 사용, 없어도 동작하게 처리)
+local SET_AEROMANEUVER_ACE=0x1c49  -- "Aero Maneuver Ace" (있으면 사용, 없어도 동작하게 처리)
 
 function s.initial_effect(c)
 	-- 카드군 표기용
