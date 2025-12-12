@@ -39,9 +39,18 @@ function s.initial_effect(c)
 	e6:SetRange(LOCATION_FZONE)
 	e6:SetTargetRange(LOCATION_DECK,0)
 	e6:SetTarget(s.acttg)
-	e6:SetCondition(s.actcon)
 	e6:SetValue(s.actop)
 	c:RegisterEffect(e6)
+	--Inactivatable
+	local e7=Effect.CreateEffect(c)
+	e7:SetType(EFFECT_TYPE_FIELD)
+	e7:SetCode(EFFECT_CANNOT_INACTIVATE)
+	e7:SetRange(LOCATION_FZONE)
+	e7:SetValue(s.efffilter)
+	c:RegisterEffect(e7)
+	local e8=e7:Clone()
+	e8:SetCode(EFFECT_CANNOT_DISEFFECT)
+	c:RegisterEffect(e8)
 end
 s.listed_series={ARCHETYPE_SPIRITUAL_ART}
 --Add attribute
@@ -92,9 +101,6 @@ function s.acttg(e,c)
 	return c:IsSetCard(ARCHETYPE_SPIRITUAL_ART) and (c:IsQuickPlaySpell() or c:IsTrap())
 		and (not c:IsLocation(LOCATION_DECK) or Duel.IsExistingMatchingCard(s.costfilter1,e:GetHandlerPlayer(),LOCATION_HAND,0,1,nil,c,e))
 end
-function s.actcon(e)
-	return true
-end
 function s.actop(e,te,tp)
 	--Duel.Hint(HINT_CARD,0,id)
 	Duel.HintSelection(e:GetHandler(),true)
@@ -103,4 +109,10 @@ function s.actop(e,te,tp)
 	Duel.Hint(HINT_SELECTMSG,ep,HINTMSG_TODECK)
 	local g=Duel.SelectMatchingCard(ep,s.costfilter2,ep,LOCATION_HAND,0,1,1,nil,te,e)
 	Duel.SendtoDeck(g,nil,SEQ_DECKBOTTOM,REASON_COST)
+end
+function s.efffilter(e,ct)
+	local p=e:GetHandler():GetControler()
+	local te,tp=Duel.GetChainInfo(ct,CHAININFO_TRIGGERING_EFFECT,CHAININFO_TRIGGERING_PLAYER)
+	return p==tp and te:GetHandler():IsSetCard(ARCHETYPE_SPIRITUAL_ART)
+		and (te:IsMonsterEffect() or (te:IsSpellTrapEffect() and te:IsHasType(EFFECT_TYPE_ACTIVATE)))
 end
