@@ -14,11 +14,15 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 end
 --SpSummon
+function s.cfilter(c,ft,tp)
+	return c:IsAttribute(ATTRIBUTE_LIGHT)
+		and (ft>0 or (c:IsControler(tp) and c:GetSequence()<5)) and (c:IsControler(tp) or c:IsFaceup())
+end
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	e:SetLabel(1)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
-	if chk==0 then return ft>-1 and Duel.CheckReleaseGroupCost(tp,Card.IsAttribute,1,false,aux.ReleaseCheckMMZ,nil,ATTRIBUTE_LIGHT) end
-	local g=Duel.SelectReleaseGroupCost(tp,Card.IsAttribute,1,1,false,aux.ReleaseCheckMMZ,nil,ATTRIBUTE_LIGHT)
+	if chk==0 then return ft>-1 and Duel.CheckReleaseGroupCost(tp,s.cfilter,1,false,nil,nil,ft,tp) end
+	local g=Duel.SelectReleaseGroupCost(tp,s.cfilter,1,1,false,nil,nil,ft,tp)
 	Duel.Release(g,REASON_COST)
 end
 function s.spfilter(c,e,tp)
