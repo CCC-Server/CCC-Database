@@ -108,22 +108,31 @@ function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	-- 1. 발동한 플레이어(rp)의 필드에 파괴수 카운터가 있으면 무효화하지 않음
 	if Duel.GetCounter(rp,LOCATION_ONFIELD,0,0x37)>0 then return false end
 	
-	-- 2. 몬스터 또는 함정 효과가 아니면(즉 마법이면) 무효화하지 않음
-	if not re:IsActiveType(TYPE_MONSTER+TYPE_TRAP) then return false end
-	
-	-- 3. 예외: "패 / 필드의 기계족 몬스터"의 효과는 무효화하지 않음
-	local loc=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)
-	local rc=re:GetHandler()
-	
-	-- 기계족 몬스터이고, 발동 위치가 패 또는 필드(몬스터존 포함)인 경우
-	if re:IsActiveType(TYPE_MONSTER) and rc:IsRace(RACE_MACHINE) then
-		-- 수정: 비트 연산을 사용하여 LOCATION_MZONE이나 LOCATION_SZONE 등 필드 전체를 확인
-		if (loc&LOCATION_HAND)~=0 or (loc&LOCATION_ONFIELD)~=0 then
-			return false
+	-- 2. 체인 무효화 가능 여부 확인
+	if not Duel.IsChainNegatable(ev) then return false end
+
+	-- 3. 함정 카드면 무조건 발동 (위치 상관 없음)
+	if re:IsActiveType(TYPE_TRAP) then return true end
+
+	-- 4. 몬스터 효과인 경우: "패 또는 필드"에서 발동했고 AND "기계족이 아닐 경우"에만 발동
+	if re:IsActiveType(TYPE_MONSTER) then
+		local loc=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)
+		local race=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_RACE)
+		
+		-- 위치가 패(LOCATION_HAND) 또는 필드(LOCATION_ONFIELD) 인지 확인 (비트 연산)
+		local is_hand_or_field = (loc & (LOCATION_HAND+LOCATION_ONFIELD)) ~= 0
+		
+		-- 종족이 기계족이 아닌지 확인 (비트 연산)
+		local is_not_machine = (race & RACE_MACHINE) == 0
+		
+		-- 패/필드에서 발동한 비-기계족 몬스터라면 무효화
+		if is_hand_or_field and is_not_machine then
+			return true
 		end
 	end
 	
-	return Duel.IsChainNegatable(ev)
+	-- 그 외(마법, 묘지/제외존 몬스터 효과, 패/필드의 기계족 몬스터 효과)는 무효화하지 않음
+	return false
 end
 
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
