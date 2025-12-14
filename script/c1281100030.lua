@@ -21,7 +21,7 @@ function s.initial_effect(c)
 	e2:SetCategory(CATEGORY_DISABLE+CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_REMOVED)
-	e2:SetCountLimit(1,{id,1})
+	e2:SetCountLimit(1,id+1) -- id+1 방식으로 변경 (충돌 방지 권장)
 	e2:SetCondition(s.spcon)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
@@ -44,7 +44,7 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e3:SetCountLimit(1,{id,2})
+	e3:SetCountLimit(1,id+2) -- id+2 방식으로 변경
 	e3:SetTarget(s.fsptg)
 	e3:SetOperation(s.fspop)
 	c:RegisterEffect(e3)
@@ -65,14 +65,10 @@ function s.kaijufilter(c)
 end
 
 function s.tftg(e,tp,eg,ep,ev,re,r,rp,chk)
-	-- 지속물 놓기 가능 여부 (마함존 공간 확인 + 덱/묘지 카드 확인)
 	local b1=Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and Duel.IsExistingMatchingCard(s.tffilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil,tp)
-	-- 서치 가능 여부 (파괴수 몬스터 존재 + 덱/묘지 카드 확인)
 	local b2=Duel.IsExistingMatchingCard(s.kaijufilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil) 
 		and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil)
-	
 	if chk==0 then return b1 or b2 end
-	-- Operation에서 선택하므로 Target 시점에는 정보만 설정
 end
 
 function s.tfop(e,tp,eg,ep,ev,re,r,rp)
@@ -82,7 +78,6 @@ function s.tfop(e,tp,eg,ep,ev,re,r,rp)
 	
 	local op=0
 	if b1 and b2 then
-		-- 0: 지속물 놓기, 1: 서치 (선택)
 		op=Duel.SelectOption(tp,aux.Stringid(id,3),aux.Stringid(id,4))
 	elseif b1 then
 		op=0
@@ -93,14 +88,12 @@ function s.tfop(e,tp,eg,ep,ev,re,r,rp)
 	end
 
 	if op==0 then
-		-- 지속물 놓기 (앞면 표시)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 		local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.tffilter),tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,tp):GetFirst()
 		if tc then
 			Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 		end
 	else
-		-- 서치 (패로 넣기)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
 		if #g>0 then
@@ -125,7 +118,6 @@ function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.disfilter(c)
-	-- aux.disfilter1을 쓰지 않고 직접 조건 작성
 	return s.kaijufilter(c) and not c:IsDisabled() and (c:IsType(TYPE_EFFECT) or c:GetOriginalType()&TYPE_EFFECT~=0)
 end
 
@@ -134,7 +126,7 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and e:GetHandler():IsCanBeSpecialSummoned(e,0,tp,false,false)
 		and Duel.IsExistingTarget(s.disfilter,tp,0,LOCATION_MZONE,1,nil)
-		and Duel.GetFlagEffect(tp,id) < 2 
+		and Duel.GetFlagEffect(tp,id) < 2 -- "1장밖에" 제한 고려 (이미 2장 이상이면 발동 불가)
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
 	local g=Duel.SelectTarget(tp,s.disfilter,tp,0,LOCATION_MZONE,1,1,nil)
@@ -180,13 +172,17 @@ end
 
 -- ③ 효과: 융합 소재 필터 (이번 턴에 특수 소환된 몬스터만)
 function s.matfilter(c,e)
-	-- 이번 턴(STATUS_SUMMON_TURN)에 특수 소환된 몬스터만 소재로 사용 가능
-	return c:IsAbleToDeck() and c:IsSummonType(SUMMON_TYPE_SPECIAL) and c:IsStatus(STATUS_SUMMON_TURN) and not c:IsImmuneToEffect(e)
+	-- [수정됨] STATUS_SUMMON_TURN 대신 TurnID 확인을 사용하여 더 확실하게 판별
+	-- 필드 융합이므로 IsFaceup() 추가 권장
+	return c:IsAbleToDeck() and c:IsSummonType(SUMMON_TYPE_SPECIAL) 
+		and c:IsFaceup() 
+		and c:GetTurnID()==Duel.GetTurnCount() 
+		and not c:IsImmuneToEffect(e)
 end
 
 -- ③ 효과: 융합 몬스터 필터
--- (타겟 단계에서 칸/소환 가능여부로 막히지 않게, 소재 성립만 체크)
 function s.ffilter(c,e,tp,m,chkf)
+	-- 카운터 효과 보유 여부는 스크립트 상 확인이 어려우므로 모든 융합 몬스터를 허용
 	return c:IsType(TYPE_FUSION) and c:CheckFusionMaterial(m,nil,chkf)
 end
 
@@ -215,18 +211,16 @@ function s.fspop(e,tp,eg,ep,ev,re,r,rp)
 	local mat=Duel.SelectFusionMaterial(tp,tc,mg,nil,chkf)
 	if not mat or #mat==0 then return end
 
-	-- ★중요: 소재가 빠진 뒤(덱으로 되돌린 뒤) 엑스트라에서 소환할 칸이 생기는지 체크
-	-- 내 필드에서 빠지는 소재만 칸 확보에 영향을 주므로 컨트롤러 tp만 걸러서 계산
+	-- 소재가 덱으로 돌아간 뒤 엑스트라 덱 몬스터가 나올 공간이 있는지 확인
 	local matc=mat:Filter(Card.IsControler,nil,tp)
-	if Duel.GetLocationCountFromEx(tp,tp,matc,tc)<=0 then return end
+	if Duel.GetLocationCountFromEx(tp,tp,matc,tc)<=0 then
+		Duel.Hint(HINT_MSG,tp,STRING_INVALID_SELECTION) -- 공간 부족 메시지
+		return 
+	end
 
 	tc:SetMaterial(mat)
 	Duel.SendtoDeck(mat,nil,SEQ_DECKSHUFFLE,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
 	Duel.BreakEffect()
-
-	-- 이제 칸이 생긴 상태에서 소환 가능 여부 확인 후 소환
-	if tc:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false) then
-		Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
-		tc:CompleteProcedure()
-	end
+	Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
+	tc:CompleteProcedure()
 end
