@@ -2,6 +2,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- ① Special Summon from hand when your monster declares an attack
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetCode(EVENT_ATTACK_ANNOUNCE)
@@ -14,6 +15,7 @@ function s.initial_effect(c)
 
 	-- ② Change name to targeted "수왕권사" monster
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetRange(LOCATION_MZONE)
@@ -25,24 +27,13 @@ function s.initial_effect(c)
 
 	-- ③ Xyz Summon on attack declaration
 	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_ATTACK_ANNOUNCE)
 	e3:SetCountLimit(1,{id,2})
+	e3:SetTarget(s.xyztg)
 	e3:SetOperation(s.xyzop)
 	c:RegisterEffect(e3)
-end
-
--- --------------------
--- Filters
--- --------------------
-function s.swk(c)
-	return c:IsSetCard(0x770)
-end
-
-function s.xyzfilter(c,tp)
-	return c:IsSetCard(0x770)
-		and c:IsType(TYPE_XYZ)
-		and c:IsXyzSummonable(nil)
 end
 
 -- --------------------
@@ -81,13 +72,13 @@ end
 -- --------------------
 function s.nametg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
-		return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.swk(chkc)
+		return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and chkc:IsSetCard(0x770)
 	end
 	if chk==0 then
-		return Duel.IsExistingTarget(s.swk,tp,LOCATION_MZONE,0,1,nil)
+		return Duel.IsExistingTarget(Card.IsSetCard,tp,LOCATION_MZONE,0,1,nil,0x770)
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	Duel.SelectTarget(tp,s.swk,tp,LOCATION_MZONE,0,1,1,nil)
+	Duel.SelectTarget(tp,Card.IsSetCard,tp,LOCATION_MZONE,0,1,1,nil,0x770)
 end
 
 function s.nameop(e,tp,eg,ep,ev,re,r,rp)
@@ -105,36 +96,18 @@ end
 -- --------------------
 -- ③ Xyz Summon
 -- --------------------
-function s.xyzfilter(c,tp,mg)
-	return c:IsSetCard(0x770)
-		and c:IsType(TYPE_XYZ)
-		and c:IsXyzSummonable(mg)
+function s.xyzfilter(c)
+	return c:IsSetCard(0x770) and c:IsXyzSummonable()
 end
-
+function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
+end
 function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.GetLocationCountFromEx(tp)<=0 then return end
-	if not c:IsRelateToBattle() then return end
-
-	-- 필드의 몬스터를 소재 후보로
-	local mg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(
-		tp,
-		s.xyzfilter,
-		tp,
-		LOCATION_EXTRA,
-		0,
-		1,
-		1,
-		nil,
-		tp,
-		mg
-	)
-
-	local sc=g:GetFirst()
-	if sc then
-		Duel.XyzSummon(tp,sc,mg)
+	local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_EXTRA,0,nil)
+	if #g>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local tg=g:Select(tp,1,1,nil)
+		Duel.XyzSummon(tp,tg:GetFirst())
 	end
 end

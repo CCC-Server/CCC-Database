@@ -2,12 +2,13 @@ local s,id=GetID()
 
 function s.initial_effect(c)
 	-- Activate (once per turn by card name)
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_ACTIVATE)
-	e0:SetCode(EVENT_FREE_CHAIN)
-	e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	e0:SetOperation(s.actop)
-	c:RegisterEffect(e0)
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	e1:SetOperation(s.actop)
+	c:RegisterEffect(e1)
 
 	-- ② Opponent cannot activate monster effects in response
 	local e2=Effect.CreateEffect(c)
@@ -21,6 +22,7 @@ function s.initial_effect(c)
 
 	-- ③ If destroyed by opponent: ATK +1500
 	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_DESTROYED)
 	e3:SetCountLimit(1,{id,2})

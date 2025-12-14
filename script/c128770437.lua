@@ -1,20 +1,13 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-	-- Activate (once per turn by card name)
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_ACTIVATE)
-	e0:SetCode(EVENT_FREE_CHAIN)
-	e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	c:RegisterEffect(e0)
-
 	-- ① Battle enhancement for "수왕권사" Xyz monster
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_DESTROY)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1,{id,1})
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetTarget(s.bttg)
 	e1:SetOperation(s.btop)
@@ -25,13 +18,12 @@ end
 -- Target
 -- --------------------
 function s.btfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0x770) and c:IsType(TYPE_XYZ)
+	return c:IsFaceup() and c:IsSetCard(0x770) and c:IsType(TYPE_XYZ) and not c:HasFlagEffect(id)
 end
 
 function s.bttg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
-		return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_MZONE)
-			and s.btfilter(chkc)
+		return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_MZONE) and s.btfilter(chkc)
 	end
 	if chk==0 then
 		return Duel.IsExistingTarget(s.btfilter,tp,LOCATION_MZONE,0,1,nil)
@@ -45,74 +37,53 @@ end
 -- --------------------
 function s.btop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
-	if not (tc and tc:IsFaceup() and tc:IsRelateToEffect(e)) then return end
-
-	-- ① Cannot activate cards or effects during battle
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CANNOT_ACTIVATE)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e1:SetTargetRange(0,1)
-	e1:SetCondition(s.actcon)
-	e1:SetValue(1)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-
-	-- ② Piercing damage
-	local e2=Effect.CreateEffect(e:GetHandler())
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_PIERCE)
-	e2:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-	tc:RegisterEffect(e2)
-
-	-- ③ Double battle damage
-	local e3=Effect.CreateEffect(e:GetHandler())
-	e3:SetType(EFFECT_TYPE_SINGLE)
-	e3:SetCode(EFFECT_CHANGE_BATTLE_DAMAGE)
-	e3:SetValue(aux.ChangeBattleDamage(1,DOUBLE_DAMAGE))
-	e3:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-	tc:RegisterEffect(e3)
-
-	-- ④ Indestructible by battle
-	local e4=Effect.CreateEffect(e:GetHandler())
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
-	e4:SetValue(1)
-	e4:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-	tc:RegisterEffect(e4)
-
-	-- ⑤ Destroy opponent monster after damage step
-	local e5=Effect.CreateEffect(e:GetHandler())
+	if not tc:IsRelateToEffect(e) then return end
+	local c=e:GetHandler()
+	local fid=tc:GetFieldID()
+	local function condition()
+		return (Duel.GetAttacker()==tc or Duel.GetAttackTarget()==tc) and tc:GetBattleTarget() and tc:GetBattleTarget():IsControler(1-tp)
+			and tc:HasFlagEffect(id) and tc:GetFlagEffectLabel(id)==fid and tc:IsControler(tp)
+	end
+	--If it battles an opponent's monster this turn while you control it, apply these effects
+	if not tc:HasFlagEffect(id) then
+		tc:RegisterFlagEffect(id,RESETS_STANDARD_PHASE_END,EFFECT_FLAG_CLIENT_HINT,1,fid,aux.Stringid(id,1))
+		--Your opponent cannot activate cards or effects until the end of the Damage Step
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_FIELD)
+		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+		e1:SetCode(EFFECT_CANNOT_ACTIVATE)
+		e1:SetTargetRange(0,1)
+		e1:SetCondition(condition)
+		e1:SetValue(1)
+		e1:SetReset(RESET_PHASE|PHASE_END)
+		Duel.RegisterEffect(e1,tp)
+		--If it attacks a Defense Position monster, inflict piercing battle damage to your opponent
+		local e2=Effect.CreateEffect(c)
+		e2:SetType(EFFECT_TYPE_FIELD)
+		e2:SetCode(EFFECT_PIERCE)
+		e2:SetTargetRange(LOCATION_MZONE,0)
+		e2:SetCondition(condition)
+		e2:SetTarget(condition)
+		e2:SetReset(RESET_PHASE|PHASE_END)
+		Duel.RegisterEffect(e2,tp)
+		--Double any battle damage your opponent takes
+		local e3=e2:Clone()
+		e3:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+		e3:SetCode(EFFECT_CHANGE_BATTLE_DAMAGE)
+		e3:SetValue(aux.ChangeBattleDamage(1,DOUBLE_DAMAGE))
+		Duel.RegisterEffect(e3,tp)
+		--It cannot be destroyed by battle
+		local e4=e2:Clone()
+		e4:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
+		e4:SetValue(1)
+		Duel.RegisterEffect(e4,tp)
+	end
+	--Destroy the opponent's monster that battled it at the end of the Damage Step
+	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e5:SetCode(EVENT_DAMAGE_STEP_END)
-	e5:SetCondition(s.descon)
-	e5:SetOperation(s.desop)
-	e5:SetLabelObject(tc)
-	e5:SetReset(RESET_PHASE+PHASE_END)
+	e5:SetCondition(function() return condition() and tc:GetBattleTarget():IsRelateToBattle() end)
+	e5:SetOperation(function() Duel.Hint(HINT_CARD,0,id) Duel.Destroy(tc:GetBattleTarget(),REASON_EFFECT) end)
+	e5:SetReset(RESET_PHASE|PHASE_END)
 	Duel.RegisterEffect(e5,tp)
-end
-
--- --------------------
--- Conditions / Operations
--- --------------------
-function s.actcon(e)
-	local a=Duel.GetAttacker()
-	local d=Duel.GetAttackTarget()
-	return a and a:IsSetCard(0x770)
-end
-
-function s.descon(e,tp,eg,ep,ev,re,r,rp)
-	local tc=e:GetLabelObject()
-	if not tc or not tc:IsRelateToBattle() then return false end
-	local bc=tc:GetBattleTarget()
-	return bc~=nil
-end
-
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=e:GetLabelObject()
-	if not tc then return end
-	local bc=tc:GetBattleTarget()
-	if bc and bc:IsRelateToBattle() then
-		Duel.Destroy(bc,REASON_EFFECT)
-	end
 end

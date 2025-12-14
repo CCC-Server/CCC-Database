@@ -14,6 +14,7 @@ function s.initial_effect(c)
 
 	-- ② Gain ATK during your Battle Phase
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1,id)
@@ -23,6 +24,7 @@ function s.initial_effect(c)
 
 	-- ③ Search "수왕권사" Spell when destroying a monster by battle
 	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_BATTLE_DESTROYING)
 	e3:SetCountLimit(1,{id,1})
@@ -33,6 +35,7 @@ function s.initial_effect(c)
 
 	-- ④ End of Battle Phase: Special Summon "수왕권사-묘랑" and return this card
 	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,3))
 	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e4:SetCode(EVENT_PHASE+PHASE_BATTLE)
 	e4:SetCountLimit(1,{id,2})

@@ -1,20 +1,13 @@
 local s,id=GetID()
 
 function s.initial_effect(c)
-	-- Activate (once per turn by card name)
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_ACTIVATE)
-	e0:SetCode(EVENT_FREE_CHAIN)
-	e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	c:RegisterEffect(e0)
-
 	-- ① Special Summon 1 "수왕권사" monster from GY
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1,{id,1})
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
@@ -31,8 +24,7 @@ end
 
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
-		return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp)
-			and s.spfilter(chkc,e,tp)
+		return chkc:IsLocation(LOCATION_GRAVE) and chkc:IsControler(tp) and s.spfilter(chkc,e,tp)
 	end
 	if chk==0 then
 		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0

@@ -1,8 +1,8 @@
 local s,id=GetID()
 function s.initial_effect(c)
-	
 	-- ① Special Summon from hand
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
 	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
@@ -11,8 +11,9 @@ function s.initial_effect(c)
 	e1:SetCondition(s.spcon)
 	c:RegisterEffect(e1)
 
-	-- ② Add "수왕권사" monster from Deck to hand (배틀 페이즈 발동 가능하도록 수정)
+	-- ② Add "수왕권사" monster from Deck to hand
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetType(EFFECT_TYPE_QUICK_O) -- 유발 즉시 효과로 변경
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetHintTiming(0,TIMING_MAIN_END+TIMING_BATTLE_END)
@@ -24,16 +25,15 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 	
-	-- ③ 공격 선언시, 엑시즈 소환
+	-- ③ Xyz Summon on attack declaration
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_ATTACK_ANNOUNCE)
 	e3:SetCountLimit(1,{id,2})
 	e3:SetTarget(s.xyztg)
 	e3:SetOperation(s.xyzop)
 	c:RegisterEffect(e3)
-	
 end
 
 -- =========================

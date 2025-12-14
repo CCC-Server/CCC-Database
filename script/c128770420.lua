@@ -2,6 +2,7 @@ local s,id=GetID()
 function s.initial_effect(c)
 	-- ① Reveal "수왕권사-배트" → Special Summon
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetRange(LOCATION_HAND)
@@ -12,6 +13,7 @@ function s.initial_effect(c)
 
 	-- ② Battle Phase start: negate opponent monster effects
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_PHASE+PHASE_BATTLE_START)
 	e2:SetRange(LOCATION_MZONE)
@@ -21,20 +23,18 @@ function s.initial_effect(c)
 
 	-- ③ Xyz Summon on attack declaration
 	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_ATTACK_ANNOUNCE)
 	e3:SetCountLimit(1,{id,2})
+	e3:SetTarget(s.xyztg)
 	e3:SetOperation(s.xyzop)
 	c:RegisterEffect(e3)
 end
 
 -- --------------------
--- Filters
+-- ① Special Summon
 -- --------------------
-function s.swk(c)
-	return c:IsSetCard(0x770)
-end
-
 function s.deckspfilter(c,e,tp)
 	return c:IsSetCard(0x770)
 		and c:IsMonster()
@@ -42,18 +42,9 @@ function s.deckspfilter(c,e,tp)
 end
 
 function s.revealfilter(c)
-	return c:IsCode(128770430) -- "수왕권사-배트" 실제 카드 ID로 변경
+	return c:IsCode(id+10) and not c:IsPublic() -- "수왕권사-배트" 실제 카드 ID로 변경
 end
 
-function s.xyzfilter(c,tp)
-	return c:IsSetCard(0x770)
-		and c:IsType(TYPE_XYZ)
-		and c:IsXyzSummonable(nil)
-end
-
--- --------------------
--- ① Special Summon
--- --------------------
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.GetLocationCount(tp,LOCATION_MZONE)>1
@@ -118,42 +109,18 @@ end
 -- --------------------
 -- ③ Xyz Summon
 -- --------------------
-function s.xyzfilter(c,tp,mg)
-	return c:IsSetCard(0x770)
-		and c:IsType(TYPE_XYZ)
-		and c:IsXyzSummonable(mg)
+function s.xyzfilter(c)
+	return c:IsSetCard(0x770) and c:IsXyzSummonable()
 end
-
--- ③ Xyz Summon operation
+function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
+end
 function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-
-	-- 엑스트라 덱 공간 체크
-	if Duel.GetLocationCountFromEx(tp)<=0 then return end
-
-	-- 필드의 몬스터들을 소재 후보로
-	local mg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-
-	-- 이 카드가 필드에 있어야 함
-	if not c:IsRelateToEffect(e) then return end
-
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(
-		tp,
-		s.xyzfilter,
-		tp,
-		LOCATION_EXTRA,
-		0,
-		1,
-		1,
-		nil,
-		tp,
-		mg
-	)
-
-	local sc=g:GetFirst()
-	if sc then
-		Duel.XyzSummon(tp,sc,mg)
+	local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_EXTRA,0,nil)
+	if #g>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local tg=g:Select(tp,1,1,nil)
+		Duel.XyzSummon(tp,tg:GetFirst())
 	end
 end
-
