@@ -1,16 +1,8 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	-- 엑시즈 소환 조건 (수왕권사 몬스터 2장)
-	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsSetCard,0x770),2,2)
+	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsSetCard,0x770),4,2,s.ovfilter,aux.Stringid(id,0),2,s.xyzop)
 	c:EnableReviveLimit()
-
-	-- 특수 엑시즈 소환 (회랑 위에 겹쳐 소환 가능)
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
-	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e0:SetValue(s.splimit)
-	c:RegisterEffect(e0)
 
 	-- ① 전투 파괴 내성
 	local e1=Effect.CreateEffect(c)
@@ -56,12 +48,16 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 
--- 특수 소환 제한: "회랑" 위에 겹쳐서 엑시즈 소환 가능
-function s.splimit(e,se,sp,st)
-	if e:GetHandler():IsLocation(LOCATION_EXTRA) and st&SUMMON_TYPE_XYZ==SUMMON_TYPE_XYZ then
-		local sc=se:GetHandler()
-		return sc and sc:IsCode(128770414) -- 수왕권사-회랑 코드로 교체
-	end
+-- --------------------
+-- Overlay Xyz Summon
+-- --------------------
+function s.ovfilter(c,tp,xyzc)
+	return c:IsSummonCode(xyzc,SUMMON_TYPE_XYZ,tp,id-10) and c:IsFaceup()
+end
+
+function s.xyzop(e,tp,chk)
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
 	return true
 end
 
@@ -93,7 +89,7 @@ end
 
 -- ④ 회랑 특수 소환 + 자신 되돌리기
 function s.filter(c,e,tp)
-	return c:IsCode(12345678) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return c:IsCode(id-10) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()

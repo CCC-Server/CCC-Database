@@ -1,20 +1,9 @@
 local s,id=GetID()
-local CHUNGHWANG_CODE=128770422 -- "수왕권사-충황"
 
 function s.initial_effect(c)
 	-- Xyz Summon procedure
-	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsSetCard,0x770),2,2)
+	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsSetCard,0x770),4,2,s.ovfilter,aux.Stringid(id,0),2,s.xyzop)
 	c:EnableReviveLimit()
-
-	-- Overlay Xyz Summon using "수왕권사-충황"
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_FIELD)
-	e0:SetCode(EFFECT_SPSUMMON_PROC)
-	e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e0:SetRange(LOCATION_EXTRA)
-	e0:SetCondition(s.ovcon)
-	e0:SetOperation(s.ovop)
-	c:RegisterEffect(e0)
 
 	-- ① Can attack while in Defense Position, using DEF as ATK
 	local e1=Effect.CreateEffect(c)
@@ -58,27 +47,14 @@ end
 -- --------------------
 -- Overlay Xyz Summon
 -- --------------------
-function s.ovcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.IsExistingMatchingCard(s.ovfilter,tp,LOCATION_MZONE,0,1,nil,tp)
+function s.ovfilter(c,tp,xyzc)
+	return c:IsSummonCode(xyzc,SUMMON_TYPE_XYZ,tp,id-10) and c:IsFaceup()
 end
 
-function s.ovfilter(c,tp)
-	return c:IsFaceup() and c:IsCode(CHUNGHWANG_CODE)
-		and c:IsCanBeXyzMaterial(nil,tp)
-end
-
-function s.ovop(e,tp,eg,ep,ev,re,r,rp,c)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local tc=Duel.SelectMatchingCard(tp,s.ovfilter,tp,LOCATION_MZONE,0,1,1,nil,tp):GetFirst()
-	if not tc then return end
-	local mg=tc:GetOverlayGroup()
-	if #mg>0 then
-		Duel.SendtoGrave(mg,REASON_RULE)
-	end
-	c:SetMaterial(Group.FromCards(tc))
-	Duel.Overlay(c,Group.FromCards(tc))
+function s.xyzop(e,tp,chk)
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
+	return true
 end
 
 -- --------------------
@@ -115,7 +91,7 @@ end
 function s.retop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
-	local g=c:GetOverlayGroup():Filter(Card.IsCode,nil,CHUNGHWANG_CODE)
+	local g=c:GetOverlayGroup():Filter(Card.IsCode,nil,id-10)
 	if #g==0 then return end
 	local tc=g:GetFirst()
 	c:RemoveOverlayCard(tp,tc,tc,REASON_EFFECT)

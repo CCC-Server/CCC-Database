@@ -1,5 +1,6 @@
 local s,id=GetID()
 function s.initial_effect(c)
+	
 	-- ① Special Summon from hand
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
@@ -10,7 +11,7 @@ function s.initial_effect(c)
 	e1:SetCondition(s.spcon)
 	c:RegisterEffect(e1)
 
-	-- **② Add "수왕권사" monster from Deck to hand (배틀 페이즈 발동 가능하도록 수정)**
+	-- ② Add "수왕권사" monster from Deck to hand (배틀 페이즈 발동 가능하도록 수정)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_QUICK_O) -- 유발 즉시 효과로 변경
 	e2:SetCode(EVENT_FREE_CHAIN)
@@ -22,21 +23,21 @@ function s.initial_effect(c)
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
-
-  -- ③ 공격 선언시, 엑시즈 소환
+	
+	-- ③ 공격 선언시, 엑시즈 소환
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,1))
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_ATTACK_ANNOUNCE)
-	e3:SetCountLimit(1,1,{id,2})
+	e3:SetCountLimit(1,{id,2})
 	e3:SetTarget(s.xyztg)
 	e3:SetOperation(s.xyzop)
 	c:RegisterEffect(e3)
-
+	
 end
 
 -- =========================
--- ① Special Summon condition (변경 없음)
+-- ① Special Summon condition
 -- =========================
 function s.spfilter(c)
 	return c:IsFaceup() and c:IsSetCard(0x770)
@@ -50,7 +51,7 @@ function s.spcon(e,c)
 end
 
 -- =========================
--- ② Search effect (변경 없음)
+-- ② Search effect
 -- =========================
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsMainPhase() or Duel.IsBattlePhase()
@@ -70,26 +71,21 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ★ E3: 공격 선언 시 엑시즈 소환
-function s.xyzfilter(c,e,tp,mg)
-	return c:IsSetCard(0x770) and c:IsType(TYPE_XYZ) and Duel.IsExistingMatchingCard(Card.IsCanBeXyzMaterial,tp,LOCATION_MZONE,0,2,nil,c)
-		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_XYZ,tp,false,false)
+-- =========================
+-- ③ Xyz Summon on attack
+-- =========================
+function s.xyzfilter(c)
+	return c:IsSetCard(0x770) and c:IsXyzSummonable()
 end
 function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,nil)
-	end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.xyzfilter,tp,LOCATION_EXTRA,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.xyzfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,nil)
-	local xyz=g:GetFirst()
-	if xyz then
-		local mg=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-		if Duel.XyzSummon(tp,xyz,mg) then
-			xyz:CompleteProcedure()
-		end
+	local g=Duel.GetMatchingGroup(s.xyzfilter,tp,LOCATION_EXTRA,0,nil)
+	if #g>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local tg=g:Select(tp,1,1,nil)
+		Duel.XyzSummon(tp,tg:GetFirst())
 	end
 end
-
-
