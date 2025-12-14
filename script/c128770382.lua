@@ -25,7 +25,7 @@ function s.initial_effect(c)
 	e2:SetTarget(s.reptg)
 	e2:SetValue(s.repval)
 	e2:SetOperation(s.repop)
-	e2:SetCountLimit(1,id+100)
+	e2:SetCountLimit(1,{id,1})
 	c:RegisterEffect(e2)
 end
 

@@ -33,7 +33,7 @@ function s.initial_effect(c)
     e4:SetType(EFFECT_TYPE_IGNITION)
     e4:SetProperty(EFFECT_FLAG_CARD_TARGET)
     e4:SetRange(LOCATION_SZONE)
-    e4:SetCountLimit(1,id+100) -- Different count limit to distinguish from effect 1
+    e4:SetCountLimit(1,{id,1}) -- Different count limit to distinguish from effect 1
     e4:SetTarget(s.tdtg)
     e4:SetOperation(s.tdop)
     c:RegisterEffect(e4)

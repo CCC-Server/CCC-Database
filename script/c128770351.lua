@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
-	e0:SetCountLimit(1,id+100)
+	e0:SetCountLimit(1,{id,1})
 	c:RegisterEffect(e0)
 
 	-----------------------------------------

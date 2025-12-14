@@ -25,7 +25,7 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_CARD_TARGET)
 	e2:SetRange(LOCATION_FZONE)
-	e2:SetCountLimit(1,id+100) -- ② 이름 있는 1턴 1번
+	e2:SetCountLimit(1,{id,1}) -- ② 이름 있는 1턴 1번
 	e2:SetCondition(s.gycon)
 	e2:SetTarget(s.gytg)
 	e2:SetOperation(s.gyop)
@@ -39,7 +39,7 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e3:SetCode(EFFECT_DESTROY_REPLACE)
 	e3:SetRange(LOCATION_FZONE)
-	e3:SetCountLimit(1,id+200) -- ③ 이름 있는 1턴 1번
+	e3:SetCountLimit(1,{id,2}) -- ③ 이름 있는 1턴 1번
 	e3:SetTarget(s.reptg)
 	e3:SetValue(s.repval)
 	e3:SetOperation(s.repop)

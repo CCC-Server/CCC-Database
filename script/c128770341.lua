@@ -52,7 +52,7 @@ function s.initial_effect(c)
 	e4:SetCondition(s.descon)
 	e4:SetTarget(s.destg)
 	e4:SetOperation(s.desop)
-	e4:SetCountLimit(1,id+100)
+	e4:SetCountLimit(1,{id,1})
 	c:RegisterEffect(e4)
 end
 

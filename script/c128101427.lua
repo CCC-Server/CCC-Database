@@ -30,7 +30,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
-	e2:SetCountLimit(1,id+100)               -- (2)번 효과 턴 1회
+	e2:SetCountLimit(1,{id,1})               -- (2)번 효과 턴 1회
 	e2:SetTarget(s.prottg)
 	e2:SetOperation(s.protop)
 	c:RegisterEffect(e2)
@@ -47,7 +47,7 @@ function s.initial_effect(c)
 	e4:SetType(EFFECT_TYPE_QUICK_O)
 	e4:SetCode(EVENT_CHAINING)
 	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1,id+200)               -- (3)번 효과 턴 1회
+	e4:SetCountLimit(1,{id,2})               -- (3)번 효과 턴 1회
 	e4:SetCondition(s.thcon)
 	e4:SetTarget(s.thtg)
 	e4:SetOperation(s.thop)

@@ -41,7 +41,7 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_CARD_TARGET)
 	e2:SetCode(EVENT_SUMMON_SUCCESS)
-	e2:SetCountLimit(1,id+100)                -- (2)번 효과 턴 1회
+	e2:SetCountLimit(1,{id,1})                -- (2)번 효과 턴 1회
 	e2:SetTarget(s.destg)
 	e2:SetOperation(s.desop)
 	c:RegisterEffect(e2)
@@ -57,7 +57,7 @@ function s.initial_effect(c)
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e4:SetCode(EVENT_SUMMON_SUCCESS)
 	e4:SetRange(LOCATION_MZONE)
-	e4:SetCountLimit(1,id+200)                -- (3)번 효과 턴 1회
+	e4:SetCountLimit(1,{id,2})                -- (3)번 효과 턴 1회
 	e4:SetCondition(s.negcon)
 	e4:SetTarget(s.negtg)
 	e4:SetOperation(s.negop)

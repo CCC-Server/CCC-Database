@@ -55,7 +55,7 @@ function s.initial_effect(c)
 	e5:SetRange(LOCATION_FZONE)
 	e5:SetProperty(EFFECT_FLAG_DELAY)
 	-- "이 카드명의 (3) 효과는 1턴에 1번만 사용할 수 있다."
-	e5:SetCountLimit(1,id+200)
+	e5:SetCountLimit(1,{id,2})
 	e5:SetCondition(s.spcon3)
 	e5:SetTarget(s.sptg3)
 	e5:SetOperation(s.spop3)

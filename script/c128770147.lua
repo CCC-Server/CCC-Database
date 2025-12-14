@@ -8,7 +8,7 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCountLimit(1,id+100) -- ★ 같은 이름 카드는 1턴에 1장만 발동 가능
+	e1:SetCountLimit(1,{id,1}) -- ★ 같은 이름 카드는 1턴에 1장만 발동 가능
 	e1:SetTarget(s.thtg)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
