@@ -182,10 +182,9 @@ end
 
 -- ③ 효과: 융합 몬스터 필터
 function s.ffilter(c,e,tp,m,chkf)
-	-- 카운터 효과 보유 여부는 스크립트 상 확인이 어려우므로 모든 융합 몬스터를 허용
-	return c:IsType(TYPE_FUSION) and c:CheckFusionMaterial(m,nil,chkf)
+    return c:IsType(TYPE_FUSION) and c:CheckFusionMaterial(m,nil,chkf)
+        and c.counter_place_list
 end
-
 function s.fsptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		local chkf=tp
