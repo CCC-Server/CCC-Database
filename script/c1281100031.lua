@@ -63,7 +63,7 @@ function s.initial_effect(c)
 	e9:SetCode(EVENT_REMOVE_COUNTER+COUNTER_KAIJU) -- 파괴수 카운터 제거 감지
 	e9:SetRange(LOCATION_MZONE)
 	e9:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
-	e9:SetCountLimit(1,id+1) -- ③ 효과는 1턴에 1번
+	e9:SetCountLimit(1,{id,1})
 	e9:SetTarget(s.rmtg)
 	e9:SetOperation(s.rmop)
 	c:RegisterEffect(e9)
