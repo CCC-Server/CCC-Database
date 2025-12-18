@@ -40,7 +40,7 @@ function s.condition(e,tp,eg,ep,ev,re,r,rp)
 	return re and re:GetHandler():IsRace(RACE_ILLUSION)
 end
 function s.tgfilter(c)
-	return c:IsRace(RACE_ILLUSION) and c:IsAbleToGrave() and not c:IsCode(id)
+	return c:IsRace(RACE_ILLUSION) and IsLevel(6) and c:IsAbleToGrave() and not c:IsCode(id)
 end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
