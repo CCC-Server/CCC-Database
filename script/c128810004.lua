@@ -37,7 +37,7 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.RegisterEffect(e1,tp)
 end
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-	return re and re:GetHandler():IsSetCard(0xc00)
+	return re and re:GetHandler():IsRace(RACE_ILLUSION)
 end
 function s.tgfilter(c)
 	return c:IsRace(RACE_ILLUSION) and c:IsAbleToGrave() and not c:IsCode(id)
