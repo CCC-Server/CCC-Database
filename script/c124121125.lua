@@ -11,6 +11,7 @@ function s.initial_effect(c)
 	-- ①: (패) 자신/상대 메인 페이즈
 	--     패/묘지의 레벨7↓ "붉은 눈" 몬스터 1장 특소
 	--     그 후 이 카드(패)를 장착 마법 취급으로 장착(+1000)
+	-- ※ 패의 카드는 타겟으로 못 잡는 경우가 많아서 "비타겟" 처리로 구현
 	---------------------------------------------------------
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
@@ -18,7 +19,6 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetRange(LOCATION_HAND)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetCountLimit(1,id)
 	e1:SetCondition(IsInMainPhase)
 	e1:SetTarget(s.eqtg1)
@@ -51,46 +51,41 @@ s.listed_names={CARD_REDEYES_B_DRAGON}
 -- ① 관련
 ---------------------------------------------------------
 
--- 특소할 후보: "붉은 눈" 몬스터 & 레벨 7 이하 & (패/묘지)에서 특소 가능
+-- 특소할 후보: 레벨 7 이하 "붉은 눈" 몬스터(이 카드 제외), 패/묘지에서 특소 가능
 function s.spfilter1(c,e,tp)
 	return c:IsSetCard(SET_RED_EYES) and c:IsMonster() and c:IsLevelBelow(7)
+		and not c:IsCode(id)
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
--- ① 타겟:
---  - 몬존 1칸 있어야 특소 가능
---  - S존 1칸 있어야 이 카드가 장착으로 이동 가능
-function s.eqtg1(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+-- ① 발동 가능 체크(비타겟이라 SetTarget은 “가능 여부만” 검사)
+function s.eqtg1(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chkc then
-		return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_HAND|LOCATION_GRAVE)
-			and chkc~=c and s.spfilter1(chkc,e,tp)
-	end
 	if chk==0 then
 		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 			and Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-			and Duel.IsExistingTarget(aux.NecroValleyFilter(s.spfilter1),
-				tp,LOCATION_HAND|LOCATION_GRAVE,0,1,c,e,tp)
+			and Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter1),
+				tp,LOCATION_HAND|LOCATION_GRAVE,0,1,nil,e,tp)
 	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectTarget(tp,aux.NecroValleyFilter(s.spfilter1),
-		tp,LOCATION_HAND|LOCATION_GRAVE,0,1,1,c,e,tp)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,tp,LOCATION_HAND|LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND|LOCATION_GRAVE)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,c,1,tp,0)
 end
 
--- ① 처리: 특소 → 이 카드 장착(+1000)
+-- ① 처리: (해결 시) 패/묘지에서 1장 고름 → 특소 → 이 카드 장착(+1000)
 function s.eqop1(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if not (tc and tc:IsRelateToEffect(e)) then return end
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
 	if not c:IsRelateToEffect(e) then return end
 
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter1),
+		tp,LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,e,tp):GetFirst()
+	if not tc then return end
+
 	if Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
 		if Duel.Equip(tp,c,tc,true) then
-			-- Equip Limit: 이 카드는 장착 대상(=tc)에게만 장착 가능
+			-- Equip Limit: 이 카드는 tc에게만 장착 가능
 			local e1=Effect.CreateEffect(c)
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
@@ -107,7 +102,7 @@ function s.eqop1(e,tp,eg,ep,ev,re,r,rp)
 			e2:SetReset(RESET_EVENT|RESETS_STANDARD)
 			c:RegisterEffect(e2)
 		else
-			-- 장착 실패 시 처리
+			-- 장착 실패 시 이 카드는 처리(묘지로)
 			Duel.SendtoGrave(c,REASON_EFFECT)
 		end
 	end
