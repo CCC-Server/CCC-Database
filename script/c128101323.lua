@@ -1,5 +1,5 @@
 --BF - 천공의 야타가라스
---Blackwing - Yatagarasu of the Firmament (temp)
+--Blackwing - Yatagarasu of the Firmament
 local s,id=GetID()
 function s.initial_effect(c)
 	--Synchro Summon
@@ -7,7 +7,6 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 
 	--① Quick effect: Tribute 1 monster; banish 1 opponent's card
-	--If the tributed monster was a "BF", you can banish 1 more
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_REMOVE)
@@ -15,7 +14,8 @@ function s.initial_effect(c)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetRange(LOCATION_MZONE)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	-- ★ TIMING_MAIN_START / TIMING_MAIN_END 사용하던 줄 삭제
+	--[수정됨] 프리 체인 발동을 위한 힌트 타이밍 복구 (몬스터 소환/효과 발동 시, 메인 페이즈 종료 시 체인 확인)
+	e1:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E|TIMING_MAIN_END) 
 	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.rmcon)
 	e1:SetCost(s.rmcost)
@@ -71,6 +71,7 @@ function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		return chkc:IsOnField() and chkc:IsControler(1-tp) and s.rmfilter(chkc)
 	end
 	if chk==0 then
+		-- 대상 지정할 상대 카드가 없으면 내 턴이라도 발동할 수 없습니다.
 		return Duel.IsExistingTarget(s.rmfilter,tp,0,LOCATION_ONFIELD,1,nil)
 	end
 	local maxct=1
