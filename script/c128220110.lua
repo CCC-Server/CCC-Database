@@ -1,15 +1,12 @@
 --F로그라이크 헤드 크러셔
 local s,id=GetID()
 function c128220110.initial_effect(c)
-    local e1=Effect.CreateEffect(c)
-    e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_FUSION_SUMMON)
-    e1:SetType(EFFECT_TYPE_ACTIVATE)
-    e1:SetCode(EVENT_FREE_CHAIN)
-    e1:SetCountLimit(1,id)
-    e1:SetTarget(s.fustg)
-    e1:SetOperation(s.fusop)
-    c:RegisterEffect(e1)
+ local e1=Effect.CreateEffect(c)
+   local e1=Fusion.CreateSummonEff(c,aux.FilterBoolFunction(Card.IsRace,RACE_ZOMBIE),nil,s.fextra)
+	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	c:RegisterEffect(e1)
+
+    -- 2. 패에서 더해졌을 때 공개 효과
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,0))
     e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
@@ -18,11 +15,15 @@ function c128220110.initial_effect(c)
     e2:SetCondition(s.pubcon)
     e2:SetOperation(s.pubop)
     c:RegisterEffect(e2)
+
+    -- 3. 공개 중이면 패에서 발동 가능
     local e3=Effect.CreateEffect(c)
     e3:SetType(EFFECT_TYPE_SINGLE)
     e3:SetCode(EFFECT_TRAP_ACT_IN_HAND)
     e3:SetCondition(s.handcon)
     c:RegisterEffect(e3)
+
+    -- 4. 묘지 회수 효과
     local e4=Effect.CreateEffect(c)
     e4:SetDescription(aux.Stringid(id,1))
     e4:SetCategory(CATEGORY_TOHAND)
@@ -36,55 +37,25 @@ function c128220110.initial_effect(c)
     e4:SetOperation(s.thop)
     c:RegisterEffect(e4)
 end
-function s.mfilter(c)
-    return c:IsOnField() and c:IsAbleToGrave()
+function s.chkfilter(c,tp,fc)
+	return c:IsSetCard(0xc25,fc,SUMMON_TYPE_FUSION,tp) and c:IsControler(tp)
+end
+function s.fcheck(tp,sg,fc,mg)
+	if sg:IsExists(Card.IsControler,1,nil,1-tp) then 
+		return sg:IsExists(s.chkfilter,1,nil,tp,fc) end
+	return true
+end
+function s.fextra(e,tp,mg)
+	if Duel.IsExistingMatchingCard(Card.IsSummonLocation,tp,0,LOCATION_MZONE,1,nil,LOCATION_EXTRA) then
+		local eg=Duel.GetMatchingGroup(s.exfilter,tp,LOCATION_DECK,0,nil)
+		if eg and #eg>0 then
+			return eg,s.fcheck
+		end
+	end
+	return nil
 end
 function s.exfilter(c)
-    return c:IsSetCard(0xc25) and c:IsLocation(LOCATION_DECK) and c:IsAbleToGrave()
-end
-function s.ffilter(c,e,tp,m,f,chkf)
-    return c:IsRace(RACE_ZOMBIE) and (not f or f(c))
-        and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_FUSION,tp,false,false) and c:CheckFusionMaterial(m,nil,chkf)
-end
-function s.fustg(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then
-        local chkf=tp
-        local mg1=Duel.GetFusionMaterial(tp):Filter(s.mfilter,nil)
-        local mg2=Duel.GetMatchingGroup(s.exfilter,tp,LOCATION_DECK,0,nil)
-        local res=Duel.IsExistingMatchingCard(s.ffilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg1,nil,chkf)
-        if not res and #mg2>0 then
-            for tc in aux.Next(mg2) do
-                mg1:AddCard(tc)
-                res=Duel.IsExistingMatchingCard(s.ffilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,mg1,nil,chkf)
-                mg1:RemoveCard(tc)
-                if res then break end
-            end
-        end
-        return res
-    end
-    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
-end
-
-function s.fusop(e,tp,eg,ep,ev,re,r,rp)
-    local chkf=tp
-    local mg1=Duel.GetFusionMaterial(tp):Filter(s.mfilter,nil)
-    local exg=Duel.GetMatchingGroup(s.exfilter,tp,LOCATION_DECK,0,nil)
-    local fcheck=function(tp,sg,fc)
-        return sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)<=1
-    end
-    local mg=mg1:Clone()
-    mg:Merge(exg)
-    local sg=Duel.GetMatchingGroup(s.ffilter,tp,LOCATION_EXTRA,0,nil,e,tp,mg,fcheck,chkf)
-    if #sg>0 then
-        local tg=sg:Select(tp,1,1,nil)
-        local tc=tg:GetFirst()
-        local mat=Duel.SelectFusionMaterial(tp,tc,mg,nil,chkf)
-        tc:SetMaterial(mat)
-        Duel.SendtoGrave(mat,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
-        Duel.BreakEffect()
-        Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)
-        tc:CompleteProcedure()
-    end
+	return c:IsMonster() and c:IsSetCard(0xc25) and c:IsAbleToGrave()
 end
 function s.pubcon(e,tp,eg,ep,ev,re,r,rp)
     return not (bit.band(r,REASON_DRAW)==REASON_DRAW)
@@ -116,5 +87,6 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     if c:IsRelateToEffect(e) then
         Duel.SendtoHand(c,nil,REASON_EFFECT)
+        Duel.ConfirmCards(1-tp,c)
     end
 end
