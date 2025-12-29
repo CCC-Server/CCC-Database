@@ -19,7 +19,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id,EFFECT_COUNT_CODE_DUEL)
+	e2:SetCountLimit(1,id)
 	e2:SetCondition(s.thcon)
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
@@ -64,10 +64,11 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ② 조건: 이 카드가 묘지에 존재하는 상태에서, 자신 필드에 빛 / 어둠 속성 엑시즈 몬스터가 특수 소환되었을 경우
+-- ② 조건: 이 카드가 묘지에 존재하는 상태에서, 자신 필드에 빛 / 어둠 속성 엑시즈 몬스터가 엑시즈 소환되었을 경우
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
-	return rc and rc:IsFaceup() and rc:IsType(TYPE_XYZ) and (rc:IsAttribute(ATTRIBUTE_LIGHT) or rc:IsAttribute(ATTRIBUTE_DARK)) and rc:IsControler(tp)
+	return rc and rc:IsType(TYPE_XYZ) and (rc:IsAttribute(ATTRIBUTE_LIGHT) or rc:IsAttribute(ATTRIBUTE_DARK))
+		and rc:IsControler(tp) and re:IsSummonType(SUMMON_TYPE_XYZ)
 end
 
 -- ② 타겟: 이 카드 자신

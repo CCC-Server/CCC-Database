@@ -41,8 +41,9 @@ end
 
 -- ① 코스트: 자신 필드의 "헤블론" 엑시즈 몬스터의 엑시즈 소재를 1개 제거
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVEXYZ)
 	local tg=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_MZONE,0,1,1,nil)
-	if chk==0 then return #tg>0 and tg:GetFirst():CheckRemoveOverlayCard(tp,1,REASON_COST) end
 	tg:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 
@@ -62,10 +63,11 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ② 조건: 이 카드가 묘지에 존재하는 상태에서, 자신 필드에 빛 / 어둠 속성 엑시즈 몬스터가 특수 소환되었을 경우
+-- ② 조건: 이 카드가 묘지에 존재하는 상태에서, 자신 필드에 빛 / 어둠 속성 엑시즈 몬스터가 엑시즈 소환되었을 경우
 function s.recccon(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
-	return rc and rc:IsFaceup() and rc:IsType(TYPE_XYZ) and (rc:IsAttribute(ATTRIBUTE_LIGHT) or rc:IsAttribute(ATTRIBUTE_DARK)) and rc:IsControler(tp)
+	return rc and rc:IsType(TYPE_XYZ) and (rc:IsAttribute(ATTRIBUTE_LIGHT) or rc:IsAttribute(ATTRIBUTE_DARK))
+		and rc:IsControler(tp) and re:IsSummonType(SUMMON_TYPE_XYZ)
 end
 
 -- ② 타겟: 이 카드 자신 (묘지에서 세트)
