@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	-- ②: 이 카드를 소재로 가지고 있는 빛/어둠 속성 엑시즈 몬스터에 효과 부여
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOFIELD)
+	e2:SetCategory(0) -- [수정] 세트 효과는 카테고리 0 권장
 	e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_IGNITION)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetCondition(s.xyzcon)
@@ -92,11 +92,9 @@ end
 
 -- ② 타겟: 덱에서 RUM 카드 1장 필드에 세트
 function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
-			and Duel.IsExistingMatchingCard(s.rumfilter,tp,LOCATION_DECK,0,1,nil)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,nil,1,tp,LOCATION_DECK)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0
+		and Duel.IsExistingMatchingCard(s.rumfilter,tp,LOCATION_DECK,0,1,nil) end
+	-- SetOperationInfo는 삭제하거나 0으로 설정
 end
 
 -- ② 필터: RUM 카드

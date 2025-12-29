@@ -18,14 +18,14 @@ function s.initial_effect(c)
 	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
 
-	-- ②: 자신 필드의 빛 / 어둠 속성 엑시즈 1장과 자신 묘지의 "헤블론" 몬스터 1장을 대상으로 하고 발동할 수 있다. 그 묘지의 "헤블론" 몬스터를 그 필드의 엑시즈 몬스터의 엑시즈 소재로 한다.
+	-- ② 묘지의 헤블론을 엑시즈 소재로 함
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_OVERLAY)
+	e2:SetCategory(0) -- [수정] 소재 충전은 전용 카테고리가 없음
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetCountLimit(1,{id,1})
+	e2:SetCountLimit(1)
 	e2:SetTarget(s.ovtg)
 	e2:SetOperation(s.ovop)
 	c:RegisterEffect(e2)
@@ -62,25 +62,13 @@ function s.ovfilter2(c)
 end
 
 function s.ovtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then
-		local tg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
-		local fc=tg:Filter(Card.IsOnField,nil):GetFirst()
-		if fc and chkc==fc then
-			return s.ovfilter2(chkc)
-		else
-			return s.ovfilter1(chkc)
-		end
-	end
-	if chk==0 then
-		return Duel.IsExistingTarget(s.ovfilter1,tp,LOCATION_MZONE,0,1,nil)
-			and Duel.IsExistingTarget(s.ovfilter2,tp,LOCATION_GRAVE,0,1,nil)
-	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g1=Duel.SelectTarget(tp,s.ovfilter1,tp,LOCATION_MZONE,0,1,1,nil)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g2=Duel.SelectTarget(tp,s.ovfilter2,tp,LOCATION_GRAVE,0,1,1,nil)
-	g1:Merge(g2)
-	Duel.SetOperationInfo(0,CATEGORY_OVERLAY,g2,1,0,0)
+	if chkc then return false end
+	if chk==0 then return Duel.IsExistingTarget(s.ovfilter1,tp,LOCATION_MZONE,0,1,nil)
+		and Duel.IsExistingTarget(s.ovfilter2,tp,LOCATION_GRAVE,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
+	Duel.SelectTarget(tp,s.ovfilter1,tp,LOCATION_MZONE,0,1,1,nil)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
+	Duel.SelectTarget(tp,s.ovfilter2,tp,LOCATION_GRAVE,0,1,1,nil)
 end
 
 -- ② 처리: 묘지의 "헤블론" 몬스터를 필드의 엑시즈 몬스터의 엑시즈 소재로 한다.
