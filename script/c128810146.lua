@@ -53,8 +53,12 @@ function s.ovop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
 	if c:IsRelateToEffect(e) and c:IsFaceup() and tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
-		local g=c:GetOverlayGroup()
-		g:AddCard(c)
-		Duel.Overlay(tc,g)
+		-- 1. 이 카드의 소재를 먼저 대상에게 이동
+		local mg=c:GetOverlayGroup()
+		if #mg>0 then
+			Duel.Overlay(tc,mg)
+		end
+		-- 2. 이 카드 자체를 대상의 소재로 이동
+		Duel.Overlay(tc,Group.FromCards(c))
 	end
 end
