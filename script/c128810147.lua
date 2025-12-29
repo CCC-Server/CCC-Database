@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	c:EnableReviveLimit()
 
 	-- 이 카드는 룰상 "헤블론" 카드로도 취급한다.
-	s.listed_series[id]=0xc06
+	s.listed_series={0xc06}
 
 	-- ①: 이 카드의 공격력은, 이 카드의 엑시즈 소재의 수 × 500 올린다.
 	local e1=Effect.CreateEffect(c)
@@ -124,5 +124,5 @@ function s.ovop7(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 then
 		Duel.Destroy(g,REASON_EFFECT)
 	end
-	Duel.SetLP(1-tp,Duel.GetLP(1-tp)/2)
+	Duel.SetLP(1-tp,math.floor(Duel.GetLP(1-tp)/2))
 end

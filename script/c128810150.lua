@@ -52,12 +52,15 @@ end
 -- ① 처리: 대상 몬스터 위에 겹쳐 엑시즈 소환으로 취급하고 엑스트라 덱에서 특수 소환한다.
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
-	if not tc:IsExists(Card.IsFaceup,1,nil,tp,LOCATION_MZONE) then return end
+	if not (tc:IsRelateToEffect(e) and tc:IsFaceup()) then return end
 	local rk=tc:GetRank()
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(tp,s.spfilter2,tp,LOCATION_EXTRA,0,1,1,nil,rk,e,tp)
 	if #g>0 then
-		Duel.XyzSummon(g:GetFirst(),e,tp,Group.FromCards(tc))
+		local sc=g:GetFirst()
+		if Duel.SpecialSummon(sc,SUMMON_TYPE_XYZ,tp,tp,false,false,POS_FACEUP)~=0 then
+			Duel.Overlay(sc,Group.FromCards(tc))
+		end
 	end
 end
 

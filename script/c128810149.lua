@@ -63,7 +63,7 @@ end
 
 function s.ovtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
-		local tg=Duel.GetTargetCards(chkc)
+		local tg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
 		local fc=tg:Filter(Card.IsOnField,nil):GetFirst()
 		if fc and chkc==fc then
 			return s.ovfilter2(chkc)
@@ -85,7 +85,7 @@ end
 
 -- ② 처리: 묘지의 "헤블론" 몬스터를 필드의 엑시즈 몬스터의 엑시즈 소재로 한다.
 function s.ovop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetTargetCards(e)
+	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
 	local fc=g:Filter(Card.IsOnField,nil):GetFirst()
 	local gc=g:Filter(Card.IsLocation,nil,LOCATION_GRAVE):GetFirst()
 	if fc and gc and fc:IsRelateToEffect(e) and gc:IsRelateToEffect(e) and fc:IsFaceup() then
