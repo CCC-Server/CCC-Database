@@ -65,15 +65,15 @@ end
 -- ② 조건: 이 카드를 소재로 가지고 있는 빛/어둠 속성 엑시즈 몬스터
 function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if not (c:IsType(TYPE_XYZ) 
+	return c:IsType(TYPE_XYZ)
 		and ((c:GetOriginalAttribute()==ATTRIBUTE_LIGHT) or (c:GetOriginalAttribute()==ATTRIBUTE_DARK))
-		and c:GetOverlayGroup():IsExists(Card.IsCode,1,nil,id)) then
-		return false
-	end
-	
-	-- 상대가 패의 몬스터의 효과를 발동했을 때
+		and c:GetOverlayGroup():IsExists(Card.IsCode,1,nil,id)
+end
+
+-- ② 발동 조건: 상대가 패의 몬스터의 효과를 발동했을 때
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
-	return Duel.IsChainNegatable(ev) 
+	return Duel.IsChainNegatable(ev)
 		and re:IsActiveType(TYPE_MONSTER)
 		and rc:IsLocation(LOCATION_HAND)
 		and rp==1-tp

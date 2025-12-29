@@ -1,22 +1,12 @@
 --헤블론-루크의 권능
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 이 카드명의 ①②의 효과는 1턴에 1번, 어느 쪽이든 1개밖에 사용할 수 없다.
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_FIELD)
-	e0:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e0:SetCode(EFFECT_CANNOT_ACTIVATE_EFFECT)
-	e0:SetTargetRange(1,0)
-	e0:SetValue(s.oathval)
-	e0:SetLabelObject(c)
-	c:RegisterEffect(e0)
-
 	-- ①: 몬스터의 효과 / 마법 / 함정 카드가 발동했을 때에 발동할 수 있다. 자신 필드의 "헤블론" 엑시즈 몬스터의 엑시즈 소재를 1개 제거하고, 그 발동을 무효로 하여 파괴한다.
 	local e1=Effect.CreateEffect(c)
 	e1:SetCategory(CATEGORY_NEGATE+CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_CHAINING)
-	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OR)
+	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.negcon)
 	e1:SetCost(s.negcost)
 	e1:SetTarget(s.negtg)
@@ -31,7 +21,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id,EFFECT_COUNT_CODE_DUEL)
+	e2:SetCountLimit(1,id)
 	e2:SetCondition(s.recccon)
 	e2:SetTarget(s.reccttg)
 	e2:SetOperation(s.recop)
@@ -39,11 +29,6 @@ function s.initial_effect(c)
 end
 
 s.listed_series={0xc06}
-
--- 1턴에 1번, 어느 쪽이든 1개밖에 사용할 수 없다.
-function s.oathval(e,re,tp)
-	return re:GetHandler():IsCode(id) and re:IsActiveType(TYPE_TRAP)
-end
 
 -- ① 발동 조건: 몬스터 효과 / 마법 / 함정 카드가 발동했을 때, 자신 필드에 "헤블론" 엑시즈 몬스터가 있을 경우
 function s.costfilter(c)
