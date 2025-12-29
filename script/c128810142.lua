@@ -8,7 +8,7 @@ function s.initial_effect(c)
 	-- ①: 이 카드를 엑시즈 소환했을 경우에 발동할 수 있다. 덱에서 "헤블론" 몬스터 1장을 이 카드의 엑시즈 소재로 한다.
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_DECK_OVERLAY)
+	e1:SetCategory(CATEGORY_TOFIELD)
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e1:SetProperty(EFFECT_FLAG_DELAY)
 	e1:SetCode(EVENT_XYZ_SUMMON_SUCCESS)
@@ -40,7 +40,7 @@ end
 function s.oetg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.IsExistingMatchingCard(s.oefilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_DECK_OVERLAY,nil,1,tp,LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,nil,1,tp,LOCATION_DECK)
 end
 
 function s.oeop(e,tp,eg,ep,ev,re,r,rp)

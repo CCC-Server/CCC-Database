@@ -17,7 +17,7 @@ function s.initial_effect(c)
 	-- ②: 상대가 필드의 카드의 효과를 발동했을 때, 이 카드의 엑시즈 소재를 2개 제거하고 발동할 수 있다. 그 필드의 카드를 이 카드의 엑시즈 소재로 한다.
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_OVERLAY)
+	e2:SetCategory(CATEGORY_TOFIELD)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
@@ -67,7 +67,7 @@ function s.ovtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) end
 	if chk==0 then return rc:IsOnField() and rc:IsControler(1-tp) and rc:IsCanBeOverlayed() end
 	Duel.SetTargetCard(rc)
-	Duel.SetOperationInfo(0,CATEGORY_OVERLAY,rc,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,rc,1,0,0)
 end
 
 -- ② 처리: 대상 카드를 엑시즈 소재로 한다

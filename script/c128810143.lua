@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	-- ②: 자신 / 상대 턴에, 이 카드의 엑시즈 소재를 1개 제거하고, 상대 필드의 카드 1장을 대상으로 하여 발동할 수 있다. 그 카드를 이 카드의 엑시즈 소재로 한다.
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_LEAVE_GRAVE)
+	e2:SetCategory(CATEGORY_TOHAND)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -42,7 +42,7 @@ end
 function s.oetg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.IsExistingMatchingCard(s.oefilter,tp,LOCATION_GRAVE,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_OVERLAY,nil,1,tp,LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,nil,1,tp,LOCATION_GRAVE)
 end
 
 function s.oeop(e,tp,eg,ep,ev,re,r,rp)
@@ -69,7 +69,7 @@ function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then return Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 	local g=Duel.SelectTarget(tp,aux.TRUE,tp,0,LOCATION_ONFIELD,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_OVERLAY,g,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,g,1,0,0)
 end
 
 -- ② 처리: 상대 필드의 카드 1장을 엑시즈 소재로 한다

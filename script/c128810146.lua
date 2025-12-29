@@ -17,7 +17,7 @@ function s.initial_effect(c)
 	-- ②: 자신 필드의 다른 어둠 속성 엑시즈 몬스터 1장을 대상으로 하고 발동할 수 있다. 이 카드 및 이 카드의 엑시즈 소재를 전부 그 몬스터의 엑시즈 소재로 한다.
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_OVERLAY)
+	e2:SetCategory(CATEGORY_TOFIELD)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -45,7 +45,7 @@ function s.ovtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then return Duel.IsExistingTarget(s.ovfilter,tp,LOCATION_MZONE,0,1,c,e) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	Duel.SelectTarget(tp,s.ovfilter,tp,LOCATION_MZONE,0,1,1,c,e)
-	Duel.SetOperationInfo(0,CATEGORY_OVERLAY,c,1,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,c,1,0,0)
 end
 
 -- ② 처리: 이 카드 및 이 카드의 엑시즈 소재를 전부 그 몬스터의 엑시즈 소재로 한다.
