@@ -8,7 +8,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetCountLimit(1,id) -- ① 효과는 1턴에 1번
+	e1:SetCountLimit(1)
 	e1:SetTarget(s.rumtg)
 	e1:SetOperation(s.rumop)
 	c:RegisterEffect(e1)
