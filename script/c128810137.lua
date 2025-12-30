@@ -18,6 +18,7 @@ function s.initial_effect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_NEGATE)
 	e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_QUICK_O) -- 유발 즉시 효과
+	e2:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
 	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetCountLimit(1,{id,1})
@@ -58,10 +59,9 @@ end
 
 --② 엑시즈 소재로 있을 때: 패의 몬스터 효과 발동을 무효
 function s.xcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	-- 빛/어둠 엑시즈이며 패에서 발동한 몬스터 효과일 때
-	return c:IsType(TYPE_XYZ) and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
-		and re:IsActiveType(TYPE_MONSTER) and re:IsLocation(LOCATION_HAND) and Duel.IsChainNegatable(ev)
+	local trig_loc=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)
+	return ep==1-tp and re:IsMonsterEffect() and trig_loc==LOCATION_HAND
+		and Duel.IsChainNegatable(ev) and not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED)
 end
 function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
