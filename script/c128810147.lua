@@ -5,8 +5,11 @@ function s.initial_effect(c)
 	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsLevel,12),2)
 	c:EnableReviveLimit()
 	--룰상 "헤블론" 카드로 취급
-	c:SetSPSummonOnce(id)
-	aux.AddCodeList(c,0xc06)
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetCode(EFFECT_ADD_SETCODE)
+	e0:SetValue(0xc06)
+	c:RegisterEffect(e0)
 
 	--① 공격력 상승: 소재 수 × 500
 	local e1=Effect.CreateEffect(c)
@@ -37,7 +40,7 @@ function s.initial_effect(c)
 	e4:SetCondition(s.indcon3)
 	c:RegisterEffect(e4)
 
-	--●5개 이상: 대상 지정 이외의 효과를 받지 않음
+	--●5개 이상: 이 카드를 대상으로 하는 효과 이외에는 받지 않음
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_SINGLE)
 	e5:SetCode(EFFECT_IMMUNE_EFFECT)
@@ -57,7 +60,6 @@ function s.initial_effect(c)
 	e6:SetTarget(s.destg)
 	e6:SetOperation(s.desop)
 	c:RegisterEffect(e6)
-	--공격 대상으로 선택되었을 때도 동일 발동
 	local e7=e6:Clone()
 	e7:SetCode(EVENT_BE_BATTLE_TARGET)
 	c:RegisterEffect(e7)
@@ -82,13 +84,15 @@ function s.indcon7(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():GetOverlayCount()>=7
 end
 
---② 효과: 5개 이상일 때 면역 처리
+--② 5개 이상 면역 처리: 이 카드를 대상으로 하는 효과만 통과
 function s.immval(e,re)
-	return re:IsActiveType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP) and re:GetOwnerPlayer()~=e:GetHandlerPlayer()
+	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
+		and re:IsActiveType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP)
 		and not re:IsHasProperty(EFFECT_FLAG_CARD_TARGET)
+		or (re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) and not re:GetTarget():IsContains(e:GetHandler()))
 end
 
---② 효과: 7개 이상일 때 발동
+--② 7개 이상: 파괴 + LP 절반
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil) end
 	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_ONFIELD,nil)
@@ -99,7 +103,6 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 then
 		Duel.Destroy(g,REASON_EFFECT)
 	end
-	--상대 LP 절반
 	local lp=Duel.GetLP(1-tp)
 	Duel.SetLP(1-tp,math.floor(lp/2))
 end
