@@ -71,5 +71,4 @@ function s.xop(e,tp,eg,ep,ev,re,r,rp)
 		if #g>0 then
 			Duel.SendtoGrave(g,REASON_EFFECT)
 		end
-	end
 end
