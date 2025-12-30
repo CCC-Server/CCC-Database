@@ -2,7 +2,7 @@
 local s,id=GetID()
 function c128220110.initial_effect(c)
  local e1=Effect.CreateEffect(c)
-   local e1=Fusion.CreateSummonEff(c,aux.FilterBoolFunction(Card.IsRace,RACE_ZOMBIE),nil,s.fextra)
+   local e1=Fusion.CreateSummonEff(c,aux.FilterBoolFunction(Card.IsRace,RACE_ZOMBIE),nil,s.fextra,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,s.extratg)
 	e1:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	c:RegisterEffect(e1)
 
@@ -37,26 +37,25 @@ function c128220110.initial_effect(c)
     e4:SetOperation(s.thop)
     c:RegisterEffect(e4)
 end
-function s.chkfilter(c,tp,fc)
-	return c:IsSetCard(0xc25,fc,SUMMON_TYPE_FUSION,tp) and c:IsControler(tp)
-end
-function s.fcheck(tp,sg,fc,mg)
-	if sg:IsExists(Card.IsControler,1,nil,1-tp) then 
-		return sg:IsExists(s.chkfilter,1,nil,tp,fc) end
-	return true
+function s.fcheck(tp,sg,fc)
+	return sg:FilterCount(Card.IsLocation,nil,LOCATION_DECK)<=1
 end
 function s.fextra(e,tp,mg)
-	if Duel.IsExistingMatchingCard(Card.IsSummonLocation,tp,0,LOCATION_MZONE,1,nil,LOCATION_EXTRA) then
-		local eg=Duel.GetMatchingGroup(s.exfilter,tp,LOCATION_DECK,0,nil)
-		if eg and #eg>0 then
-			return eg,s.fcheck
-		end
-	end
-	return nil
+    if e:GetHandler():IsSetCard(0xc25) then
+        local eg=Duel.GetMatchingGroup(s.exfilter,tp,LOCATION_DECK,0,nil)
+        if eg and #eg>0 then
+            return eg, s.fcheck
+        end
+    end
+    return nil
 end
 function s.exfilter(c)
 	return c:IsMonster() and c:IsSetCard(0xc25) and c:IsAbleToGrave()
 end
+function s.extratg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetPossibleOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
+end 
 function s.pubcon(e,tp,eg,ep,ev,re,r,rp)
     return not (bit.band(r,REASON_DRAW)==REASON_DRAW)
 end
