@@ -29,8 +29,11 @@ function c128220106.initial_effect(c)
     c:RegisterEffect(e3)
 end
 function s.condition(e, tp, eg, ep, ev, re, r, rp)
-    return Duel.GetCurrentPhase() ~= PHASE_DRAW 
-        and eg:IsExists(Card.IsPreviousLocation,1,nil,LOCATION_DECK)
+   if Duel.GetCurrentPhase()==PHASE_DRAW then return false end
+    return eg:IsExists(function(c)
+        return c:IsControler(tp) 
+            and c:IsPreviousLocation(LOCATION_DECK) 
+            and c:IsLocation(LOCATION_HAND)
 end
 function s.filter(c)
     return c:IsSetCard(0xc25)
