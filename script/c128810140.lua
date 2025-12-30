@@ -3,13 +3,12 @@ local s,id=GetID()
 function s.initial_effect(c)
 	--① 엑시즈 소재 2장으로 취급
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_XYZ_LEVEL)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(s.xyzlv)
-	c:RegisterEffect(e1)
+	e1:SetCode(EFFECT_DOUBLE_XYZ_MATERIAL)
+	e1:SetValue(1)
+	e1:SetCountLimit(1,{id,1})
+	e1:SetOperation(function(e,c) return c.minxyzct and c.minxyzct>=3 and c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK) end)
+	c:RegisterEffect(e2)
 
 	--② 필드 이외에서 묘지로 보내졌을 경우: 덱에서 "헤블론" 마/함 1장 세트
 	local e2=Effect.CreateEffect(c)
@@ -23,15 +22,6 @@ function s.initial_effect(c)
 	e2:SetTarget(s.settg)
 	e2:SetOperation(s.setop)
 	c:RegisterEffect(e2)
-end
-
---①: 몬스터 3장 이상을 소재로 하는 빛/어둠 속성 엑시즈 몬스터 소환 시 2장분으로 취급
-function s.xyzlv(e,c,rc)
-	if rc:IsAttribute(ATTRIBUTE_LIGHT+ATTRIBUTE_DARK) and rc:IsType(TYPE_XYZ) and rc.minxyzct>=3 then
-		return 0x40000+e:GetHandler():GetLevel()
-	else
-		return e:GetHandler():GetLevel()
-	end
 end
 
 --② 조건: 필드 이외에서 묘지로 보내졌을 경우
