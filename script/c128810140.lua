@@ -6,7 +6,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_DOUBLE_XYZ_MATERIAL)
 	e1:SetValue(1)
-	e1:SetCountLimit(1,{id,1})
+	e1:SetCountLimit(1,id)
 	e1:SetOperation(function(e,c) return c.minxyzct and c.minxyzct>=3 and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK)) end)
 	c:RegisterEffect(e1)
 
