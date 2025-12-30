@@ -34,6 +34,7 @@ function s.condition(e, tp, eg, ep, ev, re, r, rp)
         return c:IsControler(tp) 
             and c:IsPreviousLocation(LOCATION_DECK) 
             and c:IsLocation(LOCATION_HAND)
+			end, 1, nil)
 end
 function s.filter(c)
     return c:IsSetCard(0xc25)
