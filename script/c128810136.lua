@@ -57,7 +57,7 @@ function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 function s.gyfilter(c)
-	return c:IsSetCard(0xc06) and c:IsType(TYPE_MONSTER) not c:IsCode(id) and c:IsAbleToGrave()
+	return c:IsSetCard(0xc06) and c:IsType(TYPE_MONSTER) and not c:IsCode(id) and c:IsAbleToGrave()
 end
 function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then 
