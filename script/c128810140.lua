@@ -8,7 +8,7 @@ function s.initial_effect(c)
 	e1:SetValue(1)
 	e1:SetCountLimit(1,{id,1})
 	e1:SetOperation(function(e,c) return c.minxyzct and c.minxyzct>=3 and c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK) end)
-	c:RegisterEffect(e2)
+	c:RegisterEffect(e1)
 
 	--② 필드 이외에서 묘지로 보내졌을 경우: 덱에서 "헤블론" 마/함 1장 세트
 	local e2=Effect.CreateEffect(c)
