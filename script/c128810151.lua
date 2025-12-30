@@ -1,93 +1,80 @@
 --헤블론-루크의 권능
 local s,id=GetID()
 function s.initial_effect(c)
-	-- ①: 몬스터의 효과 / 마법 / 함정 카드가 발동했을 때에 발동할 수 있다. 자신 필드의 "헤블론" 엑시즈 몬스터의 엑시즈 소재를 1개 제거하고, 그 발동을 무효로 하여 파괴한다.
+	--① 발동 무효 + 파괴
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_NEGATE+CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_CHAINING)
-	e1:SetCountLimit(1,id)
+	e1:SetCountLimit(1,id) -- ①② 중 어느 쪽이든 1턴에 1번만
 	e1:SetCondition(s.negcon)
 	e1:SetCost(s.negcost)
 	e1:SetTarget(s.negtg)
 	e1:SetOperation(s.negop)
 	c:RegisterEffect(e1)
 
-	-- ②: 이 카드가 묘지에 존재하는 상태에서, 빛 / 어둠 속성 엑시즈 몬스터가 엑시즈 소환되었을 경우에 발동할 수 있다. 이 카드를 자신 필드에 세트한다. 이 효과로 세트한 이 카드는 필드에서 벗어났을 경우에 제외된다.
+	--② 묘지에서 세트
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOFIELD)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id)
-	e2:SetCondition(s.recccon)
-	e2:SetTarget(s.reccttg)
-	e2:SetOperation(s.recop)
+	e2:SetCountLimit(1,id) -- ①② 중 어느 쪽이든 1턴에 1번만
+	e2:SetCondition(s.setcon)
+	e2:SetTarget(s.settg)
+	e2:SetOperation(s.setop)
 	c:RegisterEffect(e2)
 end
 
-s.listed_series={0xc06}
-
--- ① 발동 조건: 몬스터 효과 / 마법 / 함정 카드가 발동했을 때, 자신 필드에 "헤블론" 엑시즈 몬스터가 있을 경우
-function s.costfilter(c)
-	return c:IsSetCard(0xc06) and c:IsType(TYPE_XYZ) and c:GetOverlayCount()>0
-end
-
+--① 조건: 몬스터/마법/함정 발동 시
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsChainNegatable(ev) and Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE,0,1,nil)
+	return Duel.IsChainNegatable(ev)
 end
-
--- ① 코스트: 자신 필드의 "헤블론" 엑시즈 몬스터의 엑시즈 소재를 1개 제거
+--① 코스트: 자신 필드의 "헤블론" 엑시즈 소재 1개 제거
+function s.cfilter(c)
+	return c:IsFaceup() and c:IsSetCard(0xc06) and c:IsType(TYPE_XYZ) and c:CheckRemoveOverlayCard(tp,1,REASON_COST)
+end
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_MZONE,0,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVEXYZ)
-	local tg=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_MZONE,0,1,1,nil)
-	tg:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_MZONE,0,1,1,nil)
+	g:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
-
--- ① 타겟: 발동 무효
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
-	if re:GetHandler():IsRelateToEffect(re) and re:GetHandler():IsDestructable() then
+	if re:GetHandler():IsDestructable() then
 		Duel.SetOperationInfo(0,CATEGORY_DESTROY,eg,1,0,0)
 	end
 end
-
--- ① 처리: 발동 무효 + 파괴
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
 		Duel.Destroy(eg,REASON_EFFECT)
 	end
 end
 
--- ② 조건: 이 카드가 묘지에 존재하는 상태에서, 자신 필드에 빛 / 어둠 속성 엑시즈 몬스터가 엑시즈 소환되었을 경우
-function s.recccon(e,tp,eg,ep,ev,re,r,rp)
-	local rc=re:GetHandler()
-	return rc and rc:IsType(TYPE_XYZ) and (rc:IsAttribute(ATTRIBUTE_LIGHT) or rc:IsAttribute(ATTRIBUTE_DARK))
-		and rc:IsControler(tp) and re:IsSummonType(SUMMON_TYPE_XYZ)
+--② 조건: 빛/어둠 속성 엑시즈 몬스터가 엑시즈 소환되었을 경우
+function s.setfilter(c,tp)
+	return c:IsType(TYPE_XYZ) and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK)) and c:IsSummonType(SUMMON_TYPE_XYZ) and c:IsControler(tp)
 end
-
--- ② 타겟: 이 카드 자신 (묘지에서 세트)
-function s.reccttg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and c:IsSSetable() end
-	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,c,1,0,0)
+function s.setcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.setfilter,1,nil,tp)
 end
-
--- ② 처리: 이 카드를 자신 필드에 세트한다. 이 효과로 세트한 이 카드는 필드에서 벗어났을 경우에 제외된다.
-function s.recop(e,tp,eg,ep,ev,re,r,rp)
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and e:GetHandler():IsSSetable() end
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,e:GetHandler(),1,0,0)
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 or not c:IsRelateToEffect(e) then return end
-	Duel.SSet(c)
-	-- 필드에서 벗어났을 경우 제외되는 지속 효과
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
-	e1:SetProperty(EFFECT_FLAG_WASH_INSTANT)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD-RESET_TOFIELD)
-	e1:SetValue(LOCATION_REMOVED)
-	c:RegisterEffect(e1)
+	if c:IsRelateToEffect(e) and Duel.SSet(tp,c)~=0 then
+		--필드에서 벗어나면 제외
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetReset(RESET_EVENT+RESETS_REDIRECT)
+		e1:SetValue(LOCATION_REMOVED)
+		c:RegisterEffect(e1,true)
+	end
 end

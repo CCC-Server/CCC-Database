@@ -1,64 +1,55 @@
 --헤블론-어둠의 우상 아누비스
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Xyz Summon Procedure (Dark, Level 8, 2 materials)
+	--엑시즈 소환 절차: 어둠 속성 레벨 8 몬스터 × 2
 	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsAttribute,ATTRIBUTE_DARK),8,2)
 	c:EnableReviveLimit()
 
-	-- ①: 이 카드의 공격력은, 이 카드의 엑시즈 소재의 수 × 500 올린다.
+	--① 공격력 상승: 소재 수 × 500
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetCode(EFFECT_UPDATE_ATTACK)
 	e1:SetValue(s.atkval)
 	c:RegisterEffect(e1)
 
-	-- ②: 자신 필드의 다른 어둠 속성 엑시즈 몬스터 1장을 대상으로 하고 발동할 수 있다. 이 카드 및 이 카드의 엑시즈 소재를 전부 그 몬스터의 엑시즈 소재로 한다.
+	--② 자신 필드의 다른 어둠 속성 엑시즈 몬스터에게 소재 이전
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOFIELD)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_MZONE)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetCountLimit(1,id)
-	e2:SetTarget(s.ovtg)
-	e2:SetOperation(s.ovop)
+	e2:SetCountLimit(1,{id,1})
+	e2:SetTarget(s.mattg)
+	e2:SetOperation(s.matop)
 	c:RegisterEffect(e2)
 end
 
-s.listed_series={0xc06}
-
--- ① 효과: 엑시즈 소재의 수 × 500만큼 공격력 상승
+--① ATK 상승
 function s.atkval(e,c)
 	return c:GetOverlayCount()*500
 end
 
--- ② 타겟: 자신 필드의 다른 어둠 속성 엑시즈 몬스터 1장
-function s.ovfilter(c,e)
-	return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsAttribute(ATTRIBUTE_DARK) and c:IsCanBeOverlayed() and c~=e:GetHandler()
+--② 대상: 자신 필드의 다른 어둠 속성 엑시즈 몬스터
+function s.matfilter(c)
+	return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsAttribute(ATTRIBUTE_DARK)
 end
-
-function s.ovtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local c=e:GetHandler()
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(tp) and s.ovfilter(chkc,e) end
-	if chk==0 then return Duel.IsExistingTarget(s.ovfilter,tp,LOCATION_MZONE,0,1,c,e) end
+function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsControler(tp) and s.matfilter(chkc) and chkc~=e:GetHandler() end
+	if chk==0 then return Duel.IsExistingTarget(s.matfilter,tp,LOCATION_MZONE,0,1,e:GetHandler()) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	Duel.SelectTarget(tp,s.ovfilter,tp,LOCATION_MZONE,0,1,1,c,e)
-	Duel.SetOperationInfo(0,CATEGORY_TOFIELD,c,1,0,0)
+	Duel.SelectTarget(tp,s.matfilter,tp,LOCATION_MZONE,0,1,1,e:GetHandler())
 end
-
--- ② 처리: 이 카드 및 이 카드의 엑시즈 소재를 전부 그 몬스터의 엑시즈 소재로 한다.
-function s.ovop(e,tp,eg,ep,ev,re,r,rp)
+function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and c:IsFaceup() and tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
-		-- 1. 이 카드의 소재를 먼저 대상에게 이동
-		local mg=c:GetOverlayGroup()
-		if #mg>0 then
-			Duel.Overlay(tc,mg)
+	if not c:IsRelateToEffect(e) or c:IsImmuneToEffect(e) then return end
+	if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
+		local g=c:GetOverlayGroup()
+		if #g>0 then
+			Duel.Overlay(tc,g)
 		end
-		-- 2. 이 카드 자체를 대상의 소재로 이동
 		Duel.Overlay(tc,Group.FromCards(c))
 	end
 end
