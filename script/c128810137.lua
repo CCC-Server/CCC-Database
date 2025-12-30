@@ -15,15 +15,16 @@ function s.initial_effect(c)
 
 	--② 엑시즈 소재로 있을 때 효과 부여
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_XMATERIAL)
-	e2:SetCode(EFFECT_TYPE_QUICK_O)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.xcon)
+	e2:SetCategory(CATEGORY_NEGATE)
+	e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_QUICK_O) -- 유발 즉시 효과
 	e2:SetCode(EVENT_CHAINING)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetOperation(s.xop)
+	e2:SetCountLimit(1,{id,1})
+	e2:SetCondition(s.xcon)
+	e2:SetCost(s.xcost)
 	e2:SetTarget(s.xtg)
+	e2:SetOperation(s.xop)
 	c:RegisterEffect(e2)
 end
 
@@ -57,14 +58,19 @@ end
 
 --② 엑시즈 소재로 있을 때: 패의 몬스터 효과 발동을 무효
 function s.xcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsAttribute(ATTRIBUTE_LIGHT+ATTRIBUTE_DARK)
+	local c=e:GetHandler()
+	-- 빛/어둠 엑시즈이며 패에서 발동한 몬스터 효과일 때
+	return c:IsType(TYPE_XYZ) and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
+		and re:IsActiveType(TYPE_MONSTER) and re:IsLocation(LOCATION_HAND) and Duel.IsChainNegatable(ev)
+end
+function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
 function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsChainNegatable(ev) and re:IsActiveType(TYPE_MONSTER) and re:IsLocation(LOCATION_HAND) end
+	if chk==0 then return true end
 	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
 end
 function s.xop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.RemoveOverlayCard(tp,1,1,REASON_COST) then
-		Duel.NegateActivation(ev)
-	end
+	Duel.NegateActivation(ev)
 end

@@ -13,13 +13,14 @@ function s.initial_effect(c)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	--② 엑시즈 소재로 있을 때 효과 부여
+	-- ② 엑시즈 소재로 있을 때 효과 부여 (수정된 구조)
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_XMATERIAL)
-	e2:SetCode(EFFECT_TYPE_IGNITION)
 	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_IGNITION) -- 타입을 합쳐서 설정
+	e2:SetRange(LOCATION_MZONE) -- 필드에서 발동함을 명시
 	e2:SetCountLimit(1,{id,1})
 	e2:SetCondition(s.xcon)
+	e2:SetCost(s.xcost) -- 비용 함수 분리
 	e2:SetTarget(s.xtg)
 	e2:SetOperation(s.xop)
 	c:RegisterEffect(e2)
@@ -71,9 +72,16 @@ function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
 		and not (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
 end
 
---② 엑시즈 소재로 있을 때: 빛/어둠 속성 엑시즈 몬스터에 효과 부여
+-- 비용 함수: 소재 1개를 제거
+function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+end
+
+-- 조건 함수: 이 카드를 소재로 한 몬스터가 빛/어둠 속성일 때
 function s.xcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsAttribute(ATTRIBUTE_LIGHT+ATTRIBUTE_DARK)
+	local c=e:GetHandler()
+	return c:IsAttribute(ATTRIBUTE_LIGHT+ATTRIBUTE_DARK) and c:IsType(TYPE_XYZ)
 end
 function s.xspfilter(c,e,tp)
 	return c:IsSetCard(0xc06) and not c:IsCode(id)
@@ -87,12 +95,9 @@ function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_HAND)
 end
 function s.xop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.RemoveOverlayCard(tp,1,1,REASON_COST) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,s.xspfilter,tp,LOCATION_DECK+LOCATION_HAND,0,1,1,nil,e,tp)
-		if #g>0 then
-			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
-		end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local g=Duel.SelectMatchingCard(tp,s.xspfilter,tp,LOCATION_DECK+LOCATION_HAND,0,1,1,nil,e,tp)
+	if #g>0 then
+		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
