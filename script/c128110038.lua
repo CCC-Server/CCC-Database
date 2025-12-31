@@ -67,8 +67,8 @@ end
 
 local hardcoded_code_table = {
 	-- ② 효과로 복사할 수 없는 몬스터 목록
-	84769941,	--Super Anti-Kaiju War Machine Mecha-Dogoran
-	0	--해당하는 카드가 없음
+	84769941,	--대파괴수용결전병기 슈퍼메카도고란
+	0	--(카드 없음)
 }
 
 -- ② 효과: 조건 수정됨 (LOCATION_FZONE 추가)
