@@ -65,56 +65,110 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
+local hardcoded_code_table = {
+	-- ② 효과로 복사할 수 없는 몬스터 목록
+	84769941,	--Super Anti-Kaiju War Machine Mecha-Dogoran
+	0	--해당하는 카드가 없음
+}
+
 -- ② 효과: 조건 수정됨 (LOCATION_FZONE 추가)
 function s.effcon(e,tp,eg,ep,ev,re,r,rp)
-	-- LOCATION_ONFIELD는 필드 존을 포함하지 않으므로 LOCATION_FZONE을 명시해야 합니다.
-	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,CODE_WATERFRONT),tp,LOCATION_ONFIELD|LOCATION_FZONE,0,1,nil)
+	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,CODE_WATERFRONT),tp,LOCATION_ONFIELD,0,1,nil)
 end
 
 function s.tdfilter(c)
-	return c:IsSetCard(0xd3) and c:IsType(TYPE_MONSTER) and c:IsAbleToDeck()
+	return c:IsSetCard(0xd3) and c:IsType(TYPE_MONSTER) and c:IsAbleToDeckAsCost()
 end
 function s.effcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.tdfilter,tp,LOCATION_GRAVE,0,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_GRAVE,0,1,1,nil)
-	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST)
-	e:SetLabel(g:GetFirst():GetOriginalCode())
+	-- 코스트 지불 여부에 따라 효과 처리 적용 가능성이 달라지는 효과는, 코스트가 아닌 타겟 함수에서 코스트 처리를 실행해야 함
+	e:SetLabel(1)
+	return true
 end
 function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
+	if chk==0 then 
+		if e:GetLabel()==0 then return false end
+		e:SetLabel(0)
+		e:SetLabelObject(nil)
+		return true
+	end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local tc=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_GRAVE,0,1,1,nil):GetFirst()
+	Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_COST)
+	e:SetLabelObject(tc)
+	e:SetLabel(tc:GetOriginalCode())
 end
 function s.effop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) then return end
 	
 	-- 1. 공격력 증가
-	local g=Duel.GetMatchingGroup(aux.FaceupFilter(Card.IsSetCard,0xd3),tp,LOCATION_MZONE,0,nil)
-	for tc in aux.Next(g) do
-		local e1=Effect.CreateEffect(c)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_UPDATE_ATTACK)
-		e1:SetValue(800)
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,2)
-		tc:RegisterEffect(e1)
-	end
-	
-	-- 2. 효과 복사 (범위 보정 추가)
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetTargetRange(LOCATION_MZONE,0)
+	e1:SetValue(800)
+	e1:SetReset(RESETS_STANDARD_PHASE_END,2)
+	Duel.RegisterEffect(e1,tp)
+
+	-- 2. 효과 복사
 	local code=e:GetLabel()
-	if code then
-		local cid=c:CopyEffect(code,RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END,2)
-		
-		-- 복사된 효과가 몬스터 존(MZONE)에서만 발동 가능한 경우, 마법 존(SZONE)에 있는 이 카드는 발동이 불가능할 수 있습니다.
-		-- 이를 해결하기 위해 이 카드에 등록된 효과들의 Range를 SZONE으로 강제 변경합니다.
-		local effs={c:GetCardEffect(code)} -- 복사된 효과들을 가져올 수 있는지 확인 (직접 가져오긴 힘듦)
-		
-		-- 대신, CopyEffect는 단순히 효과를 등록하는 것이므로, 
-		-- 해당 턴 동안 이 카드가 몬스터 효과의 코스트/조건을 충족시킬 수 있도록 
-		-- 별도의 처리가 필요할 수 있으나, 파괴수 카운터 제거 효과는 보통 Range가 MZONE입니다.
-		-- 스크립트로 완벽하게 Range를 수정하려면 복잡하므로, 일단 CopyEffect를 유지하되
-		-- 만약 효과 발동이 안된다면 'ReplaceEffect' 방식이나 수동 등록이 필요합니다.
-		-- 우선 요청하신 '발동 조건(워터프론트 감지)'은 해결되었습니다.
-		
-		Duel.Hint(HINT_CARD,0,code)
+	for k,v in pairs(hardcoded_code_table) do
+		if code==v then return end
 	end
+	Duel.MajesticCopy(c,e:GetLabelObject())
+
+	-- 3. 범위 보정
+	-- 함수 내 함수 선언에서는 변수명 겹침에 유의
+	local effs={c:GetOwnEffects()}
+	local result=false
+	local card_iscanremovecounter=Card.IsCanRemoveCounter
+	local duel_iscanremovecounter=Duel.IsCanRemoveCounter
+	Card.IsCanRemoveCounter=function(tc,p,countertype,ct,reason)
+		if reason&REASON_COST>0 then result=true end
+		return card_iscanremovecounter(tc,p,countertype,ct,reason)
+	end
+	Duel.IsCanRemoveCounter=function(p,s,o,countertype,ct,reason)
+		if reason&REASON_COST>0 then result=true end
+		return duel_iscanremovecounter(p,s,o,countertype,ct,reason)
+	end
+	for _,eff in ipairs(effs) do
+		result=false
+		if eff:GetOwner()==e:GetOwner() and not eff:IsHasProperty(EFFECT_FLAG_INITIAL) then
+			local cost=eff:GetCost()
+			local tg=eff:GetTarget()
+			if cost and type(cost)=="function" then eff:cost(PLAYER_NONE,nil,PLAYER_NONE,nil,inl,0,PLAYER_NONE,0) end
+			if tg and type(tg)=="function" then eff:tg(PLAYER_NONE,nil,PLAYER_NONE,nil,inl,0,PLAYER_NONE,0) end
+			if result then
+				-- 이 효과는 코스트로 카운터를 제거함
+				local range=eff:GetRange()
+				if range&LOCATION_MZONE>0 then
+					-- 이 효과는 몬스터 존에서 발동되는 효과
+					eff:SetRange((range|LOCATION_SZONE)&~LOCATION_MZONE)
+					-- 지속물 처리 추가
+					if not tg or type(tg)~="function" then tg=aux.TRUE end
+					eff:SetTarget(function(te,te_tp,te_eg,te_ep,te_ev,te_re,te_r,te_rp,te_chk)
+						if te_chk==0 then return te:tg(te_tp,te_eg,te_ep,te_ev,te_re,te_r,te_rp,0) end
+						te:tg(te_tp,te_eg,te_ep,te_ev,te_re,te_r,te_rp,1)
+						-- 코스트 지불 후 지속물이 남아 있고, 한편으로 효과 처리시에 남아 있지 않으면, 자동 불발
+						if te:GetHandler():IsOnField() then
+							local f=te:GetOperation()
+							if not f or type(f)~="function" then f=aux.TRUE end
+							te:SetOperation(function(...)
+								if not te:GetHandler():IsRelateToEffect(te) then return end
+								f(...)
+							end)
+						end
+					end)
+				else
+					-- 이 효과는 몬스터 존에서 발동하지 않음
+					eff:Reset()
+				end
+			else
+				-- 이 효과는 코스트로 카운터를 제거하지 않음
+				eff:Reset()
+			end
+		end
+	end
+	Card.IsCanRemoveCounter=card_iscanremovecounter
+	Duel.IsCanRemoveCounter=duel_iscanremovecounter
 end
