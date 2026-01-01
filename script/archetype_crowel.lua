@@ -6,12 +6,16 @@ ARCHETYPE_SPIRITUAL_ART  = SET_SPIRITUAL_ART or ARCHETYPE_SPIRITUAL_ART or 0x14d
 ARCHETYPE_SPIRITUAL_LIGHT_ART = 0x9d01
 ARCHETYPE_DARK_SPIRIT_ART     = 0xcd01
 ARCHETYPE_SPIRITUALIST   = 0x2d01 --reserved
-Archetype.MakeCheck(ARCHETYPE_SPIRITUAL_ART,nil,{0xd01})
+Archetype.MakeCheck(ARCHETYPE_SPIRITUAL_ART,{
+	["정령술의 사역마"]=101304022  --프리릴리즈. 정식 발매 후 갱신 필요
+},{
+	["령술 (령술사)"]=0xd01
+})
 Archetype.MakeCheck(ARCHETYPE_SPIRITUAL_LIGHT_ART,{
 	["광령술-「성」"]=5037726
 },nil)
 Archetype.MakeCheck(ARCHETYPE_DARK_SPIRIT_ART,{
-	["암령술-\"욕망\""]=5037726
+	["암령술-\"욕망\""]=38167722
 },nil)
 Archetype.MakeCheck(ARCHETYPE_SPIRITUALIST,{
 	["승령술사 조겐"]=41855169,
@@ -37,4 +41,4 @@ Archetype.MakeCheck(ARCHETYPE_DORIADO,{
 --빌런즈 히어로
 ARCHETYPE_VILLAINOUS      = 0xd04  --reserved
 ARCHETYPE_VILLAINOUS_HERO = 0x9d04
-Archetype.MakeCheck(ARCHETYPE_SPIRITUAL_ART,nil,{SET_HERO})
+Archetype.MakeCheck(SET_HERO,nil,{ARCHETYPE_VILLAINOUS_HERO})
