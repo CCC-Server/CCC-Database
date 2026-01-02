@@ -120,17 +120,19 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
 	local effs={c:GetOwnEffects()}
 	for _,eff in ipairs(effs) do
 		if eff:GetOwner()==e:GetOwner() and not eff:IsHasProperty(EFFECT_FLAG_INITIAL) then
+			local ce=eff:Clone()
 			if eff:GetRange()&LOCATION_MZONE>0 then
 				-- Change Range
-				eff:SetRange((eff:GetRange()&~LOCATION_MZONE)|LOCATION_SZONE)
-				-- Todo from here
+				ce:SetRange((eff:GetRange()&~LOCATION_MZONE)|LOCATION_SZONE)
 				local cost=eff:GetCost() or aux.TRUE
 				local tg=eff:GetTarget() or aux.TRUE
 				local op=eff:GetOperation() or aux.TRUE
-				
+				-- Todo from here
 			else
-				eff:SetRange(eff:GetRange()&~LOCATION_SZONE)
+				ce:SetRange(eff:GetRange()&~LOCATION_SZONE)
 			end
+			c:RegisterEffect(ce)
+			eff:Reset()
 		end
 	end
 end
