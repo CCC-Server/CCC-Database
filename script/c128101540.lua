@@ -34,12 +34,12 @@ function s.initial_effect(c)
 	-- 글로벌 체크: 카운터 함정 발동 횟수 및 효과 파괴 기록
 	if not s.global_check then
 		s.global_check=true
-		-- 카운터 함정 발동 체크 (횟수 누적을 위해 0번 플레이어에게 id 플래그 등록)
 		local ge1=Effect.CreateEffect(c)
-		ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-		ge1:SetCode(EVENT_CHAINING)
-		ge1:SetOperation(s.checkop)
-		Duel.RegisterEffect(ge1,0)
+ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+ge1:SetCode(EVENT_CHAIN_SOLVED) -- ← 중요
+ge1:SetOperation(s.checkop)
+Duel.RegisterEffect(ge1,0)
+
 		-- 효과 파괴 발생 체크
 		local ge2=Effect.CreateEffect(c)
 		ge2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
@@ -49,13 +49,16 @@ function s.initial_effect(c)
 	end
 end
 
--- 카운터 함정 발동 시마다 플래그를 하나씩 쌓음
+-- 카운터 함정 발동 완료 시 체크 (체인 종료 후)
 function s.checkop(e,tp,eg,ep,ev,re,r,rp)
-	if re:IsHasType(EFFECT_TYPE_ACTIVATE) and re:IsActiveType(TYPE_TRAP) and re:IsActiveType(TYPE_COUNTER) then
-		-- 0번 플레이어(시스템)에게 플래그를 쌓아 턴 전체 횟수 기록
+	if re:IsHasType(EFFECT_TYPE_ACTIVATE)
+		and re:IsActiveType(TYPE_TRAP)
+		and re:IsActiveType(TYPE_COUNTER) then
+		-- 체인이 완전히 끝난 뒤 플래그 누적
 		Duel.RegisterFlagEffect(0,id,RESET_PHASE+PHASE_END,0,1)
 	end
 end
+
 
 -- 효과 파괴 발생 시 플래그 등록
 function s.descheckop(e,tp,eg,ep,ev,re,r,rp)
