@@ -34,7 +34,7 @@ function s.initial_effect(c)
 	e4:SetDescription(aux.Stringid(id,1))
 	e4:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e4:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_IGNITION)
-	e4:SetCountLimit(1{id,2})
+	e4:SetCountLimit(1,{id,2})
 	e4:SetCondition(s.thcon)
 	e4:SetCost(s.thcost)
 	e4:SetTarget(s.thtg)
@@ -84,7 +84,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsSetCard(0xc00)
+	local c=e:GetHandler()
+	return c:IsSetCard(0xc00) and c:IsType(TYPE_XYZ)
 end
 function s.thcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
