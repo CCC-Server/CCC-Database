@@ -50,7 +50,7 @@ end
 
 --② 조건: 필드 이외에서 묘지로 보내졌을 경우
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return not e:GetHandler():IsLocation(LOCATION_ONFIELD)
+	return not e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
 end
 function s.spfilter(c,e,tp)
 	return c:IsSetCard(0xc06) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)

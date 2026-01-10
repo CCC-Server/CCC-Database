@@ -26,7 +26,7 @@ end
 
 --② 조건: 필드 이외에서 묘지로 보내졌을 경우
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return not e:GetHandler():IsLocation(LOCATION_ONFIELD)
+	return not e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
 end
 function s.setfilter(c)
 	return c:IsSetCard(0xc06) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsSSetable()
