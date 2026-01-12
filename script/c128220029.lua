@@ -82,7 +82,7 @@ function s.operation(e,tp,eg,ep,ev,re,r,rp)
 		end
 function s.discon(e,tp,eg,ep,ev,re,r,rp)
 	local loc,pos=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION,CHAININFO_TRIGGERING_POSITION)
-	return e:GetHandler():IsDefensePos()
+	return e:GetHandler():IsAttackPos()
 		and re:IsActiveType(TYPE_MONSTER) and loc==LOCATION_MZONE and (pos&POS_ATTACK)~=0
 end
 function s.disop(e,tp,eg,ep,ev,re,r,rp)
