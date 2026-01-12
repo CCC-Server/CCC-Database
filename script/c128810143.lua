@@ -39,12 +39,12 @@ end
 
 -- 소재 필터 수정: 메서드 호출 방식으로 안전하게 변경
 function s.matfilter(c,tp)
-	return c:IsAbleToOverlay(tp)
+	return c:IsCanBeXyzMaterial(xyzc,tp,REASON_EFFECT)
 end
 
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.matfilter,tp,LOCATION_GRAVE,0,1,nil,tp) end
-	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,nil,1,tp,LOCATION_GRAVE)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.matfilter,tp,LOCATION_GRAVE,0,1,nil,e:GetHandler(),tp) end
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,nil,1,tp,0)
 end
 
 function s.matop(e,tp,eg,ep,ev,re,r,rp)
