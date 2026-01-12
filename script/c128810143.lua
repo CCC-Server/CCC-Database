@@ -36,11 +36,13 @@ end
 function s.matcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_XYZ)
 end
-function s.matfilter(c)
-	return c:IsAbleToOverlay()
+function s.matfilter(c,tp)
+	return c:IsAbleToOverlay(tp)
 end
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.matfilter,tp,LOCATION_GRAVE,0,1,nil) end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.matfilter,tp,LOCATION_GRAVE,0,1,nil,tp) end
+	-- 효과 처리 대상을 명시 (묘지의 카드 1장을 대상으로 함을 코어에 알림)
+    Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,nil,1,tp,LOCATION_GRAVE)
 end
 function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
