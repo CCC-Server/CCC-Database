@@ -1,11 +1,11 @@
---헤블론-콰트로 마누스
+-- 헤블론-콰트로 마누스
 local s,id=GetID()
 function s.initial_effect(c)
-	--엑시즈 소환 절차: 레벨 8 몬스터 × 2
+	-- 엑시즈 소환 절차: 레벨 8 몬스터 × 2
 	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsLevel,8),2)
 	c:EnableReviveLimit()
 
-	--① 엑시즈 소환 성공시: 묘지의 카드 1장을 소재로 한다
+	-- ① 엑시즈 소환 성공시: 묘지의 카드 1장을 소재로 한다
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
@@ -17,7 +17,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.matop)
 	c:RegisterEffect(e1)
 
-	--② 자신/상대 턴: 소재 1개 제거 → 상대 필드의 카드 1장을 소재로 한다
+	-- ② 자신/상대 턴: 소재 1개 제거 → 상대 필드의 카드 1장을 소재로 한다
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetType(EFFECT_TYPE_QUICK_O)
@@ -32,18 +32,21 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
---① 조건: 이 카드가 엑시즈 소환되었을 경우
+-- ① 조건: 이 카드가 엑시즈 소환되었을 경우
 function s.matcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsSummonType(SUMMON_TYPE_XYZ)
 end
+
+-- 소재 필터 수정: 메서드 호출 방식으로 안전하게 변경
 function s.matfilter(c,tp)
 	return c:IsAbleToOverlay(tp)
 end
+
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.matfilter,tp,LOCATION_GRAVE,0,1,nil,tp) end
-	-- 효과 처리 대상을 명시 (묘지의 카드 1장을 대상으로 함을 코어에 알림)
-    Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,nil,1,tp,LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,nil,1,tp,LOCATION_GRAVE)
 end
+
 function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) or c:IsImmuneToEffect(e) then return end
@@ -54,29 +57,31 @@ function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---② 코스트: 엑시즈 소재 1개 제거
+-- ② 코스트: 엑시즈 소재 1개 제거
 function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
 	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
 end
---대상: 상대 필드의 카드 1장
-function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToOverlay,tp,0,LOCATION_ONFIELD,1,nil, tp) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g=Duel.SelectTarget(tp,Card.IsAbleToOverlay,tp,0,LOCATION_ONFIELD,1,1,nil)
+
+-- ② 효과 필터 추가 (IsAbleToOverlay 오류 해결을 위함)
+function s.ovfilter(c,tp)
+	return c:IsOnField() and c:IsControler(1-tp) and c:IsAbleToOverlay(tp)
 end
---처리: 그 카드를 이 카드의 소재로 한다
+
+-- 대상: 상대 필드의 카드 1장
+function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return s.ovfilter(chkc,tp) end
+	if chk==0 then return Duel.IsExistingTarget(s.ovfilter,tp,0,LOCATION_ONFIELD,1,nil,tp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	Duel.SelectTarget(tp,s.ovfilter,tp,0,LOCATION_ONFIELD,1,1,nil,tp)
+end
+
+-- 처리: 그 카드를 이 카드의 소재로 한다
 function s.xop(e,tp,eg,ep,ev,re,r,rp)
-local c=e:GetHandler()
+	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	
-	-- 대상이 여전히 필드에 있고, 효과 처리 시점에 이 카드가 소재를 가질 수 있는지 확인
 	if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e) then
-		-- 토큰은 엑시즈 소재가 될 수 없음 (IsAbleToOverlay가 거르지만 이중 체크)
 		if tc:IsType(TYPE_TOKEN) then return end
-		
-		-- Group.FromCards 대신 단일 카드도 최신 코어는 지원하지만, 안전하게 사용
 		Duel.Overlay(c,tc)
 	end
 end
