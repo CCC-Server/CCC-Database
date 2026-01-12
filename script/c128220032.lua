@@ -26,9 +26,10 @@ function c128220032.initial_effect(c)
 	c:RegisterEffect(e2)
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
-	e3:SetCategory(CATEGORY_NEGATE+CATEGORY_DESTROY)
-	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e3:SetCode(EVENT_CHAINING)
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
+    e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O) 
+    e3:SetProperty(EFFECT_FLAG_DELAY)
+    e3:SetCode(EVENT_CHAINING)
 	e3:SetRange(LOCATION_FZONE)
 	e3:SetCountLimit(1,{id,0})
 	e3:SetCondition(s.condition)
@@ -37,7 +38,7 @@ function c128220032.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 function s.condition(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetCurrentPhase()==PHASE_MAIN1 or Duel.GetCurrentPhase()==PHASE_MAIN2 and ep==1-tp
+	return Duel.GetCurrentPhase()==PHASE_MAIN1 and ep==1-tp
 end
 function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
 	return not c:IsSetCard(0xc22) and (sumtype&SUMMON_TYPE_PENDULUM)==SUMMON_TYPE_PENDULUM
