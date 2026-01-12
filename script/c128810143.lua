@@ -48,7 +48,7 @@ function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not c:IsRelateToEffect(e) or c:IsImmuneToEffect(e) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=Duel.SelectMatchingCard(tp,s.matfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.matfilter,tp,LOCATION_GRAVE,0,1,1,nil,tp)
 	if #g>0 then
 		Duel.Overlay(c,g)
 	end
@@ -62,15 +62,21 @@ end
 --대상: 상대 필드의 카드 1장
 function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToOverlay,tp,0,LOCATION_ONFIELD,1,nil) end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToOverlay,tp,0,LOCATION_ONFIELD,1,nil, tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	local g=Duel.SelectTarget(tp,Card.IsAbleToOverlay,tp,0,LOCATION_ONFIELD,1,1,nil)
 end
 --처리: 그 카드를 이 카드의 소재로 한다
 function s.xop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
+local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) then
-		Duel.Overlay(c,Group.FromCards(tc))
+	
+	-- 대상이 여전히 필드에 있고, 효과 처리 시점에 이 카드가 소재를 가질 수 있는지 확인
+	if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e) then
+		-- 토큰은 엑시즈 소재가 될 수 없음 (IsAbleToOverlay가 거르지만 이중 체크)
+		if tc:IsType(TYPE_TOKEN) then return end
+		
+		-- Group.FromCards 대신 단일 카드도 최신 코어는 지원하지만, 안전하게 사용
+		Duel.Overlay(c,tc)
 	end
 end
