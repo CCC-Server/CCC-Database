@@ -14,10 +14,10 @@ function s.initial_effect(c)
 	e1:SetOperation(s.setop)
 	c:RegisterEffect(e1)
 	
-	--②: 묘지의 이 카드를 제외하고 발동. 패 / 묘지에서 "삼환마" 1장을 소환 조건을 무시하고 특수 소환한다.
+	--②: 묘지의 이 카드를 제외하고 발동. 패 / 묘지에서 "삼환마" 1장을 덱으로 되돌리고 소환 조건을 무시하여 특수 소환한다.
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
 	e2:SetType(EFFECT_TYPE_IGNITION)
 	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,{id,1})
@@ -27,7 +27,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 end
 
---삼환마 카드 번호 리스트 (초래신 스타일)
+--삼환마 카드 번호 리스트
 s.listed_names={6007213,32491822,69890967}
 
 --1번 효과 로직
@@ -38,7 +38,6 @@ function s.setcost(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.setfilter(c)
-	-- 초래신(DBB) 스타일의 필터링: 삼환마 본체 혹은 관련 마/함
 	return (c:IsCode(6007213,32491822,69890967) or c:ListsCode(6007213,32491822,69890967))
 		and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP))
 		and c:IsSSetable()
@@ -67,11 +66,10 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---2번 효과(특수 소환) 로직
+--②번 효과: 덱으로 되돌리고 소환 조건을 무시하여 특수 소환
 function s.spfilter(c,e,tp)
-	-- IsCanBeSpecialSummoned의 4번째 인자는 소환조건 무시, 5번째 인자는 소생제한 무시
-	-- 라비엘이 묘지에서 나오려면 5번째 인자가 반드시 true여야 합니다.
 	return c:IsCode(6007213,32491822,69890967) 
+		and c:IsAbleToDeck()
 		and c:IsCanBeSpecialSummoned(e,0,tp,true,true) 
 end
 
@@ -80,16 +78,21 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 			and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND|LOCATION_GRAVE,0,1,nil,e,tp)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND|LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_HAND|LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	-- 묘지 대응을 위해 NecroValleyFilter 사용
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	-- 패/묘지에서 삼환마 선택
 	local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,e,tp)
-	if #g>0 then
-		-- 여기서도 7번째 인자를 true로 주어 소생 제한 룰을 무시합니다.
-		Duel.SpecialSummon(g,0,tp,tp,true,true,POS_FACEUP)
+	local tc=g:GetFirst()
+	if tc then
+		-- 덱으로 되돌림 (SEQ_DECKSHUFFLE을 사용하여 덱을 섞음)
+		if Duel.SendtoDeck(tc,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)>0 and tc:IsLocation(LOCATION_DECK) then
+			-- 그 후 소환 조건을 무시하고 특수 소환
+			Duel.SpecialSummon(tc,0,tp,tp,true,true,POS_FACEUP)
+		end
 	end
 end
