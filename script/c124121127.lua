@@ -23,7 +23,7 @@ function s.initial_effect(c)
     c:RegisterEffect(e2)
 end
 
--- ①번 효과
+-- ①번 효과 로직
 function s.spfilter(c)
     return c:IsType(TYPE_SPELL|TYPE_TRAP) and c:IsAbleToRemoveAsCost() 
         and (c:IsLocation(LOCATION_HAND) or aux.SpElimFilter(c,true,true))
@@ -52,7 +52,7 @@ function s.hspop(e,tp,eg,ep,ev,re,r,rp,c)
     g:DeleteGroup()
 end
 
--- ②번 효과
+-- ②번 효과 로직
 function s.effcon(e,tp,eg,ep,ev,re,r,rp)
     return re:IsActiveType(TYPE_SPELL|TYPE_TRAP) and re:IsHasType(EFFECT_TYPE_ACTIVATE)
 end
@@ -103,7 +103,6 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
     local sel=opval[op+1]
     
     if sel==1 then
-        -- [수정됨] IsRelateToEffect 제거, 앞면 표시만 확인
         Duel.RegisterFlagEffect(tp,id,RESET_PHASE+PHASE_END,0,1)
         if c:IsFaceup() then
             local e1=Effect.CreateEffect(c)
@@ -128,6 +127,7 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
+-- [완성본] 변경된 효과 처리 (엑스파라딘 '가능한 한' 로직 적용)
 function s.repop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)<3 then return end
     Duel.ConfirmDecktop(tp,3)
@@ -135,9 +135,20 @@ function s.repop(e,tp,eg,ep,ev,re,r,rp)
     if #g>0 then
         Duel.DisableShuffleCheck()
         local sg=g:Filter(Card.IsType,nil,TYPE_TRAP):Filter(Card.IsSSetable,nil)
-        if #sg>0 then
+        local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
+        
+        -- 마함존에 여유가 있고, 세트할 함정이 있을 경우
+        if ft>0 and #sg>0 then
+            -- 세트할 카드가 빈칸보다 많다면, 빈칸 개수(ft)만큼만 그룹(sg)을 축소
+            if #sg>ft then
+                Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+                sg=sg:Select(tp,ft,ft,nil)
+            end
+            -- 축소되거나 원본 그대로인 그룹을 한 번에 세트
             Duel.SSet(tp,sg)
         end
+        
+        -- 세트되지 않은 나머지 카드들을 전부 덱으로 되돌리고 셔플
         local rg=g:Filter(function(c) return not c:IsLocation(LOCATION_SZONE) end,nil)
         if #rg>0 then
             Duel.SendtoDeck(rg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT+REASON_REVEAL)
