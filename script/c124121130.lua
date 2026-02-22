@@ -1,7 +1,7 @@
 -- 환홍허신 카누스
 local s,id=GetID()
 function s.initial_effect(c)
-    -- ①: 덱 탑 1장 덤핑 후 필드의 몬스터 2장까지 파괴
+    -- ①: 덱 탑 1장 덤핑 후 필드의 몬스터 1장 파괴
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_DECKDES+CATEGORY_DESTROY)
@@ -33,16 +33,17 @@ end
 -- "환홍" 카드군 코드 (0xfa8)
 s.set_phanred=0xfa8
 
--- [① 파괴 타겟] 몬스터 최대 2장 지정
+-- [① 파괴 타겟] 몬스터 정확히 1장 지정
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) end
     if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,1)
         and Duel.IsExistingTarget(nil,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
     
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-    local g=Duel.SelectTarget(tp,nil,tp,LOCATION_MZONE,LOCATION_MZONE,1,2,nil)
+    -- 대상을 1장으로 고정 (1, 1)
+    local g=Duel.SelectTarget(tp,nil,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
     Duel.SetOperationInfo(0,CATEGORY_DECKDES,nil,0,tp,1)
-    Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
+    Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 
 -- [① 파괴 효과 처리]
