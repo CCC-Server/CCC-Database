@@ -1,7 +1,7 @@
 -- 환홍허신 카누스
 local s,id=GetID()
 function s.initial_effect(c)
-    -- ①: 덱 탑 1장 덤핑 후 필드의 몬스터 1장 파괴
+    -- ①: 덱 탑 3장 덤핑 후 필드의 몬스터 1장 파괴
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_DECKDES+CATEGORY_DESTROY)
@@ -36,19 +36,22 @@ s.set_phanred=0xfa8
 -- [① 파괴 타겟] 몬스터 정확히 1장 지정
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) end
-    if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,1)
+    -- 덤핑 조건을 1장에서 3장으로 변경
+    if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,3)
         and Duel.IsExistingTarget(nil,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
     
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-    -- 대상을 1장으로 고정 (1, 1)
+    -- 대상을 1장으로 고정
     local g=Duel.SelectTarget(tp,nil,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
-    Duel.SetOperationInfo(0,CATEGORY_DECKDES,nil,0,tp,1)
+    -- 덤핑 예정 매수를 3장으로 등록
+    Duel.SetOperationInfo(0,CATEGORY_DECKDES,nil,0,tp,3)
     Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 
 -- [① 파괴 효과 처리]
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-    if Duel.DiscardDeck(tp,1,REASON_EFFECT)>0 then
+    -- 실제 덤핑 매수를 3장으로 변경
+    if Duel.DiscardDeck(tp,3,REASON_EFFECT)>0 then
         local tg=Duel.GetTargetCards(e)
         if #tg>0 then
             Duel.Destroy(tg,REASON_EFFECT)
