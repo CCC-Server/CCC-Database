@@ -24,26 +24,23 @@ function s.initial_effect(c)
     c:RegisterEffect(e2)
     e1:SetLabelObject(e2)
 
-    -- ②: 제외되거나 효과로 묘지에 보내졌을 경우 (HOPT 적용)
+    -- ②: 제외되거나 효과로 묘지에 보내졌을 경우
     local e3=Effect.CreateEffect(c)
     e3:SetDescription(aux.Stringid(id,2))
-    e3:SetCategory(CATEGORY_TODECK+CATEGORY_SPECIAL_SUMMON)
+    e3:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_TODECK)
     e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
     e3:SetProperty(EFFECT_FLAG_DELAY)
     e3:SetCode(EVENT_TO_GRAVE)
     e3:SetCountLimit(1,{id,1})
-    e3:SetCondition(s.spcon2)
-    e3:SetTarget(s.sptg2)
-    e3:SetOperation(s.spop2)
+    e3:SetCondition(s.spcon)
+    e3:SetTarget(s.sptg)
+    e3:SetOperation(s.spop)
     c:RegisterEffect(e3)
     local e4=e3:Clone()
     e4:SetCode(EVENT_REMOVE)
-    e4:SetCondition(s.spcon_rm2)
+    e4:SetCondition(s.spcon_rm)
     c:RegisterEffect(e4)
 end
-
--- "환홍" 카드군 코드 (0xfa8)
-s.set_phanred=0xfa8
 
 -- [발동 코스트 필터] 마법/함정 카드 제외
 function s.cfilter(c)
@@ -67,7 +64,7 @@ end
 
 -- [① 세트 대상 필터] "환홍마검 레바테인" 이외의 "환홍"(0xfa8) 함정 카드
 function s.setfilter(c)
-    return c:IsSetCard(s.set_phanred) and c:IsType(TYPE_TRAP) and not c:IsCode(id) and c:IsSSetable()
+    return c:IsSetCard(0xfa8) and c:IsType(TYPE_TRAP) and not c:IsCode(id) and c:IsSSetable()
 end
 
 -- [① 발동 타겟: 덱에서만]
@@ -92,13 +89,26 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 end
 
 -- [② 조건] 효과로 묘지행
-function s.spcon2(e,tp,eg,ep,ev,re,r,rp)
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
     return e:GetHandler():IsReason(REASON_EFFECT)
 end
 
 -- [② 조건] 제외됨
-function s.spcon_rm2(e,tp,eg,ep,ev,re,r,rp)
+function s.spcon_rm(e,tp,eg,ep,ev,re,r,rp)
     return true
+end
+
+-- [② 특수 소환 필터] "환홍"(0xfa8) 몬스터
+function s.spfilter(c,e,tp)
+    return c:IsSetCard(0xfa8) and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+
+-- [② 발동 타겟: 특수 소환 우선]
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+    if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+        and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,1,nil,e,tp) end
+    Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE)
+    Duel.SetPossibleOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE)
 end
 
 -- [② 덱 바운스 필터] 묘지의 함정 카드 전부
@@ -106,35 +116,19 @@ function s.tdfilter(c)
     return c:IsType(TYPE_TRAP) and c:IsAbleToDeck()
 end
 
--- [② 특수 소환 필터] "환홍"(0xfa8) 몬스터
-function s.spfilter2(c,e,tp)
-    return c:IsSetCard(s.set_phanred) and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-end
-
--- [② 타겟 처리 (플람베르 방식)] 덱 바운스 최우선 검사
-function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(s.tdfilter,tp,LOCATION_GRAVE,0,1,nil) end
-    local g=Duel.GetMatchingGroup(s.tdfilter,tp,LOCATION_GRAVE,0,nil)
-    Duel.SetOperationInfo(0,CATEGORY_TODECK,g,#g,tp,LOCATION_GRAVE)
-    Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE)
-end
-
--- [② 오퍼레이션 처리 (플람베르 방식)] 바운스 후 특수 소환
-function s.spop2(e,tp,eg,ep,ev,re,r,rp)
-    -- 1. 묘지의 함정 카드를 전부 덱으로 되돌린다 (필수)
-    local tg=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.tdfilter),tp,LOCATION_GRAVE,0,nil)
-    if #tg==0 or Duel.SendtoDeck(tg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)==0 then return end
+-- [② 효과 처리: 특수 소환 후 선택적 덱 바운스]
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+    if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
     
-    -- 2. "그 후", 특수 소환 조건 충족 시 질문
-    if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 
-        and Duel.IsExistingMatchingCard(aux.NecroValleyFilter(s.spfilter2),tp,LOCATION_DECK|LOCATION_GRAVE,0,1,nil,e,tp)
-        and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
-        
-        Duel.BreakEffect()
-        Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-        local sg=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter2),tp,LOCATION_DECK|LOCATION_GRAVE,0,1,1,nil,e,tp)
-        if #sg>0 then
-            Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
+    local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_DECK|LOCATION_GRAVE,0,1,1,nil,e,tp)
+    -- 특수 소환이 성공적으로 이루어졌을 때
+    if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0 then
+        local tg=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.tdfilter),tp,LOCATION_GRAVE,0,nil)
+        -- 묘지에 되돌릴 함정이 있다면 질문
+        if #tg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+            Duel.BreakEffect()
+            Duel.SendtoDeck(tg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
         end
     end
 end
