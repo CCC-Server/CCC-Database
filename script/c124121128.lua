@@ -1,9 +1,10 @@
 -- 환홍마검 레바테인
 local s,id=GetID()
 function s.initial_effect(c)
-    -- ①: 카드 발동 (덱에서 세트)
+    -- ①: 카드 발동 (덱에서 2장 골라 1장 세트, 나머지 패로)
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
+    e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
     e1:SetType(EFFECT_TYPE_ACTIVATE)
     e1:SetCode(EVENT_FREE_CHAIN)
     e1:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
@@ -42,12 +43,15 @@ function s.initial_effect(c)
     c:RegisterEffect(e4)
 end
 
--- [발동 코스트 필터] 마법/함정 카드 제외
+-- "환홍" 카드군 코드 (0xfa8)
+s.set_phanred=0xfa8
+
+-- [발동 코스트 필터]
 function s.cfilter(c)
     return c:IsType(TYPE_SPELL|TYPE_TRAP) and c:IsAbleToRemoveAsCost()
 end
 
--- [① 발동 코스트] 맬리스 방식 적용
+-- [① 발동 코스트]
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
     local label_obj=e:GetLabelObject()
     if chk==0 then 
@@ -62,48 +66,79 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
     end
 end
 
--- [① 세트 대상 필터] "환홍마검 레바테인" 이외의 "환홍"(0xfa8) 함정 카드
-function s.setfilter(c)
-    return c:IsSetCard(0xfa8) and c:IsType(TYPE_TRAP) and not c:IsCode(id) and c:IsSSetable()
+-- [① 세트/서치 대상 필터] (킬러튠 참조: 세트 가능하거나 패에 넣을 수 있는 카드)
+function s.thsetfilter(c)
+    return c:IsSetCard(s.set_phanred) and c:IsType(TYPE_TRAP) and not c:IsCode(id)
+        and (c:IsSSetable() or c:IsAbleToHand())
 end
 
--- [① 발동 타겟: 덱에서만]
+-- [① 조합 검증] (고른 2장 중 1장이 세트 가능하고, 나머지 1장이 패에 들어갈 수 있는지)
+function s.validselection(c,sg)
+    return c:IsSSetable() and sg:IsExists(Card.IsAbleToHand,1,c)
+end
+function s.rescon(sg,e,tp,mg)
+    return sg:IsExists(s.validselection,1,nil,sg)
+end
+
+-- [① 발동 타겟]
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK,0,1,nil) end
+    local g=Duel.GetMatchingGroup(s.thsetfilter,tp,LOCATION_DECK,0,nil)
+    if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and #g>=2
+        and aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,0) end
+    Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
 
--- [① 발동 효과 처리: 덱에서만]
+-- [① 발동 효과 처리] (킬러튠 리믹스의 그룹 빼기 로직 적용)
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
+    if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
+    
+    local g=Duel.GetMatchingGroup(s.thsetfilter,tp,LOCATION_DECK,0,nil)
+    if #g<2 then return end
+    
+    -- 덱에서 조건에 맞는 2장을 먼저 고름
+    local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_OPERATECARD)
+    if #sg<2 then return end
+    
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-    local sc=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
-    if sc and Duel.SSet(tp,sc)>0 then
+    -- 고른 2장 중에서 세트할 1장을 선택
+    local setc=sg:FilterSelect(tp,s.validselection,1,1,nil,sg):GetFirst()
+    -- 원래 2장 그룹(sg)에서 세트할 카드(setc)를 빼서 남은 1장을 패에 넣을 카드(thc)로 지정
+    local thc=(sg-setc):GetFirst()
+    
+    -- 세트를 실행하고 성공했다면
+    if setc and Duel.SSet(tp,setc)>0 then
+        -- 당일 발동 권한 부여
         local e1=Effect.CreateEffect(c)
-        e1:SetDescription(aux.Stringid(id,4)) -- "세트한 턴에도 발동할 수 있다" 스트링
+        e1:SetDescription(aux.Stringid(id,4))
         e1:SetType(EFFECT_TYPE_SINGLE)
         e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
         e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
         e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-        sc:RegisterEffect(e1)
+        setc:RegisterEffect(e1)
+        
+        -- 남은 카드를 패로 넣음
+        if thc then
+            Duel.SendtoHand(thc,nil,REASON_EFFECT)
+            Duel.ConfirmCards(1-tp,thc)
+        end
     end
 end
 
--- [② 조건] 효과로 묘지행
+-- [② 조건]
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
     return e:GetHandler():IsReason(REASON_EFFECT)
 end
 
--- [② 조건] 제외됨
 function s.spcon_rm(e,tp,eg,ep,ev,re,r,rp)
     return true
 end
 
--- [② 특수 소환 필터] "환홍"(0xfa8) 몬스터
+-- [② 특수 소환 타겟]
 function s.spfilter(c,e,tp)
-    return c:IsSetCard(0xfa8) and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+    return c:IsSetCard(s.set_phanred) and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 
--- [② 발동 타겟: 특수 소환 우선]
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
         and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,1,nil,e,tp) end
@@ -111,21 +146,19 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
     Duel.SetPossibleOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE)
 end
 
--- [② 덱 바운스 필터] 묘지의 함정 카드 전부
+-- [② 덱 바운스 필터]
 function s.tdfilter(c)
     return c:IsType(TYPE_TRAP) and c:IsAbleToDeck()
 end
 
--- [② 효과 처리: 특수 소환 후 선택적 덱 바운스]
+-- [② 효과 처리: 특수 소환 후 선택적 바운스]
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
     
     local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_DECK|LOCATION_GRAVE,0,1,1,nil,e,tp)
-    -- 특수 소환이 성공적으로 이루어졌을 때
     if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0 then
         local tg=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.tdfilter),tp,LOCATION_GRAVE,0,nil)
-        -- 묘지에 되돌릴 함정이 있다면 질문
         if #tg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
             Duel.BreakEffect()
             Duel.SendtoDeck(tg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
