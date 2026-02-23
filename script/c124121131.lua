@@ -1,16 +1,16 @@
 -- 환홍허신 포닉스
 local s,id=GetID()
 function s.initial_effect(c)
-    -- ①: 덱 탑 1장 덤핑 후 필드의 마법/함정 카드 2장까지 파괴
+    -- ①: 덱 탑 1장 덤핑 후 필드/묘지의 마법/함정 카드 2장까지 제외
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
-    e1:SetCategory(CATEGORY_DECKDES+CATEGORY_DESTROY)
+    e1:SetCategory(CATEGORY_DECKDES+CATEGORY_REMOVE) -- 카테고리를 파괴(DESTROY)에서 제외(REMOVE)로 변경
     e1:SetType(EFFECT_TYPE_ACTIVATE)
     e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
     e1:SetCode(EVENT_FREE_CHAIN)
     e1:SetHintTiming(0,TIMING_END_PHASE|TIMING_EQUIP)
-    e1:SetTarget(s.destg)
-    e1:SetOperation(s.desop)
+    e1:SetTarget(s.rmtg)
+    e1:SetOperation(s.rmop)
     c:RegisterEffect(e1)
 
     -- ②: 제외되거나 효과로 묘지에 보내졌을 경우
@@ -33,30 +33,32 @@ end
 -- "환홍" 카드군 코드 (0xfa8)
 s.set_phanred=0xfa8
 
--- [① 파괴 대상 필터] (IsSpellTrap 사용)
-function s.desfilter(c)
-    return c:IsSpellTrap()
+-- [① 제외 대상 필터] (IsSpellTrap 사용 + 제외 가능 여부 확인)
+function s.rmfilter(c)
+    return c:IsSpellTrap() and c:IsAbleToRemove()
 end
 
--- [① 파괴 타겟] (자신은 파괴 대상에서 제외)
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+-- [① 제외 타겟] (자신은 타겟에서 제외, 서로의 필드/묘지 스캔)
+function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     local c=e:GetHandler()
-    if chkc then return chkc:IsOnField() and s.desfilter(chkc) and chkc~=c end
+    if chkc then return chkc:IsLocation(LOCATION_ONFIELD|LOCATION_GRAVE) and s.rmfilter(chkc) and chkc~=c end
+    -- 발동 조건: 덱 탑 1장을 버릴 수 있고, 서로의 필드/묘지에 제외 가능한 다른 마/함이 있어야 함
     if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,1)
-        and Duel.IsExistingTarget(s.desfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,c) end
+        and Duel.IsExistingTarget(s.rmfilter,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,1,c) end
     
-    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-    local g=Duel.SelectTarget(tp,s.desfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,2,c)
+    Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+    local g=Duel.SelectTarget(tp,s.rmfilter,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,1,2,c)
     Duel.SetOperationInfo(0,CATEGORY_DECKDES,nil,0,tp,1)
-    Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
+    Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,#g,0,0)
 end
 
--- [① 파괴 효과 처리]
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
+-- [① 제외 효과 처리]
+function s.rmop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.DiscardDeck(tp,1,REASON_EFFECT)>0 then
         local tg=Duel.GetTargetCards(e)
         if #tg>0 then
-            Duel.Destroy(tg,REASON_EFFECT)
+            -- 파괴 대신 제외 처리
+            Duel.Remove(tg,POS_FACEUP,REASON_EFFECT)
         end
     end
 end
