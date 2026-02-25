@@ -13,7 +13,7 @@ function s.initial_effect(c)
     e1:SetOperation(s.desop)
     c:RegisterEffect(e1)
 
-    -- ②: 제외되거나 효과로 묘지에 보내졌을 경우
+    -- ②: 제외되거나 "환홍" 카드의 효과로 묘지에 보내졌을 경우
     local e2=Effect.CreateEffect(c)
     e2:SetDescription(aux.Stringid(id,1))
     e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
@@ -36,21 +36,17 @@ s.set_phanred=0xfa8
 -- [① 파괴 타겟] 몬스터 정확히 1장 지정
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
     if chkc then return chkc:IsLocation(LOCATION_MZONE) end
-    -- 덤핑 조건을 1장에서 3장으로 변경
     if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,3)
         and Duel.IsExistingTarget(nil,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil) end
     
     Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-    -- 대상을 1장으로 고정
     local g=Duel.SelectTarget(tp,nil,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
-    -- 덤핑 예정 매수를 3장으로 등록
     Duel.SetOperationInfo(0,CATEGORY_DECKDES,nil,0,tp,3)
     Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 
 -- [① 파괴 효과 처리]
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
-    -- 실제 덤핑 매수를 3장으로 변경
     if Duel.DiscardDeck(tp,3,REASON_EFFECT)>0 then
         local tg=Duel.GetTargetCards(e)
         if #tg>0 then
@@ -59,11 +55,14 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- [② 조건]
+-- [② 조건] "환홍" 카드의 효과로 묘지로 보내졌을 경우로 제한
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():IsReason(REASON_EFFECT)
+    local c=e:GetHandler()
+    -- 효과로 묘지에 보내졌으며, 그 효과를 발동한 카드가 "환홍" 테마인지 체크
+    return c:IsReason(REASON_EFFECT) and re and re:GetHandler():IsSetCard(s.set_phanred)
 end
 
+-- [② 조건] 제외되었을 경우는 기존과 동일하게 무조건 발동 가능
 function s.setcon_rm(e,tp,eg,ep,ev,re,r,rp)
     return true
 end
@@ -78,7 +77,7 @@ function s.setfilter(c)
     return c:IsSetCard(s.set_phanred) and c:IsType(TYPE_TRAP) and c:IsSSetable()
 end
 
--- [② 덱 넘기기 효과 처리 (욕망과 겸허의 항아리 셔플 방식)]
+-- [② 덱 넘기기 효과 처리]
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
     if Duel.GetFieldGroupCount(tp,LOCATION_DECK,0)<6 then return end
     

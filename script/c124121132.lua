@@ -76,9 +76,11 @@ function s.tdop(e,tp,eg,ep,ev,re,r,rp)
     end
 end
 
--- [② 조건]
+-- [② 조건] "환홍" 카드의 효과로 묘지로 보내졌을 경우로 제한
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-    return e:GetHandler():IsReason(REASON_EFFECT)
+    local c=e:GetHandler()
+    -- 효과로 묘지에 보내졌으며, 그 효과를 발동한 카드가 "환홍" 테마인지 체크
+    return c:IsReason(REASON_EFFECT) and re and re:GetHandler():IsSetCard(s.set_phanred)
 end
 
 function s.setcon_rm(e,tp,eg,ep,ev,re,r,rp)
