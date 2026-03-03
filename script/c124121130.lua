@@ -1,39 +1,55 @@
 -- 환홍허신 카누스
 local s,id=GetID()
 function s.initial_effect(c)
-	-- ①: 덱 탑 3장 덤핑 후 필드의 몬스터 1장 파괴
+	-- ①: 몬스터의 효과가 발동했을 때
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_DECKDES+CATEGORY_DESTROY)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetHintTiming(0,TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
+	e1:SetCode(EVENT_CHAINING)
+	e1:SetCondition(s.chcon)
 	e1:SetTarget(s.destg)
 	e1:SetOperation(s.desop)
 	c:RegisterEffect(e1)
 
-	-- ②: 제외되거나 "자신의 효과"로 묘지에 보내졌을 경우
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCode(EVENT_TO_GRAVE)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.setcon)
-	e2:SetTarget(s.settg)
-	e2:SetOperation(s.setop)
+	-- ①: 몬스터의 공격 선언시에
+	local e2=e1:Clone()
+	e2:SetCode(EVENT_ATTACK_ANNOUNCE)
+	e2:SetCondition(s.atkcon)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EVENT_REMOVE)
-	e3:SetCondition(s.setcon_rm)
+
+	-- ②: 제외되거나 "자신의 효과"로 묘지에 보내졌을 경우
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetCode(EVENT_TO_GRAVE)
+	e3:SetCountLimit(1,{id,1})
+	e3:SetCondition(s.setcon)
+	e3:SetTarget(s.settg)
+	e3:SetOperation(s.setop)
 	c:RegisterEffect(e3)
+	local e4=e3:Clone()
+	e4:SetCode(EVENT_REMOVE)
+	e4:SetCondition(s.setcon_rm)
+	c:RegisterEffect(e4)
 end
 
 -- "환홍" 카드군 코드 (0xfa8)
 s.set_phanred=0xfa8
 
--- [① 파괴 타겟] 몬스터 정확히 1장 지정
+-- [① 조건 1: 아무 몬스터의 효과가 발동했을 때]
+function s.chcon(e,tp,eg,ep,ev,re,r,rp)
+	return re:IsActiveType(TYPE_MONSTER)
+end
+
+-- [① 조건 2: 자신 또는 상대 몬스터의 공격 선언 시]
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+	return true
+end
+
+-- [① 타겟] 필드의 몬스터 1장 지정
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_MZONE) end
 	if chk==0 then return Duel.IsPlayerCanDiscardDeck(tp,3)
@@ -45,7 +61,7 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
 end
 
--- [① 파괴 효과 처리]
+-- [① 효과 처리] 덱 3장 덤핑 후 대상 몬스터 파괴
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.DiscardDeck(tp,3,REASON_EFFECT)>0 then
 		local tg=Duel.GetTargetCards(e)
@@ -86,7 +102,6 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.DisableShuffleCheck()
 		local tg=g:Filter(s.setfilter,nil)
 		
-		-- 그 중에 "환홍" 함정 카드가 있다면 세트
 		if #tg>0 then
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
 			local tc=tg:Select(tp,1,1,nil):GetFirst()
@@ -102,7 +117,6 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 		
-		-- 남은 카드는 덱으로 되돌린다 (그대로 덱을 셔플)
 		Duel.ShuffleDeck(tp)
 	end
 end
