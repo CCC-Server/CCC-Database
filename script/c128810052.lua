@@ -1,74 +1,116 @@
---올마이티 셀레스티얼 타이탄-이터니티 미라클
 local s,id=GetID()
+
 function s.initial_effect(c)
 	c:EnableReviveLimit()
-	Synchro.AddProcedure(c,nil,3,3,Synchro.NonTunerEx(s.matfilter),1,1)
+	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(s.tmatfilter),1,1,Synchro.NonTunerEx(s.ntmatfilter),2,99)
 	c:AddMustBeSynchroSummoned()
-	Pendulum.AddProcedure(c,false)
-	--Cannot be destroyed by effects
+	Pendulum.AddProcedure(c)
+	-- ATK/DEF update
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,2))
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	e1:SetValue(1)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetValue(s.adval)
 	c:RegisterEffect(e1)
 	local e2=e1:Clone()
-	e2:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
-	e2:SetValue(1)
+	e2:SetCode(EFFECT_UPDATE_DEFENSE)
 	c:RegisterEffect(e2)
-	--Change a monster effect activated by the opponent
+	-- Unaffected by other activated effects
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
-	e3:SetType(EFFECT_TYPE_QUICK_O)
-	e3:SetCode(EVENT_CHAINING)
+	e3:SetType(EFFECT_TYPE_SINGLE)
+	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e3:SetRange(LOCATION_MZONE)
-	e3:SetCountLimit(1,id)
-	e3:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==1-tp and re:IsMonsterEffect() end)
-	e3:SetCost(s.cost)
-	e3:SetCondition(s.chcon)
-	e3:SetTarget(s.chngtg)
-	e3:SetOperation(s.chngop)
+	e3:SetCode(EFFECT_IMMUNE_EFFECT)
+	e3:SetValue(s.efilter)
 	c:RegisterEffect(e3)
+	-- Change activated effect
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,0))
+	e4:SetCategory(CATEGORY_REMOVE)
+	e4:SetType(EFFECT_TYPE_QUICK_O)
+	e4:SetCode(EVENT_CHAINING)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetLabel(0)
+	e4:SetCondition(s.chcon)
+	e4:SetTarget(s.chtg)
+	e4:SetOperation(s.chop)
+	c:RegisterEffect(e4)
+	-- Store material count
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e5:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e5:SetLabelObject(e4)
+	e5:SetOperation(s.regop)
+	c:RegisterEffect(e5)
 end
+
 s.listed_series={0xc02}
-s.synchro_nt_required=1
-function s.matfilter(c,val,scard,sumtype,tp)
-	return c:IsRace(RACE_FAIRY,scard,sumtype,tp) and c:IsType(TYPE_SYNCHRO,scard,sumtype,tp)
+s.listed_names={id}
+s.synchro_tuner_required=1
+s.synchro_nt_required=2
+
+function s.tmatfilter(c,scard,sumtype,tp)
+	return c:IsAttribute(ATTRIBUTE_LIGHT,scard,sumtype,tp) and c:IsType(TYPE_SYNCHRO,scard,sumtype,tp)
 end
 
-function s.costfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0xc02) and c:IsType(TYPE_PENDULUM)
+function s.ntmatfilter(c,scard,sumtype,tp)
+	return c:IsAttribute(ATTRIBUTE_LIGHT,scard,sumtype,tp) and c:IsType(TYPE_SYNCHRO,scard,sumtype,tp)
 end
 
-function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.adfilter(c)
+	return c:IsAttribute(ATTRIBUTE_LIGHT) and (not c:IsLocation(LOCATION_MZONE|LOCATION_EXTRA) or c:IsFaceup())
+end
+
+function s.adval(e,c)
+	return Duel.GetMatchingGroupCount(s.adfilter,c:GetControler(),LOCATION_EXTRA|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)*200
+end
+
+function s.efilter(e,te)
+	return te:IsActivated() and te:GetHandler()~=e:GetHandler()
+end
+
+function s.regop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(s.costfilter,tp,LOCATION_EXTRA,0,nil)
-	if chk==0 then return Duel.GetCustomActivityCount(id,tp,ACTIVITY_SPSUMMON)==0 and #g>0 and c:IsAbleToRemoveAsCost() end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,1,aux.TRUE,1,tp,HINTMSG_REMOVE)
-	Duel.Remove(sg,POS_FACEUP,REASON_COST)
+	if not c:IsSummonType(SUMMON_TYPE_SYNCHRO) then return end
+	local mg=c:GetMaterial()
+	if not mg then return end
+	local ct=mg:FilterCount(Card.IsType,nil,TYPE_SYNCHRO)
+	e:GetLabelObject():SetLabel(ct)
 end
-function s.fairyfilter(c)
-	return c:IsRace(RACE_FAIRY) and c:IsMonster() and (c:IsFaceup() or not c:IsOnField())
+
+function s.rmfilter(c)
+	return c:IsAbleToRemove() and (not c:IsLocation(LOCATION_EXTRA) or c:IsFaceup())
 end
+
 function s.chcon(e,tp,eg,ep,ev,re,r,rp)
-	local rc=re:GetHandler()
-	return rp==1-tp and (re:IsMonsterEffect() or ((rc:IsSpell() or rc:IsTrap()) and re:IsHasType(EFFECT_TYPE_ACTIVATE)))
+	local c=e:GetHandler()
+	local ct=e:GetLabel()
+	return rp==1-tp and re:GetHandler()~=c and ct~=nil and c:GetFlagEffect(id+100)<ct
+		and (re:IsActiveType(TYPE_MONSTER)
+			or (re:IsActiveType(TYPE_SPELL) and re:GetHandler():IsNormalSpell())
+			or (re:IsActiveType(TYPE_TRAP) and re:GetHandler():IsNormalTrap()))
 end
-function s.chngtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.fairyfilter,tp,LOCATION_GRAVE,0,1,e:GetHandler()) end
+
+function s.chtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		return Duel.IsExistingMatchingCard(s.rmfilter,tp,LOCATION_HAND|LOCATION_GRAVE|LOCATION_EXTRA,0,4,nil)
+	end
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,4,tp,LOCATION_HAND|LOCATION_GRAVE|LOCATION_EXTRA)
 end
-function s.chngop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Group.CreateGroup()
-	Duel.ChangeTargetCard(ev,g)
-	Duel.ChangeChainOperation(ev,s.repop)
+
+function s.repop(p)
+	Duel.Hint(HINT_SELECTMSG,p,HINTMSG_REMOVE)
+	local g=Duel.SelectMatchingCard(p,s.rmfilter,p,LOCATION_HAND|LOCATION_GRAVE|LOCATION_EXTRA,0,4,4,nil)
+	if not g or #g<4 then return end
+	Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
 end
-function s.repop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_SPSUMMON)
-	local sg=Duel.SelectMatchingCard(1-tp,aux.NecroValleyFilter(s.fairyfilter),tp,0,LOCATION_GRAVE,1,1,nil,e,1-tp)
-		local tc=sg:GetFirst() 
-		if tc then
-			Duel.SpecialSummon(tc,0,1-tp,1-tp,false,false,POS_FACEUP)
-		end
+
+function s.chop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	c:RegisterFlagEffect(id+100,RESET_EVENT|RESETS_STANDARD|RESET_PHASE|PHASE_END,0,1)
+	local p=tp
+	Duel.ChangeChainOperation(ev,function()
+		s.repop(p)
+	end)
 end
