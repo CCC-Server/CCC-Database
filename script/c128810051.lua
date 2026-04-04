@@ -2,8 +2,7 @@
 local s,id=GetID()
 function s.initial_effect(c)
 	-- 싱크로 소환 (비튜너가 싱크로 몬스터)
-	Synchro.AddProcedure(c,
-		aux.FilterBoolFunction(Card.IsAttribute,ATTRIBUTE_LIGHT),1,1,
+	Synchro.AddProcedure(c,nil,1,1,
 		s.synfilter,1,99)
 	c:EnableReviveLimit()
 	Pendulum.AddProcedure(c)
