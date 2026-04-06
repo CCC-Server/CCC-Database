@@ -47,7 +47,7 @@ end
 function s.discon(e,tp,eg,ep,ev,re,r,rp)
 	return rp==1-tp and not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED)
 		and (re:IsActiveType(TYPE_MONSTER) or re:IsActiveType(TYPE_SPELL))
-		and Duel.NegateActivation(ev)
+		and Duel.IsChainNegatable(ev)
 end
 
 -- ① 비용: 히로익만 소재일 경우 1개, 아니면 2개
