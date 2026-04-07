@@ -1,9 +1,9 @@
 --셀레스티얼 타이탄-원 어보브 올
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 싱크로 소환 (비튜너가 싱크로 몬스터)
+	-- 싱크로 소환
 	Synchro.AddProcedure(c,nil,1,1,
-		s.synfilter,1,99)
+		Synchro.NonTunerEx(Card.IsAttribute,ATTRIBUTE_LIGHT),1,99)
 	c:EnableReviveLimit()
 	Pendulum.AddProcedure(c)
 	-- E1: 퀵 제외
@@ -23,15 +23,10 @@ end
 s.listed_series={0xc02}
 s.listed_names={id}
 
--- 비튜너 조건: 빛 속성 + 싱크로 몬스터
-function s.synfilter(c,scard,sumtype,tp)
-	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsType(TYPE_SYNCHRO)
-end
-
 -- 코스트: LP 1000
 function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.CheckLPCost(tp,1000) end
-	Duel.PayLP(tp,1000)
+	Duel.PayLPCost(tp,1000)
 end
 
 -- 대상: 상대 필드 카드 1장
