@@ -1,3 +1,5 @@
+여기에서 3번 효과를 "~발동한다." 에서 "발동할 수 있다."로 바꿔줘
+
 -- 길퍼 데몬 데스트루도
 local s,id=GetID()
 function s.initial_effect(c)
