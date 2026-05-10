@@ -25,7 +25,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.drop)
 	c:RegisterEffect(e1)
 
-	-- ②: 자신 / 상대 메인 페이즈에, 자신 필드 데몬 1장과 상대 필드 2장 파괴, 공격력 500 다운
+	-- ②: 자신 / 상대 메인 페이즈에, 자신 필드 앞면 표시 데몬 1장과 상대 필드 2장 파괴, 공격력 500 다운
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_DESTROY+CATEGORY_ATKCHANGE)
@@ -93,9 +93,9 @@ function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return ph==PHASE_MAIN1 or ph==PHASE_MAIN2
 end
 
--- [② 내 필드의 데몬 파괴 대상 필터]
+-- [② 내 필드의 앞면 표시 데몬 파괴 대상 필터]
 function s.desfilter1(c)
-	return c:IsSetCard(0x45)
+	return c:IsFaceup() and c:IsSetCard(0x45)
 end
 
 -- [② 타겟 지정] (다중 타겟팅)
@@ -105,7 +105,7 @@ function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		and Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_ONFIELD,2,nil) end
 	
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	-- 1. 내 필드의 "데몬" 카드 1장 선택
+	-- 1. 내 필드의 "앞면 표시 데몬" 카드 1장 선택
 	local g1=Duel.SelectTarget(tp,s.desfilter1,tp,LOCATION_ONFIELD,0,1,1,nil)
 	
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
