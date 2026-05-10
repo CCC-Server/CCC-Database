@@ -25,7 +25,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.drop)
 	c:RegisterEffect(e1)
 
-	-- ②: 자신 / 상대 메인 페이즈에, 자신 필드 앞면 표시 데몬 1장과 상대 필드 2장 파괴, 공격력 500 다운
+	-- ②: 자신 / 상대 메인 페이즈에, 상대 필드의 카드 2장 대상. 자신 패/필드의 앞면 표시 데몬 1장과 대상 파괴, 공격력 500 다운
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_DESTROY+CATEGORY_ATKCHANGE)
@@ -33,7 +33,6 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetRange(LOCATION_MZONE)
-	-- 각각 1턴에 2번 제약 (구버전 호환용 id+1)
 	e2:SetCountLimit(2,id+1)
 	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E+TIMING_MAIN_END)
 	e2:SetCondition(s.descon)
@@ -93,41 +92,49 @@ function s.descon(e,tp,eg,ep,ev,re,r,rp)
 	return ph==PHASE_MAIN1 or ph==PHASE_MAIN2
 end
 
--- [② 내 필드의 앞면 표시 데몬 파괴 대상 필터]
-function s.desfilter1(c)
-	return c:IsFaceup() and c:IsSetCard(0x45)
+-- [② 내 패/필드의 데몬 파괴 필터] (패에 있거나 필드 앞면 표시)
+function s.desfilter_my(c)
+	return c:IsSetCard(0x45) and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 end
 
--- [② 타겟 지정] (다중 타겟팅)
+-- [② 타겟 지정] (상대 필드 2장만 대상)
 function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return false end
-	if chk==0 then return Duel.IsExistingTarget(s.desfilter1,tp,LOCATION_ONFIELD,0,1,nil)
-		and Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_ONFIELD,2,nil) end
+	if chkc then return chkc:IsControler(1-tp) and chkc:IsOnField() end
+	if chk==0 then 
+		return Duel.IsExistingTarget(aux.TRUE,tp,0,LOCATION_ONFIELD,2,nil)
+		and Duel.IsExistingMatchingCard(s.desfilter_my,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil) 
+	end
 	
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	-- 1. 내 필드의 "앞면 표시 데몬" 카드 1장 선택
-	local g1=Duel.SelectTarget(tp,s.desfilter1,tp,LOCATION_ONFIELD,0,1,1,nil)
+	-- 상대 필드의 카드 2장 대상 지정
+	local g=Duel.SelectTarget(tp,aux.TRUE,tp,0,LOCATION_ONFIELD,2,2,nil)
 	
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	-- 2. 상대 필드의 카드 2장 선택
-	local g2=Duel.SelectTarget(tp,aux.TRUE,tp,0,LOCATION_ONFIELD,2,2,nil)
-	
-	g1:Merge(g2)
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g1,3,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,3,tp,LOCATION_HAND+LOCATION_ONFIELD)
 end
 
 -- [② 효과 처리]
 function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local tg=Duel.GetTargetCards(e)
-	if tg:GetCount()>0 and Duel.Destroy(tg,REASON_EFFECT)>0 then
-		local c=e:GetHandler()
-		if c:IsRelateToEffect(e) and c:IsFaceup() then
-			local e1=Effect.CreateEffect(c)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_UPDATE_ATTACK)
-			e1:SetValue(-500)
-			e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
-			c:RegisterEffect(e1)
+	
+	-- 효과 처리 시점에 내 패/필드의 "데몬" 카드 1장을 고름 (비대상)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
+	local my_g=Duel.SelectMatchingCard(tp,s.desfilter_my,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,1,nil)
+	
+	if my_g:GetCount()>0 then
+		-- 선택한 내 카드와 대상 지정된 상대 카드를 그룹으로 합침
+		tg:Merge(my_g)
+		
+		-- 동시 파괴 처리
+		if Duel.Destroy(tg,REASON_EFFECT)>0 then
+			local c=e:GetHandler()
+			if c:IsRelateToEffect(e) and c:IsFaceup() then
+				local e1=Effect.CreateEffect(c)
+				e1:SetType(EFFECT_TYPE_SINGLE)
+				e1:SetCode(EFFECT_UPDATE_ATTACK)
+				e1:SetValue(-500)
+				e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
+				c:RegisterEffect(e1)
+			end
 		end
 	end
 end
