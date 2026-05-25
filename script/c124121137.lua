@@ -1,8 +1,8 @@
 -- 제너럴 마스터 데몬
 local s,id=GetID()
 function s.initial_effect(c)
-    -- ①: 자신 / 상대 스탠바이 페이즈 또는 엔드 페이즈에 500 LP 지불하고 패에서 특수 소환. 
-    -- 그 후 데몬 마/함 또는 팬더모니엄 서치/세트. (특소된 카드는 레벨/공격력 2배, 엔드 페이즈 파괴)
+    -- ①: 자신 / 상대 스탠바이 페이즈 또는 엔드 페이즈에 1000 LP 지불하고 패에서 특수 소환. 
+    -- 그 후 데몬 마/함 또는 팬더모니엄 서치/세트. (특소된 카드는 엔드 페이즈 파괴)
     local e1=Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id,0))
     e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_SEARCH+CATEGORY_TOHAND+CATEGORY_SET)
@@ -34,10 +34,10 @@ end
 s.listed_names={94585852,id}
 s.listed_series={0x45}
 
--- [① 코스트]
+-- [① 코스트] 500 -> 1000 LP 변경
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-    if chk==0 then return Duel.CheckLPCost(tp,500) end
-    Duel.PayLPCost(tp,500)
+    if chk==0 then return Duel.CheckLPCost(tp,1000) end
+    Duel.PayLPCost(tp,1000)
 end
 
 -- [① 필터]
@@ -60,32 +60,16 @@ end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
     local c=e:GetHandler()
     if c:IsRelateToEffect(e) and Duel.SpecialSummonStep(c,0,tp,tp,false,false,POS_FACEUP) then
-        -- ★ 강화: 레벨 2배 (현재 레벨에 레벨만큼 더함)
+        -- 디메리트: 엔드 페이즈에 파괴 (레벨/공격력 변동 효과 삭제)
         local e1=Effect.CreateEffect(c)
-        e1:SetType(EFFECT_TYPE_SINGLE)
-        e1:SetCode(EFFECT_UPDATE_LEVEL)
-        e1:SetValue(c:GetLevel())
+        e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+        e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+        e1:SetCode(EVENT_PHASE+PHASE_END)
+        e1:SetCountLimit(1)
+        e1:SetRange(LOCATION_MZONE)
+        e1:SetOperation(s.desop)
         e1:SetReset(RESET_EVENT+RESETS_STANDARD)
         c:RegisterEffect(e1,true)
-        
-        -- ★ 강화: 공격력 2배 (현재 공격력에 공격력만큼 더함)
-        local e2=Effect.CreateEffect(c)
-        e2:SetType(EFFECT_TYPE_SINGLE)
-        e2:SetCode(EFFECT_UPDATE_ATTACK)
-        e2:SetValue(c:GetAttack())
-        e2:SetReset(RESET_EVENT+RESETS_STANDARD)
-        c:RegisterEffect(e2,true)
-        
-        -- 디메리트: 엔드 페이즈에 파괴
-        local e3=Effect.CreateEffect(c)
-        e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-        e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-        e3:SetCode(EVENT_PHASE+PHASE_END)
-        e3:SetCountLimit(1)
-        e3:SetRange(LOCATION_MZONE)
-        e3:SetOperation(s.desop)
-        e3:SetReset(RESET_EVENT+RESETS_STANDARD)
-        c:RegisterEffect(e3,true)
     end
     Duel.SpecialSummonComplete()
     
@@ -102,7 +86,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
     Duel.Destroy(e:GetHandler(),REASON_EFFECT)
 end
 
--- [② 샐비지] (잘 작동하던 원본 유지)
+-- [② 샐비지] (원본 유지)
 function s.thcon2(e,tp,eg,ep,ev,re,r,rp) return e:GetHandler():IsReason(REASON_EFFECT) end
 function s.gyfilter(c)
     return c:IsSetCard(0x45) and not c:IsCode(id) and c:IsAbleToHand()
