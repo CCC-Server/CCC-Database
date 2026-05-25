@@ -4,7 +4,7 @@ function s.initial_effect(c)
 	-- 특수 소환 몬스터 제약 (통상 소환 불가)
 	c:EnableReviveLimit()
 	
-	-- "데몬과의 거래(6850209)"의 효과로만 특수 소환할 수 있다
+	-- "데몬" 몬스터의 효과 또는 "데몬과의 거래(6850209)"의 효과로만 특수 소환할 수 있다
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
 	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
@@ -43,9 +43,12 @@ end
 s.listed_names={6850209, 85605684} -- 데몬과의 거래, 버서크 데드 드래곤
 s.listed_series={0x45} -- 데몬
 
--- [소환 조건 필터] "데몬과의 거래"인지 확인
+-- [소환 조건 필터] "데몬과의 거래" 또는 "데몬 몬스터"의 효과인지 확인
 function s.splimit(e,se,sp,st)
-	return se and se:GetHandler():IsCode(6850209)
+	if not se then return false end
+	local sc=se:GetHandler()
+	-- 1. 데몬과의 거래 카드이거나 / 2. 데몬 카드군이면서 몬스터 카드인 경우 소환 허용
+	return sc:IsCode(6850209) or (sc:IsSetCard(0x45) and sc:IsMonster())
 end
 
 -- [① 코스트 필터] 패에서 보여줄 이 카드 이외의 다른 "데몬" 카드
