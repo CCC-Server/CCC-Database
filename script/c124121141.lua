@@ -10,7 +10,7 @@ function s.initial_effect(c)
 	e1:SetOperation(s.activate)
 	c:RegisterEffect(e1)
 
-	-- ②: 제외되었을 경우 또는 자신의 효과로 묘지에 보내졌을 경우
+	-- ②: 제외되었을 경우 또는 자신의 효과로 묘지에 보내졌을 경우 (검증 완료 로직)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_HANDES)
@@ -38,7 +38,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 
--- [①번 효과 처리] 클리포트 다운 소환 + 버제스토마식 제외 구조 안착
+-- [①번 효과 처리] 클리포트 다운 소환 + 버제스토마 제외 구조 + 천옥의 왕 확장 내성 결합
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	local c=e:GetHandler()
@@ -51,7 +51,7 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 		if Duel.SpecialSummonStep(c,0,tp,tp,true,false,POS_FACEUP) then
 			c:AddMonsterAttributeComplete()
 			
-			-- [복구] 버제스토마식 리다이렉트 제외 효과 강제 주입
+			-- 1. [제외 구조] 버제스토마식 리다이렉트 제외 효과 주입
 			local e1=Effect.CreateEffect(c)
 			e1:SetDescription(3300) -- "필드에서 벗어났을 경우에 제외된다" 시스템 힌트
 			e1:SetType(EFFECT_TYPE_SINGLE)
@@ -60,10 +60,35 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			e1:SetReset(RESET_EVENT|RESETS_REDIRECT)
 			e1:SetValue(LOCATION_REMOVED)
 			c:RegisterEffect(e1,true)
+
+			-- 2. [천옥의 왕 기반 내성 구조 확장] 자신 필드의 뒷면 표시 카드 + 앞면 표시 "환홍" 몬스터 효과 파괴 내성 지속 효과
+			local e3=Effect.CreateEffect(c)
+			e3:SetType(EFFECT_TYPE_FIELD)
+			e3:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+			-- [천옥의 왕 필수 플래그] 이 플래그가 세트된 카드들을 강제로 사정거리에 묶어둡니다.
+			e3:SetProperty(EFFECT_FLAG_SET_AVAILABLE) 
+			e3:SetRange(LOCATION_MZONE) -- 살라무리아가 몬스터 존에 존재할 때 결계 활성화
+			-- [사정거리 확장] 마함 존에서 몬스터 존을 포함한 자신 필드 전체(LOCATION_ONFIELD)로 사정거리 확장!
+			e3:SetTargetRange(LOCATION_ONFIELD,0) 
+			-- 하단의 정밀 확장 필터 함수로 연결
+			e3:SetTarget(s.heavenlytg) 
+			e3:SetValue(1)
+			e3:SetReset(RESET_EVENT+RESETS_STANDARD)
+			c:RegisterEffect(e3,true)
 		end
 	end
 	-- 최종 완료 선언 매립
 	Duel.SpecialSummonComplete()
+end
+
+-- [①번 효과의 ● 지속 내성 정밀 확장 필터 함수]
+function s.heavenlytg(e,c)
+	-- 조건 1: 자신 필드의 뒷면 표시 카드전체 (몬스터 / 마법 / 함정 세트 상태) 보호
+	if c:IsFacedown() then return true end
+	-- 조건 2: 자신 필드의 앞면 표시이면서 + 몬스터이고 + "환홍" 카드군인 카드 보호 (자기 자신도 포함하여 지킴)
+	if c:IsFaceup() and c:IsMonster() and c:IsSetCard(s.set_phanred) then return true end
+	-- 두 조건에 모두 맞지 않으면 보호하지 않음
+	return false
 end
 
 -- ②번 효과 발동 조건 (자신의 효과로 묘지에 보내졌을 경우)
@@ -83,7 +108,7 @@ end
 
 -- ②번 효과 타겟 지정
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,tp,1)
 end
