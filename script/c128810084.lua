@@ -1,65 +1,78 @@
---코스모 핀드-융합형 핀드
+--코스모 핀드-중력의 바이스
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 첫 번째 효과: 이 카드가 파괴되었을 때 "코스모 핀드" 마법/함정 서치 (E1)
-	local e1=Effect.CreateEffect(c)
-	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e1:SetCode(EVENT_DESTROYED)
-	e1:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
-	e1:SetCountLimit(1,id)
-	e1:SetTarget(s.thtg)
-	e1:SetOperation(s.thop)
-	c:RegisterEffect(e1)
+	c:EnableReviveLimit()
 	
-	-- 두 번째 효과: 묘지에서 제외하고 공격력/수비력 0인 악마족 파괴 (E2)
+	-- 융합 소환 설정: 공격력과 수비력이 0인 악마족 ×2
+	Fusion.AddProcMixN(c,true,true,s.ffilter,2)
+	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
+
+	-- 이 카드는 효과로는 파괴되지 않는다 (E1)
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e1:SetValue(1)
+	c:RegisterEffect(e1)
+
+	-- 상대 필드의 앞면 표시 몬스터 제외 (E2)
 	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_DESTROY)
+	e2:SetCategory(CATEGORY_REMOVE)
 	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetCost(s.descost)
-	e2:SetTarget(s.destg)
-	e2:SetOperation(s.desop)
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCountLimit(1,id)
+	e2:SetTarget(s.rmtg)
+	e2:SetOperation(s.rmop)
 	c:RegisterEffect(e2)
 end
 
 s.listed_series={0xc04}
 
--- "코스모 핀드" 마법/함정 서치 (E1)
-function s.thfilter(c)
-	return c:IsSetCard(0xc04) and c:IsAbleToHand() and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP))
+-- 융합 소재 필터: 공격력과 수비력이 0인 악마족
+function s.ffilter(c)
+	return c:IsRace(RACE_FIEND) and c:IsAttack(0) and c:IsDefense(0)
 end
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+
+-- 🔹 컨택트 융합 관련 함수 🔹
+-- 융합 재료 필터 (공/수 0인 악마족 몬스터)
+function s.contactfil(tp)
+	return Duel.GetMatchingGroup(s.matfilter, tp, LOCATION_GRAVE, 0, nil)
 end
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.SendtoHand(g,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,g)
+
+function s.matfilter(c)
+	return c:IsRace(RACE_FIEND) and c:IsAttack(0) and c:IsDefense(0) and c:IsAbleToRemoveAsCost()
+end
+
+-- 융합 재료 제외 처리
+function s.contactop(g,tp)
+	Duel.Remove(g, POS_FACEUP, REASON_COST+REASON_MATERIAL+REASON_FUSION)
+end
+
+-- 필드의 몬스터를 융합 재료로 사용하지 않도록 제한
+function s.contactlim(e,c)
+	return c:IsLocation(LOCATION_GRAVE)
+end
+
+-- 융합 가능 조건 (묘지에 필요한 수의 재료가 있는지 확인)
+function s.contactcon(e,tp)
+	return Duel.IsExistingMatchingCard(s.matfilter, tp, LOCATION_GRAVE, 0, 2, nil)
+end
+
+-- 제외 효과 타겟 설정 (E2)
+function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_MZONE) and chkc:IsControler(1-tp) and chkc:IsFaceup() and chkc:IsAbleToRemove() end
+	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToRemove,tp,0,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectTarget(tp,Card.IsAbleToRemove,tp,0,LOCATION_MZONE,1,1,nil)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
+end
+
+-- 제외 효과 실행 (E2)
+function s.rmop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if tc and tc:IsRelateToEffect(e) then
+		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
 	end
 end
-
--- 묘지 제외 비용 (E2)
-function s.descost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():IsAbleToRemoveAsCost() end
-	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_COST)
-end
-
--- 공격력/수비력 0인 악마족 필터 (E2)
-function s.desfilter(c)
-	return c:IsRace(RACE_FIEND) and c:IsAttack(0) and c:IsDefense(0) and not c:IsCode(id)
-end
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,nil,1,tp,LOCATION_DECK)
-end
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.Destroy(g,REASON_EFFECT)
-	end
-end
-

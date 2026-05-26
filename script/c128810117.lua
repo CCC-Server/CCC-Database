@@ -1,71 +1,55 @@
---드래고니아-절규하는 흑룡 네이저
+--드래고니아-파괴하는 광룡 히스마
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Synchro Summon
-Synchro.AddProcedure(c, aux.FilterBoolFunction(Card.IsSetCard, 0xc05), 1, 1, Synchro.NonTuner(Card.IsSetCard, 0xc05), 1, 99)
+	--싱크로 소환 조건
+	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(s.matfilter),1,1,
+		aux.FilterBoolFunctionEx(s.matfilter),1,99)
 	c:EnableReviveLimit()
-	-- ①: 상대 몬스터 릴리스 (1턴 1번)
+	--① 효과로 파괴되지 않음
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_RELEASE)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e1:SetRange(LOCATION_MZONE)
-	e1:SetCountLimit(1,id)
-	e1:SetTarget(s.rltg)
-	e1:SetOperation(s.rlop)
+	e1:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
+	e1:SetValue(1)
 	c:RegisterEffect(e1)
-	-- ②: LP 1000 지불 후 상대 마/함 제외 (1턴 1번)
+
+	--② 상대 몬스터 전부에 1회씩 공격 가능
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_REMOVE)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetCost(s.rmcost)
-	e2:SetTarget(s.rmtg)
-	e2:SetOperation(s.rmop)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetCode(EFFECT_ATTACK_ALL)
+	e2:SetValue(1)
 	c:RegisterEffect(e2)
+
+	--③ 전투 시 공격력 200 상승 (누적)
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,0))
+	e3:SetCategory(CATEGORY_ATKCHANGE)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
+	e3:SetCode(EVENT_BATTLE_START)
+	e3:SetCondition(s.condition)
+	e3:SetOperation(s.operation)
+	c:RegisterEffect(e3)
 end
 
--- ①: 상대 필드 몬스터 릴리스
-function s.rlfilter(c,tp)
-	return c:IsReleasable() and c:IsControler(1-tp)
-end
-function s.rltg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_MZONE) and s.rlfilter(chkc,tp) end
-	if chk==0 then return Duel.IsExistingTarget(s.rlfilter,tp,0,LOCATION_MZONE,1,nil,tp) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RELEASE)
-	local g=Duel.SelectTarget(tp,s.rlfilter,tp,0,LOCATION_MZONE,1,1,nil,tp)
-	Duel.SetOperationInfo(0,CATEGORY_RELEASE,g,1,0,0)
-end
-function s.rlop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.Release(tc,REASON_EFFECT)
-	end
+function s.matfilter(c,val,scard,sumtype,tp)
+	return c:IsRace(RACE_DRAGON,scard,sumtype,tp) and c:IsType(TYPE_SYNCHRO,scard,sumtype,tp)
 end
 
--- ②: LP 1000 지불
-function s.rmcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.CheckLPCost(tp,1000) end
-	Duel.PayLPCost(tp,1000)
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+	return e:GetHandler():IsRelateToBattle()
 end
--- ②: 상대 마/함 제외
-function s.rmfilter(c)
-	return c:IsType(TYPE_SPELL+TYPE_TRAP) and c:IsAbleToRemove()
-end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_ONFIELD) and s.rmfilter(chkc) and chkc:IsControler(1-tp) end
-	if chk==0 then return Duel.IsExistingTarget(s.rmfilter,tp,0,LOCATION_ONFIELD,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectTarget(tp,s.rmfilter,tp,0,LOCATION_ONFIELD,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,0)
-end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
+
+--③ 공격력 영구 상승 처리
+function s.operation(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if c:IsRelateToBattle() and c:IsFaceup() then
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_UPDATE_ATTACK)
+		e1:SetValue(200)
+		-- ※ 영구 상승을 위해 Reset을 "리셋되지 않도록" 설정
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
+		c:RegisterEffect(e1)
 	end
 end

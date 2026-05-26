@@ -1,97 +1,64 @@
---헤블론-콰트로 마누스 Mk.2
+--헤블론-루크의 예언
 local s,id=GetID()
 function s.initial_effect(c)
-	--엑시즈 소환 절차: 레벨 9 몬스터 × 3
-	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsLevel,9),3)
-	c:EnableReviveLimit()
-
-	--랭크 업 엑시즈 소환 (랭크 8 위에 겹쳐 소환, 소재 1개 제거)
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_FIELD)
-	e0:SetCode(EFFECT_SPSUMMON_PROC)
-	e0:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e0:SetRange(LOCATION_EXTRA)
-	e0:SetCondition(s.rumcon)
-	e0:SetOperation(s.rumop)
-	c:RegisterEffect(e0)
-
-	--① 공격력 상승: 소재 수 × 500
+	--① 덱에서 "헤블론" 카드 1장을 패에 넣기
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_UPDATE_ATTACK)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(s.atkval)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCountLimit(1,id)
+	e1:SetTarget(s.thtg)
+	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
 
-	--② 상대 필드 카드 효과 발동 시: 소재 2개 제거 → 그 카드를 소재로 함
+	--② 묘지에서 제외하고 발동: 패/묘지에서 "헤블론" 몬스터 특수 소환
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_QUICK_O)
-	e2:SetCode(EVENT_CHAINING)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_GRAVE)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.ovcon)
-	e2:SetCost(s.ovcost)
-	e2:SetTarget(s.ovtg)
-	e2:SetOperation(s.ovop)
+	e2:SetCost(aux.bfgcost) --묘지에서 제외하는 코스트
+	e2:SetTarget(s.sptg)
+	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
 end
 
---랭크 업 소환 조건: 랭크 8 엑시즈 몬스터가 존재하고 소재 1개 제거 가능
-function s.rumfilter(c,tp)
-	return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsRank(8) and c:IsControler(tp)
-		and c:CheckRemoveOverlayCard(tp,1,REASON_COST)
+--① 덱에서 "헤블론" 카드 1장 패에 넣기
+function s.thfilter(c)
+	return c:IsSetCard(0xc06) and not c:IsCode(id) and c:IsAbleToHand()
 end
-function s.rumcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.IsExistingMatchingCard(s.rumfilter,tp,LOCATION_MZONE,0,1,nil,tp)
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
-function s.rumop(e,tp,eg,ep,ev,re,r,rp,c)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=Duel.SelectMatchingCard(tp,s.rumfilter,tp,LOCATION_MZONE,0,1,1,nil,tp)
-	local tc=g:GetFirst()
-	if tc then
-		--소재 1개 제거
-		tc:RemoveOverlayCard(tp,1,1,REASON_COST)
-		--그 위에 겹쳐 소환
-		local mg=tc:GetOverlayGroup()
-		if #mg>0 then
-			Duel.Overlay(c,mg)
-		end
-		c:SetMaterial(Group.FromCards(tc))
-		Duel.Overlay(c,Group.FromCards(tc))
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
 	end
 end
 
---① 공격력 상승
-function s.atkval(e,c)
-	return c:GetOverlayCount()*500
+--② 패/묘지에서 "헤블론" 몬스터 특수 소환
+function s.spfilter(c,e,tp)
+	return c:IsSetCard(0xc06) and c:IsType(TYPE_MONSTER)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
-
---② 조건: 상대가 필드의 카드 효과 발동했을 때
-function s.ovcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==1-tp and re:GetHandler():IsOnField()
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then 
+		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+			and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,nil,e,tp)
+	end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_GRAVE)
 end
---② 코스트: 소재 2개 제거
-function s.ovcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,2,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,2,2,REASON_COST)
-end
---② 대상: 상대 필드의 카드 1장
-function s.ovtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsAbleToOverlay,tp,0,LOCATION_ONFIELD,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	Duel.SelectTarget(tp,Card.IsAbleToOverlay,tp,0,LOCATION_ONFIELD,1,1,nil)
-end
---② 처리: 그 카드를 소재로 함
-function s.ovop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local tc=Duel.GetFirstTarget()
-	if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) then
-		Duel.Overlay(c,Group.FromCards(tc))
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_HAND+LOCATION_GRAVE,0,1,1,nil,e,tp)
+	if #g>0 then
+		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end

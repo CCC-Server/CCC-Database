@@ -1,71 +1,55 @@
---헤블론-레드 크라운
+--헤블론-어둠의 우상 아누비스
 local s,id=GetID()
 function s.initial_effect(c)
-	--엑시즈 소환 절차
-	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsAttribute,ATTRIBUTE_LIGHT+ATTRIBUTE_DARK),4,2)
+	--엑시즈 소환 절차: 어둠 속성 레벨 8 몬스터 × 2
+	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsAttribute,ATTRIBUTE_DARK),8,2)
 	c:EnableReviveLimit()
 
-	--① 엑시즈 소환 성공시: 덱에서 "헤블론" 몬스터 1장을 소재로 한다
+	--① 공격력 상승: 소재 수 × 500
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e1:SetProperty(EFFECT_FLAG_DELAY)
-	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.matcon)
-	e1:SetTarget(s.mattg)
-	e1:SetOperation(s.matop)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetValue(s.atkval)
 	c:RegisterEffect(e1)
 
-	--② 소재가 제거되었을 경우: 묘지에서 "헤블론" 몬스터 특수 소환
+	--② 자신 필드의 다른 어둠 속성 엑시즈 몬스터에게 소재 이전
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetCode(EVENT_DETACH_MATERIAL)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetTarget(s.sptg)
-	e2:SetOperation(s.spop)
+	e2:SetTarget(s.mattg)
+	e2:SetOperation(s.matop)
 	c:RegisterEffect(e2)
 end
 
---① 조건: 이 카드가 엑시즈 소환되었을 경우
-function s.matcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsSummonType(SUMMON_TYPE_XYZ)
+--① ATK 상승
+function s.atkval(e,c)
+	return c:GetOverlayCount()*500
 end
+
+--② 대상: 자신 필드의 다른 어둠 속성 엑시즈 몬스터
 function s.matfilter(c)
-	return c:IsSetCard(0xc06) and c:IsType(TYPE_MONSTER)
+	return c:IsFaceup() and c:IsType(TYPE_XYZ) and c:IsAttribute(ATTRIBUTE_DARK)
 end
-function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.matfilter,tp,LOCATION_DECK,0,1,nil) end
+function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsControler(tp) and s.matfilter(chkc) and chkc~=e:GetHandler() end
+	if chk==0 then return Duel.IsExistingTarget(s.matfilter,tp,LOCATION_MZONE,0,1,e:GetHandler()) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	Duel.SelectTarget(tp,s.matfilter,tp,LOCATION_MZONE,0,1,1,e:GetHandler())
 end
 function s.matop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
+	local tc=Duel.GetFirstTarget()
 	if not c:IsRelateToEffect(e) or c:IsImmuneToEffect(e) then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
-	local g=Duel.SelectMatchingCard(tp,s.matfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.Overlay(c,g)
-	end
-end
-
---② 묘지에서 "헤블론" 몬스터 특수 소환
-function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xc06) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then 
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_GRAVE)
-end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
-	if #g>0 then
-		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+	if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
+		local g=c:GetOverlayGroup()
+		if #g>0 then
+			Duel.Overlay(tc,g)
+		end
+		Duel.Overlay(tc,Group.FromCards(c))
 	end
 end

@@ -1,89 +1,52 @@
---드래고니아-에네기
+--드래고니아-전격의 스테이츠
 local s,id=GetID()
 function s.initial_effect(c)
-	-- Special Summon this card from your hand or GY
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	-- Synchro Summon
+Synchro.AddProcedure(c, aux.FilterBoolFunction(Card.IsSetCard, 0xc05), 1, 1, Synchro.NonTuner(Card.IsSetCard, 0xc05), 1, 99)
+    c:EnableReviveLimit()
+	-- ①: 사용하지 않은 메인 몬스터 존 지정 (1턴에 2번까지)
+	local e1 = Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id, 0))
 	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_HAND|LOCATION_GRAVE) -- '+'로 수정
-	e1:SetCountLimit(1,id)
-	e1:SetCost(s.spcost)
-	e1:SetCondition(s.spcon)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetCountLimit(2, id)
+	e1:SetOperation(s.zop)
 	c:RegisterEffect(e1)
 
-	-- Effect 2: When this card is Special Summoned, revive 1 "0xc05" monster from your GY
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1)) -- strings.conf에 설명 추가 권장
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
-	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetTarget(s.sptg2)
-	e2:SetOperation(s.spop2)
+	-- ②: 지정한 존 수 × 200만큼 공격력 상승
+	local e2 = Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCode(EFFECT_UPDATE_ATTACK)
+	e2:SetValue(s.atkval)
 	c:RegisterEffect(e2)
 end
 
-s.listed_series={0xc05}
+-- ① 효과 처리: 메인 몬스터 존 1곳 지정 → 해당 존 비사용  
+function s.zop(e, tp, eg, ep, ev, re, rp)
+	local c = e:GetHandler()
+	if not c:IsRelateToEffect(e) then return end
 
--- 조건: 자신 필드에 드래고니아 몬스터가 있어야 함
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsSetCard,0xc05),tp,LOCATION_MZONE,0,1,nil)
-end
+	-- 아직 사용되지 않은 메인 몬스터 존 중에서 1곳 선택
+	local zone = Duel.SelectDisableField(tp, 1, LOCATION_MZONE, 0, 0)
 
--- 코스트: 그 턴 엑스트라에서 드래곤 싱크로 이외 특소 불가
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	local e1=Effect.CreateEffect(e:GetHandler())
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH+EFFECT_FLAG_CLIENT_HINT)
-	e1:SetDescription(aux.Stringid(id,2)) -- strings.conf에 설명 추가 권장
-	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e1:SetTargetRange(1,0)
-	e1:SetTarget(s.splimit)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-end
-function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return c:IsLocation(LOCATION_EXTRA) and (not c:IsType(TYPE_SYNCHRO) or not c:IsRace(RACE_DRAGON))
-end
+	-- 선택된 존을 비사용 처리
+	local dis = Effect.CreateEffect(c)
+	dis:SetType(EFFECT_TYPE_FIELD)
+	dis:SetCode(EFFECT_DISABLE_FIELD)
+	dis:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	dis:SetTargetRange(1, 0)
+	dis:SetValue(zone)
+	-- 이 카드가 필드에 존재하는 동안 유지
+	dis:SetReset(RESET_EVENT + RESETS_STANDARD)
+	c:RegisterEffect(dis)
 
--- 특수 소환 대상 지정
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
-end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-	end
+	-- 지정한 존의 개수를 플래그로 기록 (카드이동/턴 종료 시 초기화)
+	c:RegisterFlagEffect(id, RESET_EVENT + RESETS_STANDARD + RESET_PHASE + PHASE_END, 0, 1)
 end
 
--- 필터: 부활 가능한 0xc05 몬스터
-function s.spfilter2(c,e,tp)
-	return c:IsSetCard(0xc05) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-end
-
--- 타겟 지정
-function s.sptg2(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_GRAVE) and s.spfilter2(chkc,e,tp) end
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingTarget(s.spfilter2,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectTarget(tp,s.spfilter2,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
-end
-
--- 동작
-function s.spop2(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
-	end
+-- ② 효과 처리: 플래그 개수 × 200 공격력 상승
+function s.atkval(e, c)
+	return c:GetFlagEffect(id) * 200
 end

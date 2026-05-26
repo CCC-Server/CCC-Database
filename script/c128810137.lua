@@ -1,40 +1,38 @@
---헤블론-빛의 칼바리
+--헤블론-어둠의 골고타
 local s,id=GetID()
 function s.initial_effect(c)
-	--① 패에서 특수 소환
+	--① 패/묘지에서 특수 소환
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_HAND)
+	e1:SetRange(LOCATION_HAND+LOCATION_GRAVE)
 	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.spcon)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
 
-	--② 엑시즈 소재로 있을 때 효과 부여
+	--② 필드 이외에서 묘지로 보내졌을 경우: 덱에서 "헤블론" 마/함 1장 묘지로 보내기
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_NEGATE)
-	e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_QUICK_O) -- 유발 즉시 효과
-	e2:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
-	e2:SetCode(EVENT_CHAINING)
-	e2:SetRange(LOCATION_MZONE)
+	e2:SetCategory(CATEGORY_TOGRAVE)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.xcon)
-	e2:SetCost(s.xcost)
-	e2:SetTarget(s.xtg)
-	e2:SetOperation(s.xop)
+	e2:SetCondition(s.gycon)
+	e2:SetTarget(s.gytg)
+	e2:SetOperation(s.gyop)
 	c:RegisterEffect(e2)
 end
 
---① 조건: 엑스트라 덱의 "헤블론" 엑시즈 몬스터를 보여줄 경우
+--① 조건: 필드에 "헤블론" 몬스터가 존재할 경우
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(s.showfilter,tp,LOCATION_EXTRA,0,1,nil)
+	return Duel.IsExistingMatchingCard(s.heblonfilter,tp,LOCATION_MZONE,0,1,nil)
 end
-function s.showfilter(c)
-	return c:IsSetCard(0xc06) and c:IsType(TYPE_XYZ)
+function s.heblonfilter(c)
+	return c:IsSetCard(0xc06)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
@@ -48,29 +46,25 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	if c:IsRelateToEffect(e) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
-		local g=Duel.SelectMatchingCard(tp,s.showfilter,tp,LOCATION_EXTRA,0,1,1,nil)
-		if #g>0 then
-			Duel.ConfirmCards(1-tp,g)
-			Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-		end
+		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
 
---② 엑시즈 소재로 있을 때: 패의 몬스터 효과 발동을 무효
-function s.xcon(e,tp,eg,ep,ev,re,r,rp)
-	local trig_loc=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)
-	return ep==1-tp and re:IsMonsterEffect() and trig_loc==LOCATION_HAND
-		and Duel.IsChainNegatable(ev) and not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED)
+--② 조건: 필드 이외에서 묘지로 보내졌을 경우
+function s.gycon(e,tp,eg,ep,ev,re,r,rp)
+	return not e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
 end
-function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+function s.gyfilter(c)
+	return c:IsSetCard(0xc06) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsAbleToGrave()
 end
-function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
+function s.gytg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.gyfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
-function s.xop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.NegateActivation(ev)
+function s.gyop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.gyfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoGrave(g,REASON_EFFECT)
+	end
 end

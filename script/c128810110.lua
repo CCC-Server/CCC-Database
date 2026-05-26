@@ -1,45 +1,74 @@
---드래고니아-졸린 눈의 로턴드
+--드래고니아-요룡 님파
 local s,id=GetID()
 function s.initial_effect(c)
-	--① 묘지 제외하여 상대 몬스터를 뒷면 수비로
+	-- Synchro Summon
+Synchro.AddProcedure(c, aux.FilterBoolFunction(Card.IsSetCard, 0xc05), 1, 1, Synchro.NonTuner(Card.IsSetCard, 0xc05), 1, 99)
+    c:EnableReviveLimit()
+	--① 효과: 싱크로 소환 성공 시, 덱에서 드래고니아 몬스터 1장을 묘지로 보냄
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_POSITION)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_GRAVE)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET) -- 대상 지정 플래그
-	e1:SetCountLimit(1,id) -- 이 카드명의 효과는 1턴에 1번
-	e1:SetCondition(s.poscon)
-	e1:SetCost(aux.bfgcost) -- 묘지의 자신을 제외하는 표준 코스트
-	e1:SetTarget(s.postg)
-	e1:SetOperation(s.posop)
+	e1:SetCategory(CATEGORY_TOGRAVE)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
+	e1:SetCountLimit(1,id) -- ① 효과 1턴 1번
+	e1:SetCondition(s.tgcon)
+	e1:SetTarget(s.tgtg)
+	e1:SetOperation(s.tgop)
 	c:RegisterEffect(e1)
+
+	--② 효과: 묘지의 드래고니아 제외 → LP 1000 회복
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_REMOVE+CATEGORY_RECOVER)
+	e2:SetType(EFFECT_TYPE_IGNITION)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetCountLimit(1,{id,1}) -- ② 효과 1턴 1번
+	e2:SetCost(s.reccost)
+	e2:SetTarget(s.rectg)
+	e2:SetOperation(s.recop)
+	c:RegisterEffect(e2)
 end
 
-s.listed_series={0xc05} -- "드래고니아"
+s.listed_series={0xc05}
 
--- 발동 조건: 상대 턴 + 드래고니아 싱크로 몬스터가 필드에 존재
-function s.synfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0xc05) and c:IsType(TYPE_SYNCHRO)
+-----------------------------------------
+-- ① 덱에서 드래고니아 몬스터 1장을 묘지로 보냄
+-----------------------------------------
+function s.tgcon(e,tp,eg,ep,ev,re,r,rp)
+	return e:GetHandler():IsSummonType(SUMMON_TYPE_SYNCHRO)
 end
-function s.poscon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsTurnPlayer(1-tp) and Duel.IsExistingMatchingCard(s.synfilter,tp,LOCATION_MZONE,0,1,nil)
+function s.tgfilter(c)
+	return c:IsSetCard(0xc05) and c:IsMonster() and c:IsAbleToGrave()
 end
-
--- 대상 지정: 상대 필드 앞면 표시 몬스터 1장
-function s.postg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsControler(1-tp) and chkc:IsFaceup() and chkc:IsLocation(LOCATION_MZONE) end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsFaceup,tp,0,LOCATION_MZONE,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-	local g=Duel.SelectTarget(tp,Card.IsFaceup,tp,0,LOCATION_MZONE,1,1,nil)
-	Duel.SetOperationInfo(0,CATEGORY_POSITION,g,1,0,0)
+function s.tgtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
 end
-
--- 처리: 뒷면 수비 표시로 변경
-function s.posop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() then
-		Duel.ChangePosition(tc,POS_FACEDOWN_DEFENSE)
+function s.tgop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoGrave(g,REASON_EFFECT)
 	end
+end
+
+-----------------------------------------
+-- ② 묘지의 드래고니아 제외 → LP 1000 회복
+-----------------------------------------
+function s.cfilter(c)
+	return c:IsSetCard(0xc05) and c:IsAbleToRemoveAsCost()
+end
+function s.reccost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_GRAVE,0,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	Duel.Remove(g,POS_FACEUP,REASON_COST)
+end
+function s.rectg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_RECOVER,nil,0,tp,1000)
+end
+function s.recop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Recover(tp,1000,REASON_EFFECT)
 end

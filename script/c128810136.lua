@@ -1,74 +1,44 @@
---헤블론-고강화 아르고스
+--헤블론-악몽의 네르베
 local s,id=GetID()
 function s.initial_effect(c)
-	--① 패/묘지에서 특수 소환
+	--① 엑시즈 소재 2장으로 취급
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_HAND+LOCATION_GRAVE)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_DOUBLE_XYZ_MATERIAL)
+	e1:SetValue(1)
 	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.spcon)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
+	e1:SetOperation(function(e,c) return c.minxyzct and c.minxyzct>=3 and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK)) end)
 	c:RegisterEffect(e1)
 
-	--② 엑시즈 소재로 있을 때 효과 부여
+	--② 필드 이외에서 묘지로 보내졌을 경우: 덱에서 "헤블론" 마/함 1장 세트
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOGRAVE)
-	e2:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_IGNITION)
-	e2:SetRange(LOCATION_MZONE)
+	e2:SetCategory(CATEGORY_LEAVE_GRAVE+CATEGORY_SPECIAL_SUMMON)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.xcon)
-	e2:SetCost(s.xcost)
-	e2:SetTarget(s.xtg)
-	e2:SetOperation(s.xop)
+	e2:SetCondition(s.setcon)
+	e2:SetTarget(s.settg)
+	e2:SetOperation(s.setop)
 	c:RegisterEffect(e2)
 end
 
---① 조건: 필드에 엑시즈 몬스터가 존재할 경우
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsExistingMatchingCard(Card.IsType,tp,LOCATION_MZONE,0,1,nil,TYPE_XYZ)
+--② 조건: 필드 이외에서 묘지로 보내졌을 경우
+function s.setcon(e,tp,eg,ep,ev,re,r,rp)
+	return not e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
 end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then 
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+function s.setfilter(c)
+	return c:IsSetCard(0xc06) and (c:IsType(TYPE_SPELL) or c:IsType(TYPE_TRAP)) and c:IsSSetable()
+end
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+	local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SSet(tp,g)
+		Duel.ConfirmCards(1-tp,g)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
-end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	if c:IsRelateToEffect(e) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-	end
-end
-
---② 엑시즈 소재로 있을 때: 빛/어둠 속성 엑시즈 몬스터에 효과 부여
-function s.xcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	return c:IsType(TYPE_XYZ) and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
-end
-function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
-	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
-end
-function s.gyfilter(c)
-	return c:IsSetCard(0xc06) and c:IsType(TYPE_MONSTER) and not c:IsCode(id) and c:IsAbleToGrave()
-end
-function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then 
-		return Duel.IsExistingMatchingCard(s.gyfilter,tp,LOCATION_DECK+LOCATION_HAND,0,1,nil)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK+LOCATION_HAND)
-end
-function s.xop(e,tp,eg,ep,ev,re,r,rp)
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-		local g=Duel.SelectMatchingCard(tp,s.gyfilter,tp,LOCATION_DECK+LOCATION_HAND,0,1,1,nil)
-		if #g>0 then
-			Duel.SendtoGrave(g,REASON_EFFECT)
-		end
 end

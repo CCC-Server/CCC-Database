@@ -1,108 +1,83 @@
---제 9사도-건설자 루크
+--헤블론-루크의 권능
 local s,id=GetID()
 function s.initial_effect(c)
-	--엑시즈 소환 절차: 레벨 12 몬스터 × 2
-	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsLevel,12),2)
-	c:EnableReviveLimit()
-	--룰상 "헤블론" 카드로 취급
-	local e0=Effect.CreateEffect(c)
-	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetCode(EFFECT_ADD_SETCODE)
-	e0:SetValue(0xc06)
-	c:RegisterEffect(e0)
-
-	--① 공격력 상승: 소재 수 × 500
+	--① 발동 무효 + 파괴
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_UPDATE_ATTACK)
-	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e1:SetRange(LOCATION_MZONE)
-	e1:SetValue(s.atkval)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_NEGATE+CATEGORY_DESTROY)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_CHAINING)
+	e1:SetCountLimit(1,id) -- ①② 중 어느 쪽이든 1턴에 1번만
+	e1:SetCondition(s.negcon)
+	e1:SetCost(s.negcost)
+	e1:SetTarget(s.negtg)
+	e1:SetOperation(s.negop)
 	c:RegisterEffect(e1)
 
-	--② 효과 부여 (소재 수에 따라)
-	--●1개 이상: 전투/효과로 파괴되지 않음
+	--② 묘지에서 세트
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_INDESTRUCTABLE_BATTLE)
-	e2:SetCondition(s.indcon1)
-	e2:SetValue(1)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetRange(LOCATION_GRAVE)
+	e2:SetCountLimit(1,id) -- ①② 중 어느 쪽이든 1턴에 1번만
+	e2:SetCondition(s.setcon)
+	e2:SetTarget(s.settg)
+	e2:SetOperation(s.setop)
 	c:RegisterEffect(e2)
-	local e3=e2:Clone()
-	e3:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-	c:RegisterEffect(e3)
-
-	--●3개 이상: 속성을 어둠으로도 취급
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetCode(EFFECT_ADD_ATTRIBUTE)
-	e4:SetValue(ATTRIBUTE_DARK)
-	e4:SetCondition(s.indcon3)
-	c:RegisterEffect(e4)
-
-	--●5개 이상: 이 카드를 대상으로 하는 효과 이외에는 받지 않음
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_SINGLE)
-	e5:SetCode(EFFECT_IMMUNE_EFFECT)
-	e5:SetCondition(s.indcon5)
-	e5:SetValue(s.immval)
-	c:RegisterEffect(e5)
-
-	--●7개 이상: 대상/공격 선택 시 발동 → 상대 필드 전부 파괴 + LP 절반
-	local e6=Effect.CreateEffect(c)
-	e6:SetDescription(aux.Stringid(id,1))
-	e6:SetCategory(CATEGORY_DESTROY)
-	e6:SetType(EFFECT_TYPE_QUICK_O)
-	e6:SetCode(EVENT_BECOME_TARGET)
-	e6:SetRange(LOCATION_MZONE)
-	e6:SetCountLimit(1,{id,1})
-	e6:SetCondition(s.indcon7)
-	e6:SetTarget(s.destg)
-	e6:SetOperation(s.desop)
-	c:RegisterEffect(e6)
-	local e7=e6:Clone()
-	e7:SetCode(EVENT_BE_BATTLE_TARGET)
-	c:RegisterEffect(e7)
 end
 
---① ATK 상승
-function s.atkval(e,c)
-	return c:GetOverlayCount()*500
+--① 조건: 몬스터/마법/함정 발동 시
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.IsChainNegatable(ev)
 end
-
---② 조건 체크
-function s.indcon1(e)
-	return e:GetHandler():GetOverlayCount()>=1
+--① 코스트: 자신 필드의 "헤블론" 엑시즈 소재 1개 제거
+function s.cfilter(c,tp)
+	return c:IsFaceup() and c:IsSetCard(0xc06) and c:IsType(TYPE_XYZ) and c:CheckRemoveOverlayCard(tp,1,REASON_COST)
 end
-function s.indcon3(e)
-	return e:GetHandler():GetOverlayCount()>=3
-end
-function s.indcon5(e)
-	return e:GetHandler():GetOverlayCount()>=5
-end
-function s.indcon7(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():GetOverlayCount()>=7
-end
-
---② 5개 이상 면역 처리: 이 카드를 대상으로 하는 효과만 통과
-function s.immval(e,re)
-	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
-		and re:IsActiveType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP)
-		and not re:IsHasProperty(EFFECT_FLAG_CARD_TARGET)
-		or (re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) and not re:GetTarget():IsContains(e:GetHandler()))
-end
-
---② 7개 이상: 파괴 + LP 절반
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(aux.TRUE,tp,0,LOCATION_ONFIELD,1,nil) end
-	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_ONFIELD,nil)
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,#g,0,0)
-end
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetMatchingGroup(aux.TRUE,tp,0,LOCATION_ONFIELD,nil)
-	if #g>0 then
-		Duel.Destroy(g,REASON_EFFECT)
+function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		return Duel.IsExistingMatchingCard(s.cfilter,tp,LOCATION_MZONE,0,1,nil,tp)
 	end
-	local lp=Duel.GetLP(1-tp)
-	Duel.SetLP(1-tp,math.floor(lp/2))
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectMatchingCard(tp,s.cfilter,tp,LOCATION_MZONE,0,1,1,nil,tp)
+	g:GetFirst():RemoveOverlayCard(tp,1,1,REASON_COST)
+end
+
+function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
+	if re:GetHandler():IsDestructable() then
+		Duel.SetOperationInfo(0,CATEGORY_DESTROY,eg,1,0,0)
+	end
+end
+function s.negop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.NegateActivation(ev) and re:GetHandler():IsRelateToEffect(re) then
+		Duel.Destroy(eg,REASON_EFFECT)
+	end
+end
+
+--② 조건: 빛/어둠 속성 엑시즈 몬스터가 엑시즈 소환되었을 경우
+function s.setfilter(c,tp)
+	return c:IsType(TYPE_XYZ) and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK)) and c:IsSummonType(SUMMON_TYPE_XYZ) and c:IsControler(tp)
+end
+function s.setcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.setfilter,1,nil,tp)
+end
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and e:GetHandler():IsSSetable() end
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,e:GetHandler(),1,0,0)
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if c:IsRelateToEffect(e) and Duel.SSet(tp,c)~=0 then
+		--필드에서 벗어나면 제외
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetReset(RESET_EVENT+RESETS_REDIRECT)
+		e1:SetValue(LOCATION_REMOVED)
+		c:RegisterEffect(e1,true)
+	end
 end

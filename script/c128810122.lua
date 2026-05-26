@@ -1,85 +1,70 @@
---드래고니아-사무치는 냉룡 스카사
+--드래고니아-폭룡왕의 정전
+-- 카드명
 local s,id=GetID()
 function s.initial_effect(c)
-	--싱크로 소환 조건
-	Synchro.AddProcedure(c,aux.FilterBoolFunctionEx(s.matfilter),1,1,
-		aux.FilterBoolFunctionEx(s.matfilter),1,99)
-	c:EnableReviveLimit()
-	--①: 싱크로 소환 성공 시 묘지의 "드래고니아" 몬스터 1장 특수 소환
+	--Activate
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY)
-	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.spcon)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e1)
-	--②: 상대 필드의 마/함 1장 파괴 (발동에 대해 그 카드를 발동 불가)
+	-- ①: 덱/묘지에서 "드래고니아" 카드 1장 패에 넣기
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_DESTROY)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetCountLimit(1,{id,1})
-	e2:SetTarget(s.destg)
-	e2:SetOperation(s.desop)
+	e2:SetRange(LOCATION_SZONE)
+	e2:SetCountLimit(1,id)
+	e2:SetTarget(s.thtg)
+	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
+	-- ②: "제 9사도-폭룡왕 바칼" 공격 선언 시 500 데미지
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_DAMAGE)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e3:SetCode(EVENT_ATTACK_ANNOUNCE)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetCountLimit(1,{id,1})
+	e3:SetCondition(s.damcon)
+	e3:SetTarget(s.damtg)
+	e3:SetOperation(s.damop)
+	c:RegisterEffect(e3)
 end
---리스트 등록
-s.listed_series={0xc05} -- "드래고니아"
+s.listed_series={0xc05} -- "드래고니아" 세트코드
+s.listed_names={128810123, 128810124} -- "제 9사도-폭룡왕 바칼"의 실제 카드 ID로 교체 필요
 
-function s.matfilter(c,val,scard,sumtype,tp)
-	return c:IsRace(RACE_DRAGON,scard,sumtype,tp) and c:IsType(TYPE_SYNCHRO,scard,sumtype,tp)
+-- ①: 덱/묘지에서 "드래고니아" 카드 1장 패에 넣기
+function s.thfilter(c)
+	return c:IsSetCard(0xc05) and c:IsAbleToHand()
 end
-
---① 싱크로 소환 성공 조건
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsSummonType(SUMMON_TYPE_SYNCHRO)
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then 
+		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil) 
+	end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE)
 end
-function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xc05) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsControler(tp) and chkc:IsLocation(LOCATION_GRAVE) and s.spfilter(chkc,e,tp) end
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingTarget(s.spfilter,tp,LOCATION_GRAVE,0,1,nil,e,tp) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectTarget(tp,s.spfilter,tp,LOCATION_GRAVE,0,1,1,nil,e,tp)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,g,1,0,0)
-end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.thfilter),tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
 	end
 end
 
---② 마/함 파괴
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) and chkc:IsType(TYPE_SPELL+TYPE_TRAP) end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsType,tp,0,LOCATION_ONFIELD,1,nil,TYPE_SPELL+TYPE_TRAP) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,Card.IsType,tp,0,LOCATION_ONFIELD,1,1,nil,TYPE_SPELL+TYPE_TRAP)
-	--발동에 대해 해당 카드를 발동 불가 처리
-	local tc=g:GetFirst()
-	if tc then
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetCode(EFFECT_CANNOT_TRIGGER)
-		e1:SetTargetRange(0,LOCATION_ONFIELD)
-		e1:SetTarget(function(e,c) return c==tc end)
-		e1:SetReset(RESET_CHAIN)
-		Duel.RegisterEffect(e1,tp)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
+-- ②: "제 9사도-폭룡왕 바칼" 공격 선언 시
+function s.damcon(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetAttacker()
+	return tc and tc:IsControler(tp) and (tc:IsCode(128810123) or tc:IsCode(128810124))
+ -- 실제 카드 ID로 교체
 end
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.Destroy(tc,REASON_EFFECT)
-	end
+function s.damtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetTargetPlayer(1-tp)
+	Duel.SetTargetParam(500)
+	Duel.SetOperationInfo(0,CATEGORY_DAMAGE,nil,0,1-tp,500)
+end
+function s.damop(e,tp,eg,ep,ev,re,r,rp)
+	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
+	Duel.Damage(p,d,REASON_EFFECT)
 end

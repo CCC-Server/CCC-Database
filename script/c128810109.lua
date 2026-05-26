@@ -1,45 +1,49 @@
---드래고니아-격룡 브루트
-local s,id=GetID()
+--드래고니아-악동 스완
+local s, id = GetID()
 function s.initial_effect(c)
-	--① 묘지 제외하여 상대 마/함 파괴
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_DESTROY)
-	e1:SetType(EFFECT_TYPE_QUICK_O)
-	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_GRAVE)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET) -- 대상 지정 플래그
-	e1:SetCountLimit(1,id) -- 이 카드명의 효과는 1턴에 1번
-	e1:SetCondition(s.descon)
-	e1:SetCost(aux.bfgcost) -- 묘지의 자신을 제외하는 공통 코스트
-	e1:SetTarget(s.destg)
-	e1:SetOperation(s.desop)
+	-- 싱크로 소환 조건: 튜너 1장 + 튜너 이외 몬스터 1장 이상
+	Synchro.AddProcedure(c,nil,1,1,Synchro.NonTuner(nil),1,99)
+    c:EnableReviveLimit()
+	-- ① 묘지의 카드 수 × 100만큼 공격력 상승
+	local e1 = Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetCode(EFFECT_UPDATE_ATTACK)
+	e1:SetValue(s.atkval)
 	c:RegisterEffect(e1)
+
+	-- ② 데미지 스텝 개시시에 공격력 300 상승 (1턴에 1번)
+	local e2 = Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id, 0))
+	e2:SetCategory(CATEGORY_ATKCHANGE)
+	e2:SetType(EFFECT_TYPE_SINGLE + EFFECT_TYPE_TRIGGER_O)
+	e2:SetCode(EVENT_BATTLE_START)
+	e2:SetCondition(s.condition)
+	e2:SetOperation(s.operation)
+	e2:SetCountLimit(1, id)
+	c:RegisterEffect(e2)
 end
 
-s.listed_series={0xc05} -- "드래고니아"
+s.listed_series={0xc05}
 
--- 발동 조건: 상대 턴 + 자신 필드에 드래고니아 싱크로 몬스터 존재
-function s.synfilter(c)
-	return c:IsFaceup() and c:IsSetCard(0xc05) and c:IsType(TYPE_SYNCHRO)
-end
-function s.descon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.IsTurnPlayer(1-tp) and Duel.IsExistingMatchingCard(s.synfilter,tp,LOCATION_MZONE,0,1,nil)
+-- ① 효과: 묘지의 카드 수 × 100
+function s.atkval(e, c)
+	return Duel.GetFieldGroupCount(0, LOCATION_GRAVE, LOCATION_GRAVE) * 100
 end
 
--- 대상 지정: 상대 필드의 마/함 1장
-function s.destg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsOnField() and chkc:IsControler(1-tp) and chkc:IsType(TYPE_SPELL+TYPE_TRAP) end
-	if chk==0 then return Duel.IsExistingTarget(Card.IsType,tp,0,LOCATION_ONFIELD,1,nil,TYPE_SPELL+TYPE_TRAP) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESTROY)
-	local g=Duel.SelectTarget(tp,Card.IsType,tp,0,LOCATION_ONFIELD,1,1,nil,TYPE_SPELL+TYPE_TRAP)
-	Duel.SetOperationInfo(0,CATEGORY_DESTROY,g,1,0,0)
+-- ② 효과 발동 조건: 이 카드가 전투에 참여할 때
+function s.condition(e,tp,eg,ep,ev,re,r,rp)
+	return e:GetHandler():IsRelateToBattle()
 end
-
--- 처리: 선택된 카드 파괴
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc and tc:IsRelateToEffect(e) then
-		Duel.Destroy(tc,REASON_EFFECT)
+function s.operation(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if c:IsFaceup() and c:IsRelateToEffect(e) then
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_UPDATE_ATTACK)
+		e1:SetValue(300)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD_DISABLE)
+		c:RegisterEffect(e1)
 	end
 end

@@ -1,83 +1,87 @@
---헤블론-메탈기어
+-- 헤블론-콰트로 마누스
 local s,id=GetID()
 function s.initial_effect(c)
-	--① 패의 다른 카드 1장을 묘지로 보내고 특수 소환
+	-- 엑시즈 소환 절차: 레벨 8 몬스터 × 2
+	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsLevel,8),2)
+	c:EnableReviveLimit()
+
+	-- ① 엑시즈 소환 성공시: 묘지의 카드 1장을 소재로 한다
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_HAND)
+	e1:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e1:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
 	e1:SetCountLimit(1,id)
-	e1:SetCost(s.spcost)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
+	e1:SetCondition(s.matcon)
+	e1:SetTarget(s.mattg)
+	e1:SetOperation(s.matop)
 	c:RegisterEffect(e1)
 
-	--② 필드 이외에서 묘지로 보내졌을 경우: 덱에서 "헤블론" 카드 1장 묘지로 보내기
+	-- ② 자신/상대 턴: 소재 1개 제거 → 상대 필드의 카드 1장을 소재로 한다
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_TOGRAVE)
-	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e2:SetProperty(EFFECT_FLAG_DELAY)
-	e2:SetCode(EVENT_TO_GRAVE)
+	e2:SetType(EFFECT_TYPE_QUICK_O)
+	e2:SetCode(EVENT_FREE_CHAIN)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e2:SetCountLimit(1,{id,1})
-	e2:SetCondition(s.gycon)
-	e2:SetTarget(s.gytg)
-	e2:SetOperation(s.gyop)
+	e2:SetHintTiming(0,TIMINGS_CHECK_MONSTER+TIMING_END_PHASE)
+	e2:SetCost(s.xcost)
+	e2:SetTarget(s.xtg)
+	e2:SetOperation(s.xop)
 	c:RegisterEffect(e2)
 end
 
---① 코스트: 패의 다른 카드 1장을 묘지로 보낸다
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToGraveAsCost,tp,LOCATION_HAND,0,1,e:GetHandler()) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToGraveAsCost,tp,LOCATION_HAND,0,1,1,e:GetHandler())
-	Duel.SendtoGrave(g,REASON_COST)
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then 
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,0)
-end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	if c:IsRelateToEffect(e) then
-		Duel.SpecialSummon(c,0,tp,tp,false,false,POS_FACEUP)
-	end
-	--제약: 이 턴 동안 빛/어둠 속성 엑시즈 몬스터만 엑스트라 덱에서 소환 가능
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH)
-	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e1:SetTargetRange(1,0)
-	e1:SetTarget(s.splimit)
-	e1:SetReset(RESET_PHASE+PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-end
-function s.splimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return c:IsLocation(LOCATION_EXTRA) and c:IsType(TYPE_XYZ) 
-		and not (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
+-- ① 조건: 이 카드가 엑시즈 소환되었을 경우
+function s.matcon(e,tp,eg,ep,ev,re,r,rp)
+	return e:GetHandler():IsSummonType(SUMMON_TYPE_XYZ)
 end
 
---② 조건: 필드 이외에서 묘지로 보내졌을 경우
-function s.gycon(e,tp,eg,ep,ev,re,r,rp)
-	return not e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
+-- 소재 필터 수정: 메서드 호출 방식으로 안전하게 변경
+function s.matfilter(c,tp)
+	return c:IsCanBeXyzMaterial(xyzc,tp,REASON_EFFECT)
 end
-function s.gyfilter(c)
-	return c:IsSetCard(0xc06) and c:IsAbleToGrave()
+
+function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.matfilter,tp,LOCATION_GRAVE,0,1,nil,e:GetHandler(),tp) end
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,nil,1,tp,0)
 end
-function s.gytg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.gyfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK)
-end
-function s.gyop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectMatchingCard(tp,s.gyfilter,tp,LOCATION_DECK,0,1,1,nil)
+
+function s.matop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not c:IsRelateToEffect(e) or c:IsImmuneToEffect(e) then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_XMATERIAL)
+	local g=Duel.SelectMatchingCard(tp,s.matfilter,tp,LOCATION_GRAVE,0,1,1,nil,tp)
 	if #g>0 then
-		Duel.SendtoGrave(g,REASON_EFFECT)
+		Duel.Overlay(c,g)
+	end
+end
+
+-- ② 코스트: 엑시즈 소재 1개 제거
+function s.xcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return e:GetHandler():CheckRemoveOverlayCard(tp,1,REASON_COST) end
+	e:GetHandler():RemoveOverlayCard(tp,1,1,REASON_COST)
+end
+
+-- ② 효과 필터 추가 (IsAbleToOverlay 오류 해결을 위함)
+function s.ovfilter(c,tp)
+	return c:IsOnField() and c:IsControler(1-tp) and c:IsAbleToOverlay(tp)
+end
+
+-- 대상: 상대 필드의 카드 1장
+function s.xtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return s.ovfilter(chkc,tp) end
+	if chk==0 then return Duel.IsExistingTarget(s.ovfilter,tp,0,LOCATION_ONFIELD,1,nil,tp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+	Duel.SelectTarget(tp,s.ovfilter,tp,0,LOCATION_ONFIELD,1,1,nil,tp)
+end
+
+-- 처리: 그 카드를 이 카드의 소재로 한다
+function s.xop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local tc=Duel.GetFirstTarget()
+	if c:IsRelateToEffect(e) and tc and tc:IsRelateToEffect(e) and not tc:IsImmuneToEffect(e) then
+		if tc:IsType(TYPE_TOKEN) then return end
+		Duel.Overlay(c,tc)
 	end
 end
