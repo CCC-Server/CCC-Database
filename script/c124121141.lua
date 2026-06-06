@@ -38,7 +38,7 @@ function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,e:GetHandler(),1,0,0)
 end
 
--- [①번 효과 처리] 클리포트 다운 소환 + 버제스토마 제외 구조 + 천옥의 왕 확장 내성 결합
+-- [①번 효과 처리] 클리포트 다운 소환 + 버제스토마 제외 구조 + 배만의 찬환장식 내성 완전 이식
 function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	local c=e:GetHandler()
@@ -61,18 +61,14 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 			e1:SetValue(LOCATION_REMOVED)
 			c:RegisterEffect(e1,true)
 
-			-- 2. [천옥의 왕 기반 내성 구조 확장] 자신 필드의 뒷면 표시 카드 + 앞면 표시 "환홍" 몬스터 효과 파괴 내성 지속 효과
+			-- 2. [찬환장 구조 이식] 자신 필드의 "환홍" 몬스터는 상대가 발동한 효과를 받지 않는다.
 			local e3=Effect.CreateEffect(c)
 			e3:SetType(EFFECT_TYPE_FIELD)
-			e3:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
-			-- [천옥의 왕 필수 플래그] 이 플래그가 세트된 카드들을 강제로 사정거리에 묶어둡니다.
-			e3:SetProperty(EFFECT_FLAG_SET_AVAILABLE) 
-			e3:SetRange(LOCATION_MZONE) -- 살라무리아가 몬스터 존에 존재할 때 결계 활성화
-			-- [사정거리 확장] 마함 존에서 몬스터 존을 포함한 자신 필드 전체(LOCATION_ONFIELD)로 사정거리 확장!
-			e3:SetTargetRange(LOCATION_ONFIELD,0) 
-			-- 하단의 정밀 확장 필터 함수로 연결
-			e3:SetTarget(s.heavenlytg) 
-			e3:SetValue(1)
+			e3:SetCode(EFFECT_IMMUNE_EFFECT) -- 발동한 효과에 영향을 받지 않는 내성 코드
+			e3:SetRange(LOCATION_MZONE) -- 살라무리아가 몬스터 존에 앞면 표시로 존재할 때 결계 활성화
+			e3:SetTargetRange(LOCATION_MZONE,0) -- 자신 필드의 몬스터 존만 사정거리에 지정
+			e3:SetTarget(s.heavenlytg) -- 하단의 "환홍" 몬스터 판정 필터 함수로 연결
+			e3:SetValue(s.immuneval) -- 찬환장 공식 메커니즘을 담은 밸류 함수로 연결
 			e3:SetReset(RESET_EVENT+RESETS_STANDARD)
 			c:RegisterEffect(e3,true)
 		end
@@ -81,14 +77,16 @@ function s.activate(e,tp,eg,ep,ev,re,r,rp)
 	Duel.SpecialSummonComplete()
 end
 
--- [①번 효과의 ● 지속 내성 정밀 확장 필터 함수]
+-- [①번 효과의 ● 지속 내성 대상 필터 함수]
 function s.heavenlytg(e,c)
-	-- 조건 1: 자신 필드의 뒷면 표시 카드전체 (몬스터 / 마법 / 함정 세트 상태) 보호
-	if c:IsFacedown() then return true end
-	-- 조건 2: 자신 필드의 앞면 표시이면서 + 몬스터이고 + "환홍" 카드군인 카드 보호 (자기 자신도 포함하여 지킴)
-	if c:IsFaceup() and c:IsMonster() and c:IsSetCard(s.set_phanred) then return true end
-	-- 두 조건에 모두 맞지 않으면 보호하지 않음
-	return false
+	-- 조건: 자신 필드에 앞면 표시로 존재하면서 + "환홍" 카드군인 몬스터 보호 (살라무리아 자신도 포함)
+	return c:IsFaceup() and c:IsSetCard(s.set_phanred)
+end
+
+-- [● 배만의 찬환장 공식 메커니즘 이식 부] 상대가 발동한 효과만 면역시키는 판정 함수
+function s.immuneval(e,te)
+	-- 효과의 소유 플레이어가 상대 플레이어(1-e:GetHandlerPlayer())이고, 동시에 체인에 발동된 효과(te:IsActivated())일 때만 무적 판정
+	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()
 end
 
 -- ②번 효과 발동 조건 (자신의 효과로 묘지에 보내졌을 경우)
@@ -108,7 +106,7 @@ end
 
 -- ②번 효과 타겟 지정
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	Duel.SetOperationInfo(0,CATEGORY_HANDES,nil,0,tp,1)
 end
