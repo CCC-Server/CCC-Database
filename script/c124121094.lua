@@ -11,11 +11,8 @@ function s.initial_effect(c)
 	e1:SetTarget(s.tar1)
 	e1:SetOperation(s.op1)
 	c:RegisterEffect(e1)
-	local e2=e1:Clone()
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e2:SetCode(EVENT_SUMMON_SUCCESS)
-	e2:SetCondition(s.con2)
-	c:RegisterEffect(e2)
+	-- 기존의 일반 소환 유발 효과 e2 (EVENT_SUMMON_SUCCESS) 부분 완전 삭제됨
+	
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetCode(EVENT_FREE_CHAIN)
@@ -30,20 +27,36 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 end
 s.listed_series={0x2a}
+
+-- ①번 효과 Condition: 마법 카드의 발동 또는 일반 소환된 몬스터의 효과 발동
 function s.con1(e,tp,eg,ep,ev,re,r,rp)
-	return re:IsActiveType(TYPE_SPELL) and re:IsHasType(EFFECT_TYPE_ACTIVATE)
+	-- 마법 카드의 발동일 때
+	if re:IsActiveType(TYPE_SPELL) and re:IsHasType(EFFECT_TYPE_ACTIVATE) then
+		return true
+	end
+	-- 일반 소환된 몬스터의 효과 발동일 때
+	if re:IsActiveType(TYPE_MONSTER) then
+		local rc=re:GetHandler()
+		return rc:IsLocation(LOCATION_MZONE) and rc:IsSummonType(SUMMON_TYPE_NORMAL)
+	end
+	return false
 end
+
+-- ①번 효과 Cost: 원본의 패/필드 묘지행 및 체인 플래그 로직 그대로 유지
 function s.cost1(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
 		return c:IsAbleToGraveAsCost() and Duel.GetFlagEffect(tp,id)==0
 	end
 	Duel.SendtoGrave(c,REASON_COST)
+	-- 동일 체인 발동 불가 처리를 위해 RESET_CHAIN 플래그 등록
 	Duel.RegisterFlagEffect(tp,id,RESET_CHAIN,0,1)
 end
+
 function s.tfil1(c,e,tp)
 	return c:IsSetCard(0x2a) and c:IsLevelBelow(2) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
+
 function s.tar1(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
@@ -52,6 +65,7 @@ function s.tar1(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE)
 end
+
 function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then
 		return
@@ -62,22 +76,24 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
 end
-function s.con2(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	return not eg:IsContains(c)
-end
+
+-- ②번 효과 Condition
 function s.con3(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetCurrentPhase()&(PHASE_MAIN1+PHASE_MAIN2)~=0
 end
+
+-- ②번 효과 Cost: 원본의 체인 플래그 체크 로직 그대로 유지 (①번과 id 플래그 공유로 동일 체인 제약 자동 성립)
 function s.cost3(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.GetFlagEffect(tp,id)==0
 	end
 	Duel.RegisterFlagEffect(tp,id,RESET_CHAIN,0,1)
 end
+
 function s.tfil3(c)
 	return c:IsFaceup() and c:IsAbleToDeck() and c:IsSetCard(0x2a) and not c:IsCode(id)
 end
+
 function s.tar3(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local c=e:GetHandler()
 	if chkc then
@@ -91,9 +107,7 @@ function s.tar3(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	g:AddCard(c)
 	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,4,0,0)
 end
-function s.ofil3(c,e,tp)
-	return c:IsSetCard(0x2a) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-end
+
 function s.op3(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local g=Duel.GetTargetCards(e)
