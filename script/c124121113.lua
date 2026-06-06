@@ -28,19 +28,22 @@ function s.initial_effect(c)
 	e3:SetCategory(CATEGORY_TODECK+CATEGORY_SPECIAL_SUMMON)
 	e3:SetCountLimit(1,{id,1})
 	e3:SetCondition(s.con3)
-	e3:SetCost(s.cost3)
+	-- ③번 효과 코스트(엑시즈 소재 제거) 연동 해제
 	e3:SetTarget(s.tar3)
 	e3:SetOperation(s.op3)
 	c:RegisterEffect(e3)
 end
+
+-- ①번 효과 조건: 필드나 묘지에 "G.Rock" 카드가 존재하는지 체크
 function s.con1(e,c)
 	if c==nil then
 		return true
 	end
 	local tp=c:GetControler()
 	return c:GetLevel()>=5 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(Card.IsSetCard,tp,LOCATION_GRAVE,0,1,nil,0xfa6)
+		and Duel.IsExistingMatchingCard(Card.IsSetCard,tp,LOCATION_ONFIELD+LOCATION_GRAVE,0,1,nil,0xfa6)
 end
+
 function s.con2(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	return re:IsHasType(EFFECT_TYPE_ACTIVATE) and Duel.IsChainNegatable(ev)
@@ -76,12 +79,6 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.con3(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetTurnPlayer()~=tp
-end
-function s.cost3(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.CheckRemoveOverlayCard(tp,1,0,1,REASON_COST)
-	end
-	Duel.RemoveOverlayCard(tp,1,0,1,1,REASON_COST)
 end
 function s.tfil3(c,e,tp,ec)
 	return c:IsSetCard(0xfa6) and c:IsType(TYPE_MONSTER)

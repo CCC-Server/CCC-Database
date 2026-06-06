@@ -55,37 +55,48 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 		tc:RegisterEffect(e1)
 	end
 end
+
+-- ②번 효과 처리용 필터: 덱/엑스트라 덱의 "G.Rock" 카드 체크
 function s.tfil3(c,chk)
 	return c:IsSetCard(0xfa6) and (c:IsAbleToGrave() or chk)
 end
+
+-- ②번 효과 타겟: 덱 + 엑스트라 덱의 합계 매수가 2장 이상인지 체크
 function s.tar3(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.tfil3,tp,LOCATION_DECK,0,1,nil,c:IsType(TYPE_XYZ))
-			and Duel.IsExistingMatchingCard(s.tfil3,tp,LOCATION_EXTRA,0,1,nil,c:IsType(TYPE_XYZ))
+		local g=Duel.GetMatchingGroup(s.tfil3,tp,LOCATION_DECK+LOCATION_EXTRA,0,nil,c:IsType(TYPE_XYZ))
+		return #g>=2
 	end
-	Duel.SetPossibleOperationInfo(0,CATEGORY_TOGRAVE,nil,1,tp,LOCATION_DECK+LOCATION_EXTRA)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_TOGRAVE,nil,2,tp,LOCATION_DECK+LOCATION_EXTRA)
 end
+
+-- ②번 효과 오퍼레이션: 합계 2장을 골라 각각 묘지행 / 소재 충전 실행
 function s.op3(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g1=Duel.SelectMatchingCard(tp,s.tfil3,tp,LOCATION_DECK,0,1,1,nil,c:IsRelateToEffect(e))
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g2=Duel.SelectMatchingCard(tp,s.tfil3,tp,LOCATION_EXTRA,0,1,1,nil,c:IsRelateToEffect(e))
-	g1:Merge(g2)
-	local tc=g1:GetFirst()
-	while tc do
-		Duel.Hint(HINT_CARD,0,tc:GetOriginalCode())
-		local b1=tc:IsAbleToGrave()
-		local b2=c:IsRelateToEffect(e)
-		local op=Duel.SelectEffect(tp,
-			{b1,aux.Stringid(id,0)},
-			{b2,aux.Stringid(id,1)})
-		if op==1 then
-			Duel.SendtoGrave(tc,REASON_EFFECT)
-		elseif op==2 then
-			Duel.Overlay(c,tc,true)
+	local g=Duel.GetMatchingGroup(s.tfil3,tp,LOCATION_DECK+LOCATION_EXTRA,0,nil,c:IsType(TYPE_XYZ))
+	if #g<2 then return end
+	
+	-- 덱/엑스트라 덱을 통틀어 합계 2장 선택
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SELECT)
+	local sg=g:Select(tp,2,2,nil)
+	if #sg==2 then
+		local tc=sg:GetFirst()
+		while tc do
+			Duel.Hint(HINT_CARD,0,tc:GetOriginalCode())
+			local b1=tc:IsAbleToGrave()
+			local b2=c:IsRelateToEffect(e)
+			
+			-- 0번: 묘지로 보낸다 / 1번: 이 카드의 엑시즈 소재로 한다
+			local op=Duel.SelectEffect(tp,
+				{b1,aux.Stringid(id,0)},
+				{b2,aux.Stringid(id,1)})
+			if op==1 then
+				Duel.SendtoGrave(tc,REASON_EFFECT)
+			elseif op==2 then
+				Duel.Overlay(c,tc,true)
+			end
+			tc=sg:GetNext()
 		end
-		tc=g1:GetNext()
 	end
 end
