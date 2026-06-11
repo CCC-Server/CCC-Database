@@ -13,7 +13,7 @@ function c128220190.initial_effect(c)
     e1:SetProperty(EFFECT_FLAG_DELAY)
     e1:SetCode(EVENT_CHAINING)
     e1:SetRange(LOCATION_FZONE)
-    e1:SetCountLimit(1, id)
+    e1:SetCountLimit(1)
     e1:SetCondition(s.ctcon)
     e1:SetTarget(s.cttg)
     e1:SetOperation(s.ctop)
@@ -22,27 +22,19 @@ function c128220190.initial_effect(c)
     -- 2: 메인 페이즈 효과
     local e2 = e1:Clone()
     e2:SetDescription(aux.Stringid(id, 1))
-    e2:SetCountLimit(1, {id, 1})
     e2:SetCondition(s.ctmcon)
     c:RegisterEffect(e2)
 
     -- 3: 배틀 페이즈 효과
     local e3 = e1:Clone()
     e3:SetDescription(aux.Stringid(id, 2))
-    e3:SetCountLimit(1, {id, 2})
     e3:SetCondition(s.ctbcon)
     c:RegisterEffect(e3)
 
     -- 4: 엔드 페이즈 효과
-    local e4 = Effect.CreateEffect(c)
+    local e4 = e1:Clone()
     e4:SetDescription(aux.Stringid(id, 3))
-	e1:SetCategory(CATEGORY_COUNTER)
-    e1:SetType(EFFECT_TYPE_QUICK_O)
-    e1:SetProperty(EFFECT_FLAG_DELAY)
-    e1:SetCode(EVENT_PHASE+PHASE_END)
-	e1:SetRange(LOCATION_FZONE)
-    e4:SetCountLimit(1, {id, 3})
-    e4:SetOperation(s.regop)
+    e4:SetCondition(s.ctecon)
     c:RegisterEffect(e4)
     
     -- ②: 악장 카운터 수에 따른 효과
@@ -86,7 +78,7 @@ local COUNTER_MUSIC = 0x1c29
 -- ①번 효과: 카운터 적립
 
 function s.ctcon(e, tp, eg, ep, ev, re, r, rp)
-       return not Duel.IsMainPhase() and not Duel.IsBattlePhase() and rp == tp and re:IsActiveType(TYPE_MONSTER)
+       return Duel.IsPhase(PHASE_STANDBY) and rp == tp and re:IsActiveType(TYPE_MONSTER)
 end
 function s.ctmcon(e, tp, eg, ep, ev, re, r, rp)
 	return Duel.IsMainPhase() and rp == tp and re:IsActiveType(TYPE_MONSTER)
@@ -95,7 +87,7 @@ function s.ctbcon(e, tp, eg, ep, ev, re, r, rp)
        return Duel.IsBattlePhase() and rp == tp and re:IsActiveType(TYPE_MONSTER)
 end
 function s.ctecon(e, tp, eg, ep, ev, re, r, rp)
-       return rp ~= tp and re:IsActiveType(TYPE_MONSTER)
+       return Duel.IsPhase(PHASE_END) and rp == tp and re:IsActiveType(TYPE_MONSTER)
 end
 -- 카운터 적치 타겟
 function s.cttg(e, tp, eg, ep, ev, re, r, rp, chk)
