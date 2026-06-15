@@ -3,7 +3,6 @@ local s,id=GetID()
 function s.initial_effect(c) 
     Synchro.AddProcedure(c, nil, 1, 99, Synchro.NonTuner(nil), 1, 99)
     c:EnableReviveLimit()
-    
   local e1 = Effect.CreateEffect(c)
     e1:SetDescription(aux.Stringid(id, 0))
     e1:SetCategory(CATEGORY_COUNTER)
@@ -11,7 +10,7 @@ function s.initial_effect(c)
     e1:SetProperty(EFFECT_FLAG_DELAY)
     e1:SetCode(EVENT_CHAINING)
     e1:SetRange(LOCATION_MZONE)
-    e1:SetCountLimit(1, id)
+    e1:SetCountLimit(1)
     e1:SetCondition(s.ctcon)
     e1:SetTarget(s.cttg)
     e1:SetOperation(s.ctop)
@@ -20,21 +19,18 @@ function s.initial_effect(c)
     -- 2: 메인 페이즈 효과
     local e2 = e1:Clone()
     e2:SetDescription(aux.Stringid(id, 1))
-    e2:SetCountLimit(1, {id, 1})
     e2:SetCondition(s.ctmcon)
     c:RegisterEffect(e2)
 
     -- 3: 배틀 페이즈 효과
     local e3 = e1:Clone()
     e3:SetDescription(aux.Stringid(id, 2))
-    e3:SetCountLimit(1, {id, 2})
     e3:SetCondition(s.ctbcon)
     c:RegisterEffect(e3)
 
     -- 4: 엔드 페이즈 효과
     local e4 = e1:Clone()
     e4:SetDescription(aux.Stringid(id, 3))
-    e4:SetCountLimit(1, {id, 3})
     e4:SetCondition(s.ctecon)
     c:RegisterEffect(e4)
     
@@ -67,22 +63,22 @@ end
 
 -- 카드군 번호 및 카운터 상수 정의
 s.setname_virtus = 0xc29
-local COUNTER_MUSIC = 0x110a -- 악장 카운터
+local COUNTER_MUSIC = 0x1c29 -- 악장 카운터
 
 ---------------------------------------------------------------------------------
 -- ①번 효과 관련 함수 (카운터 놓기)
 
 function s.ctcon(e, tp, eg, ep, ev, re, r, rp)
-       return Duel.GetCurrentPhase() == PHASE_STANDBY and rp ~= tp and re:IsActiveType(TYPE_MONSTER)
+       return Duel.IsPhase(PHASE_STANDBY) and rp == tp and re:IsActiveType(TYPE_MONSTER)
 end
 function s.ctmcon(e, tp, eg, ep, ev, re, r, rp)
-       return Duel.GetCurrentPhase() == PHASE_MAIN1, PHASE_MAIN2 and rp ~= tp and re:IsActiveType(TYPE_MONSTER)
+	return Duel.IsMainPhase() and rp == tp and re:IsActiveType(TYPE_MONSTER)
 end
 function s.ctbcon(e, tp, eg, ep, ev, re, r, rp)
-       return Duel.GetCurrentPhase() == PHASE_BATTLE_START, PHASE_BATTLE_STEP, PHASE_DAMAGE, PHASE_DAMAGE_CAL, PHASE_BATTLE and rp ~= tp and re:IsActiveType(TYPE_MONSTER)
+       return Duel.IsBattlePhase() and rp == tp and re:IsActiveType(TYPE_MONSTER)
 end
 function s.ctecon(e, tp, eg, ep, ev, re, r, rp)
-       return rp ~= tp and Duel.IsEndPhase() and re:IsActiveType(TYPE_MONSTER)
+       return Duel.IsPhase(PHASE_END) and rp == tp and re:IsActiveType(TYPE_MONSTER)
 end
 -- 카운터 적치 타겟
 function s.cttg(e, tp, eg, ep, ev, re, r, rp, chk)
