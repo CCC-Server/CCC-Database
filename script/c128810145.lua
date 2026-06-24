@@ -44,8 +44,9 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --② 대상: 필드의 빛/어둠 속성 엑시즈 + 묘지의 "헤블론" 몬스터
-function s.xyzfilter(c)
+function s.xyzfilter(c,e)
 	return c:IsFaceup() and c:IsType(TYPE_XYZ) and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
+		and not c:IsImmuneToEffect(e)
 end
 function s.matfilter(c)
 	return c:IsSetCard(0xc06) and c:IsType(TYPE_MONSTER)
@@ -53,11 +54,11 @@ end
 function s.mattg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return false end
 	if chk==0 then 
-		return Duel.IsExistingTarget(s.xyzfilter,tp,LOCATION_MZONE,0,1,nil)
+		return Duel.IsExistingTarget(s.xyzfilter,tp,LOCATION_MZONE,0,1,nil,e)
 			and Duel.IsExistingTarget(s.matfilter,tp,LOCATION_GRAVE,0,1,nil)
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g1=Duel.SelectTarget(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil)
+	local g1=Duel.SelectTarget(tp,s.xyzfilter,tp,LOCATION_MZONE,0,1,1,nil,e)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
 	local g2=Duel.SelectTarget(tp,s.matfilter,tp,LOCATION_GRAVE,0,1,1,nil)
 end
