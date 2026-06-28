@@ -47,7 +47,7 @@ function s.initial_effect(c)
 	e4:SetValue(s.immunoval)
 	c:RegisterEffect(e4)
 
-	-- ③ [종류 부여]: 효과 몬스터가 아닌 엑시즈 몬스터에게 일시적으로 효과 몬스터 타입 주입 (대융합 메커니즘 버그 방지)
+	-- ③ [종류 부여]: 효과 몬스터가 아닌 엑시즈 몬스터에게 일시적으로 효과 몬스터 타입 주입 (대융합/투스파로켓 공용 안전장치)
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_XMATERIAL)
 	e5:SetCode(EFFECT_ADD_TYPE)
@@ -58,12 +58,12 @@ function s.initial_effect(c)
 	e5:SetValue(TYPE_EFFECT)
 	c:RegisterEffect(e5)
 
-	-- ③ [스트링 부여]: 이볼브를 소재로 두고 있는 동안 카드 하단에 전용 스트링 힌트 플래그를 상시 노출
+	-- ③ [스트링 부여]: 투스파 로켓 규격 - 이 카드가 소재로 지정되어 들어가는 시점에 본체에 직접 스트링 플래그 이식
 	local e6=Effect.CreateEffect(c)
-	e6:SetType(EFFECT_TYPE_XMATERIAL)
-	e6:SetProperty(EFFECT_FLAG_CLIENT_HINT)
-	e6:SetCode(id) -- 고유 커스텀 코드로 id 지정
-	e6:SetDescription(aux.Stringid(id,2)) -- 디비 텍스트의 3번째 줄을 읽어옴
+	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e6:SetCode(EVENT_BE_MATERIAL)
+	e6:SetCondition(s.strcon)
+	e6:SetOperation(s.strop)
 	c:RegisterEffect(e6)
 end
 
@@ -143,4 +143,25 @@ function s.immunoval(e,te)
 	
 	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
 	return g and g:IsContains(c)
+end
+
+-- 투스파 로켓 스타일의 스트링 직접 주입 조건 및 연산식
+function s.strcon(e,tp,eg,ep,ev,re,r,rp)
+	-- 필드의 이 카드가 정규 엑시즈 소재가 되었거나(REASON_XYZ), 
+	-- 패/기타 구역에서 카드 효과에 의해 다른 엑시즈 몬스터의 소재로 충전되었을 때 작동
+	return (r==REASON_XYZ) or (r==REASON_EFFECT and e:GetHandler():GetReasonCard())
+end
+function s.strop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local rc=c:GetReasonCard() -- 나를 소재로 흡수한 엑시즈 본체 몬스터 포착
+	if not rc then return end
+	
+	-- 본체 카드 하단에 전용 클라이언트 힌트 아이콘 플래그 주입
+	local e1=Effect.CreateEffect(rc)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
+	e1:SetCode(EFFECT_ADD_TYPE) -- 단순 꼬임 방지용 타겟 이식
+	e1:SetDescription(aux.Stringid(id,2)) -- 디비 3번째 줄 텍스트 스트링 출력
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD) -- 본체가 필드를 떠나면 플래그 소멸
+	rc:RegisterEffect(e1,true)
 end

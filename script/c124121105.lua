@@ -1,6 +1,7 @@
 --G.Rock 메탈
 local s,id=GetID()
 function s.initial_effect(c)
+	-- ①: 엑스트라 덱에서 랭크 9 엑시즈 몬스터 1장을 묘지로 보내고 패에서 특수 소환
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_SPSUMMON_PROC)
@@ -10,6 +11,8 @@ function s.initial_effect(c)
 	e1:SetTarget(s.tar1)
 	e1:SetOperation(s.op1)
 	c:RegisterEffect(e1)
+	
+	-- ②: 자신 필드의 엑시즈 몬스터의 효과가 발동했을 때, 덱에서 "G.Rock" 마법 / 함정 1장 세트
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_CHAINING)
@@ -20,6 +23,8 @@ function s.initial_effect(c)
 	e2:SetTarget(s.tar2)
 	e2:SetOperation(s.op2)
 	c:RegisterEffect(e2)
+	
+	-- ③ [효과 부여]: 이 카드를 엑시즈 소재로 하고 있는 엑시즈 몬스터는 이 카드명의 ②의 효과를 얻는다.
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_XMATERIAL+EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_CHAINING)
@@ -31,20 +36,41 @@ function s.initial_effect(c)
 	e3:SetTarget(s.tar2)
 	e3:SetOperation(s.op2)
 	c:RegisterEffect(e3)
+	
+	-- ③ [내성 부여]: 이 카드를 소재로 가진 엑시즈 몬스터에게 효과 파괴 내성 부여
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_XMATERIAL)
 	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e4:SetCode(EFFECT_INDESTRUCTABLE_EFFECT)
 	e4:SetValue(1)
 	c:RegisterEffect(e4)
+
+	-- ③ [종류 부여]: 효과 몬스터가 아닌 엑시즈 몬스터에게 일시적으로 효과 몬스터 타입 주입 (대융합 메커니즘 버그 방지)
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_XMATERIAL)
+	e5:SetCode(EFFECT_ADD_TYPE)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCondition(function(e)
+		return not e:GetHandler():IsType(TYPE_EFFECT)
+	end)
+	e5:SetValue(TYPE_EFFECT)
+	c:RegisterEffect(e5)
+
+	-- ③ [스트링 부여]: 투스파 로켓 규격 - 이 카드가 소재로 지정되어 들어가는 시점에 본체에 직접 스트링 플래그 이식
+	local e6=Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_CONTINUOUS)
+	e6:SetCode(EVENT_BE_MATERIAL)
+	e6:SetCondition(s.strcon)
+	e6:SetOperation(s.strop)
+	c:RegisterEffect(e6)
 end
+
+-- ①번 효과 연산
 function s.nfil1(c)
 	return c:IsAbleToGraveAsCost() and c:IsType(TYPE_XYZ) and c:IsRank(9)
 end
 function s.con1(e,c)
-	if c==nil then
-		return true
-	end
+	if c==nil then return true end
 	local tp=c:GetControler()
 	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and Duel.IsExistingMatchingCard(s.nfil1,tp,LOCATION_EXTRA,0,1,nil)
@@ -61,11 +87,10 @@ function s.tar1(e,tp,eg,ep,ev,re,r,rp,chk,c)
 end
 function s.op1(e,tp,eg,ep,ev,re,r,rp,c)
 	local g=e:GetLabelObject()
-	if not g then
-		return
-	end
+	if not g then return end
 	Duel.SendtoGrave(g,REASON_COST)
 	g:DeleteGroup()
+	
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
@@ -76,13 +101,15 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp,c)
 		return c:IsLocation(LOCATION_EXTRA) and
 			not (c:IsType(TYPE_XYZ) and c:IsAttribute(ATTRIBUTE_FIRE|ATTRIBUTE_EARTH|ATTRIBUTE_LIGHT))
 	end)
-	e1:SetReset(RESET_PHASE|PHASE_END)
+	e1:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e1,tp)
+	
 	aux.addTempLizardCheck(c,tp,function(e,c)
-		return not (c:IsOriginalType(TYPE_XYZ)
-			and c:IsOriginalAttribute(ATTRIBUTE_FIRE|ATTRIBUTE_EARTH|ATTRIBUTE_LIGHT))
+		return not (c:IsOriginalType(TYPE_XYZ) and c:IsOriginalAttribute(ATTRIBUTE_FIRE|ATTRIBUTE_EARTH|ATTRIBUTE_LIGHT))
 	end)
 end
+
+-- ②번 및 ③번 효과 연산
 function s.con2(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
 	return re:IsActiveType(TYPE_MONSTER) and rc:IsType(TYPE_XYZ)
@@ -91,9 +118,7 @@ function s.tfil2(c)
 	return c:IsSetCard(0xfa6) and c:IsSSetable()
 end
 function s.tar2(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.tfil2,tp,LOCATION_DECK,0,1,nil)
-	end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.tfil2,tp,LOCATION_DECK,0,1,nil) end
 end
 function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
@@ -101,4 +126,22 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 then
 		Duel.SSet(tp,g)
 	end
+end
+
+-- 투스파 로켓 스타일의 스트링 직접 주입 조건 및 연산식
+function s.strcon(e,tp,eg,ep,ev,re,r,rp)
+	return (r==REASON_XYZ) or (r==REASON_EFFECT and e:GetHandler():GetReasonCard())
+end
+function s.strop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local rc=c:GetReasonCard()
+	if not rc then return end
+	
+	local e1=Effect.CreateEffect(rc)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
+	e1:SetCode(EFFECT_ADD_TYPE)
+	e1:SetDescription(aux.Stringid(id,2)) -- 디비 3번째 줄 텍스트 스트링 상시 출력 플래그
+	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
+	rc:RegisterEffect(e1,true)
 end
