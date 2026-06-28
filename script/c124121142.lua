@@ -1,9 +1,9 @@
 --구혼성 쇄함루
 local s,id=GetID()
 function s.initial_effect(c)
-	--엑시즈 소환 절차: 레벨 9 몬스터 × 2장 이상 ("영원의 제너레이드 요르문간드" 표준 참조)
+	--엑시즈 소환 절차: 레벨 9 몬스터 × 2장
 	c:EnableReviveLimit()
-	Xyz.AddProcedure(c,nil,9,2,nil,nil,Xyz.InfiniteMats)
+	Xyz.AddProcedure(c,nil,9,2)
 	
 	--①: 카드가 묘지로 보내졌을 경우에 발동할 수 있다 (동일 체인 위 1번까지)
 	local e1=Effect.CreateEffect(c)
