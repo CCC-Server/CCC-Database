@@ -15,7 +15,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 
 	----------------------------------------
-	-- ② 묘지에서 융합 + ATK 상승
+	-- ② 묘지에서 융합 (릴리스)
 	----------------------------------------
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_QUICK_O)
@@ -60,13 +60,14 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.NegateActivation(ev) and rc:IsRelateToEffect(re) then
 		if Duel.Destroy(eg,REASON_EFFECT)>0 and rc:IsAbleToHand()
 			and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+			-- 파괴한 카드를 자신 패에 넣을 수 있다
 			Duel.SendtoHand(eg,tp,REASON_EFFECT)
 		end
 	end
 end
 
 ----------------------------------------
--- ② 융합 관련
+-- ② 융합 관련 (ATK 증가 로직 완전 제거)
 ----------------------------------------
 
 -- 융합 소재: 우리 필드/패 몬스터 아무거나
@@ -137,19 +138,7 @@ function s.fusop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Release(mat,REASON_EFFECT+REASON_MATERIAL+REASON_FUSION)
 
 	Duel.BreakEffect()
-	if Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)<=0 then
-		return
-	end
-	tc:CompleteProcedure()
-
-	-- 그 후, 패가 존재하면 패 매수 × 400 ATK 상승
-	local ct=Duel.GetFieldGroupCount(tp,LOCATION_HAND,0)
-	if ct>0 and tc:IsFaceup() and tc:IsRelateToEffect(e) then
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetCode(EFFECT_UPDATE_ATTACK)
-		e1:SetValue(ct*400)
-		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-		tc:RegisterEffect(e1,true)
+	if Duel.SpecialSummon(tc,SUMMON_TYPE_FUSION,tp,tp,false,false,POS_FACEUP)>0 then
+		tc:CompleteProcedure()
 	end
 end
