@@ -44,8 +44,27 @@ function s.initial_effect(c)
 	e4:SetCode(EFFECT_IMMUNE_EFFECT)
 	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e4:SetRange(LOCATION_MZONE)
-	e4:SetValue(s.immunoval) -- 믹스된 검증 함수 연동
+	e4:SetValue(s.immunoval)
 	c:RegisterEffect(e4)
+
+	-- ③ [종류 부여]: 효과 몬스터가 아닌 엑시즈 몬스터에게 일시적으로 효과 몬스터 타입 주입 (대융합 메커니즘 버그 방지)
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_XMATERIAL)
+	e5:SetCode(EFFECT_ADD_TYPE)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetCondition(function(e)
+		return not e:GetHandler():IsType(TYPE_EFFECT)
+	end)
+	e5:SetValue(TYPE_EFFECT)
+	c:RegisterEffect(e5)
+
+	-- ③ [스트링 부여]: 이볼브를 소재로 두고 있는 동안 카드 하단에 전용 스트링 힌트 플래그를 상시 노출
+	local e6=Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_XMATERIAL)
+	e6:SetProperty(EFFECT_FLAG_CLIENT_HINT)
+	e6:SetCode(id) -- 고유 커스텀 코드로 id 지정
+	e6:SetDescription(aux.Stringid(id,2)) -- 디비 텍스트의 3번째 줄을 읽어옴
+	c:RegisterEffect(e6)
 end
 
 -- ①번 효과 연산
@@ -86,6 +105,7 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp,c)
 	end)
 	e1:SetReset(RESET_PHASE+PHASE_END)
 	Duel.RegisterEffect(e1,tp)
+	
 	aux.addTempLizardCheck(c,tp,function(e,c)
 		return not (c:IsOriginalType(TYPE_XYZ) and c:IsOriginalAttribute(ATTRIBUTE_FIRE|ATTRIBUTE_EARTH|ATTRIBUTE_LIGHT))
 	end)
@@ -113,20 +133,14 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- ③번 내성 부여 필터 (올려주신 예시 두 개를 정밀하게 믹스한 연산식)
+-- ③번 내성 부여 필터
 function s.immunoval(e,te)
-	local c=e:GetHandler() -- 이 카드를 소재로 가진 엑시즈 몬스터 본체
+	local c=e:GetHandler()
 	local tp=e:GetHandlerPlayer()
 	
-	-- 1. 상대가 발동한 효과(rp ~= tp)이면서 체인을 형성한 활성화된 효과(te:IsActivated())인지 확인
 	if not (te:GetOwnerPlayer()~=tp and te:IsActivated()) then return false end
-	
-	-- 2. 해당 효과가 대상을 지정하는 효과(EFFECT_FLAG_CARD_TARGET)인지 확인
 	if not te:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then return false end
 	
-	-- 3. 현재 해결 중인 체인 블록의 대상 그룹을 불러옴
 	local g=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
-	
-	-- 4. 그 대상 그룹 안에 이 엑시즈 몬스터(c)가 포함되어 있다면 내성 적용(true)
 	return g and g:IsContains(c)
 end
