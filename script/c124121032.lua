@@ -1,6 +1,15 @@
---셰터드 섀도우즈 스트라이크
+--섀터드 섀도우즈 스트라이크
 local s,id=GetID()
 function s.initial_effect(c)
+	-- 패에서 발동할 수 있게 해주는 룰 효과 (Sin 패러다임 시프트 방식 적용 + 조건 필터 수정)
+	local e0=Effect.CreateEffect(c)
+	e0:SetDescription(aux.Stringid(id,0))
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetCode(EFFECT_TRAP_ACT_IN_HAND)
+	e0:SetValue(function(e,c) e:SetLabel(1) end)
+	e0:SetCondition(s.handcon)
+	c:RegisterEffect(e0)
+	-- ①: 덱/묘지에서 특수 소환 + 묘지에서 패 덤
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -9,19 +18,10 @@ function s.initial_effect(c)
 	e1:SetCost(s.cost1)
 	e1:SetTarget(s.tar1)
 	e1:SetOperation(s.op1)
+	-- 패 발동 플래그 체크를 위해 라벨 오브젝트를 연결
+	e1:SetLabelObject(e0)
 	c:RegisterEffect(e1)
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_TRAP_ACT_IN_HAND)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetValue(function(e,c)
-		e:SetLabel(1)
-	end)
-	e2:SetCondition(function(e)
-		return Duel.IsExistingMatchingCard(Card.IsAbleToHand,e:GetHandlerPlayer(),LOCATION_HAND,0,1,e:GetHandler())
-	end)
-	c:RegisterEffect(e2)
-	e1:SetLabelObject(e2)
+	-- ②: 묘지에서 패로 되돌아오고 카드를 파괴하는 효과
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetCode(EVENT_FREE_CHAIN)
@@ -33,16 +33,26 @@ function s.initial_effect(c)
 	e3:SetOperation(s.op3)
 	c:RegisterEffect(e3)
 end
+
+-- [수정됨] 패에서 발동할 수 있는 텍스트 조건 (자기 자신 이외에 '버릴 수 있는' 패가 1장 이상 있을 것)
+function s.handcon(e)
+	return Duel.IsExistingMatchingCard(Card.IsDiscardable,e:GetHandlerPlayer(),LOCATION_HAND,0,1,e:GetHandler())
+end
+
+-- ①번 효과 코스트 처리
 function s.cost1(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		e:GetLabelObject():SetLabel(0)
-		return true
+	local label_obj=e:GetLabelObject()
+	if chk==0 then 
+		label_obj:SetLabel(0) 
+		return true 
 	end
-	if e:GetLabelObject():GetLabel()>0 then
-		e:GetLabelObject():SetLabel(0)
-		Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD)
+	-- e0에 의해 라벨이 1이 되었을 때 (패에서 발동했을 때)
+	if label_obj:GetLabel()==1 then
+		label_obj:SetLabel(0)
+		Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD,e:GetHandler())
 	end
 end
+
 function s.tfil1(c,e,tp)
 	return c:IsSetCard(0xfa2) and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
@@ -63,29 +73,20 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local g=Duel.SelectMatchingCard(tp,s.tfil1,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,e,tp)
-	if #g>0 then 
+	if #g>0 then
 		local tc=g:GetFirst()
-		Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
-		--Return it to deck if it leaves the field
-		if tc:IsPreviousLocation(LOCATION_GRAVE) then
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetDescription(3301)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
-			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CLIENT_HINT)
-			e1:SetReset(RESET_EVENT+RESETS_REDIRECT)
-			e1:SetValue(LOCATION_DECKBOT)
-			tc:RegisterEffect(e1)
-		end
-		Duel.SpecialSummonComplete()
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-		local sg=Duel.SelectMatchingCard(tp,s.ofil1,tp,LOCATION_GRAVE,0,0,1,nil)
-		if #sg>0 then
-			Duel.SendtoHand(sg,nil,REASON_EFFECT)
-			Duel.ConfirmCards(1-tp,sg)
+		-- [수정됨] 잔존 효과(필드를 벗어났을 경우 덱으로 바운스) 관련 구문 완벽 삭제
+		if Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+			local sg=Duel.SelectMatchingCard(tp,s.ofil1,tp,LOCATION_GRAVE,0,0,1,nil)
+			if #sg>0 then
+				Duel.SendtoHand(sg,nil,REASON_EFFECT)
+				Duel.ConfirmCards(1-tp,sg)
+			end
 		end
 	end
 end
+
 function s.cfil3(c)
 	return c:IsType(TYPE_SPELL) and c:IsAbleToGraveAsCost() and c:IsSetCard(0x46)
 end

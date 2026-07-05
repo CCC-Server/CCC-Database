@@ -1,4 +1,4 @@
---셰터드 섀도우 스테라
+--섀터드 섀도우 스테라
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
@@ -17,7 +17,8 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_LEAVE_FIELD)
-	e2:SetRange(LOCATION_MZONE+LOCATION_GRAVE)
+	-- 변경점 C 반영: 필드를 삭제하고 오직 묘지(LOCATION_GRAVE)에서만 발동하도록 변경
+	e2:SetRange(LOCATION_GRAVE)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
 	e2:SetCountLimit(1,{id,1})
 	e2:SetCondition(s.con2)
@@ -36,8 +37,9 @@ function s.con1(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	return c:IsSummonType(SUMMON_TYPE_LINK)
 end
+-- 변경점 A 반영: 레벨 4 제약(c:IsLevel(4)) 삭제
 function s.cfil1(c)
-	return c:IsAbleToGraveAsCost() and c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_WINGEDBEAST) and c:IsLevel(4)
+	return c:IsAbleToGraveAsCost() and c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_WINGEDBEAST)
 end
 function s.cost1(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.cfil1,tp,LOCATION_DECK,0,nil)
@@ -65,22 +67,24 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ConfirmCards(1-tp,g)
 	end
 end
+-- 변경점 B 반영: 상대 효과 파괴(REASON_EFFECT) 조건 삭제 및 상대(rp==1-tp)에 의한 유발 필터링
 function s.nfil2(c,tp,rp)
 	return c:IsPreviousPosition(POS_FACEUP) and c:IsPreviousControler(tp) and
 		c:GetPreviousTypeOnField()&TYPE_FUSION~=0 and c:IsPreviousLocation(LOCATION_MZONE)
-		and c:IsPreviousSetCard(0xfa2) and c:IsReason(REASON_EFFECT) and rp==1-tp
+		and c:IsPreviousSetCard(0xfa2) and rp==1-tp
 end
 function s.con2(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	return not eg:IsContains(c) and eg:IsExists(s.nfil2,1,nil,tp,rp)
+	-- 안전 연산을 위해 데미지 스텝 제외 검증식 결합
+	return not eg:IsContains(c) and eg:IsExists(s.nfil2,1,nil,tp,rp) and Duel.GetCurrentPhase()~=PHASE_DAMAGE
 end
 function s.cost2(e,tp,eg,ep,ev,re,r,rp,chk)
 	e:SetLabel(1)
 	return true
 end
+-- 변경점 B 텍스트 반영: 덱에서 "초융합(48130397)" 1장만을 골라 묘지로 보내도록 조건 압축
 function s.tfil2(c)
-	return (c:IsCode(24094653) or c:IsCode(48130397)) and c:CheckActivateEffect(true,true,false)~=nil
-		and c:IsAbleToGraveAsCost()
+	return c:IsCode(48130397) and c:CheckActivateEffect(true,true,false)~=nil and c:IsAbleToGraveAsCost()
 end
 function s.tar2(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()

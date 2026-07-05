@@ -1,6 +1,15 @@
---셰터드 섀도우즈 스위프트
+--섀터드 섀도우즈 스위프트
 local s,id=GetID()
 function s.initial_effect(c)
+	-- 패에서 발동할 수 있게 해주는 룰 효과 (Sin 패러다임 시프트 방식)
+	local e0=Effect.CreateEffect(c)
+	e0:SetDescription(aux.Stringid(id,0))
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetCode(EFFECT_TRAP_ACT_IN_HAND)
+	e0:SetValue(function(e,c) e:SetLabel(1) end)
+	e0:SetCondition(s.handcon)
+	c:RegisterEffect(e0)
+	-- ①: 자신 필드에 세트 + 묘지에서 패 덤
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -9,19 +18,10 @@ function s.initial_effect(c)
 	e1:SetCost(s.cost1)
 	e1:SetTarget(s.tar1)
 	e1:SetOperation(s.op1)
+	-- 패 발동 플래그 체크를 위해 라벨 오브젝트를 연결
+	e1:SetLabelObject(e0)
 	c:RegisterEffect(e1)
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_TRAP_ACT_IN_HAND)
-	e2:SetDescription(aux.Stringid(id,0))
-	e2:SetValue(function(e,c)
-		e:SetLabel(1)
-	end)
-	e2:SetCondition(function(e)
-		return Duel.IsExistingMatchingCard(Card.IsAbleToHand,e:GetHandlerPlayer(),LOCATION_HAND,0,1,e:GetHandler())
-	end)
-	c:RegisterEffect(e2)
-	e1:SetLabelObject(e2)
+	-- ②: 묘지에서 패로 되돌아오는 효과
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_QUICK_O)
 	e3:SetCode(EVENT_FREE_CHAIN)
@@ -33,16 +33,26 @@ function s.initial_effect(c)
 	e3:SetOperation(s.op3)
 	c:RegisterEffect(e3)
 end
+
+-- [수정됨] 패에서 발동할 수 있는 텍스트 조건 (자기 자신 이외에 '버릴 수 있는' 패가 1장 이상 있을 것)
+function s.handcon(e)
+	return Duel.IsExistingMatchingCard(Card.IsDiscardable,e:GetHandlerPlayer(),LOCATION_HAND,0,1,e:GetHandler())
+end
+
+-- ①번 효과 코스트 처리
 function s.cost1(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		e:GetLabelObject():SetLabel(0)
-		return true
+	local label_obj=e:GetLabelObject()
+	if chk==0 then 
+		label_obj:SetLabel(0) 
+		return true 
 	end
-	if e:GetLabelObject():GetLabel()>0 then
-		e:GetLabelObject():SetLabel(0)
-		Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD)
+	-- e0에 의해 라벨이 1이 되었을 때 (패에서 발동했을 때)
+	if label_obj:GetLabel()==1 then
+		label_obj:SetLabel(0)
+		Duel.DiscardHand(tp,Card.IsDiscardable,1,1,REASON_COST+REASON_DISCARD,e:GetHandler())
 	end
 end
+
 function s.tfil1(c,e,tp)
 	return c:IsCode(24094653) and (c:IsSSetable()
 		or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE)))
@@ -79,7 +89,7 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 function s.cfil3(c)
-	return c:IsType(TYPE_SPELL) and c:IsAbleToGraveAsCost() and c:IsSetCard(0x46)
+	return c:IsType(TYPE_SPELL) and c:IsAbleToGraveAsCost() and (c:IsSetCard(0x46) or c:IsSetCard(0x10a2))
 end
 function s.cost3(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.cfil3,tp,LOCATION_HAND+LOCATION_ONFIELD,0,nil)

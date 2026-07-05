@@ -1,4 +1,4 @@
---셰터드 섀도우 블랙 로크
+--섀터드 섀도우 블랙 로크
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
@@ -83,9 +83,14 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end 
 end
+-- ②번 효과 발동 조건 (엔진 버전 에러 방지 및 호환성 보강 버전)
 function s.con2(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	return rp~=tp and c:IsPreviousPosition(POS_FACEUP) and c:IsReason(REASON_EFFECT) and c:IsSummonType(SUMMON_TYPE_FUSION) and Duel.GetCurrentPhase()~=PHASE_DAMAGE 
+	-- rp==1-tp : 상대에 의해 필드에서 벗어났을 경우 (전투/효과 불문)
+	-- c:IsPreviousControler(tp) : 자신 필드에서 존재하고 있었을 경우
+	-- c:IsPreviousPosition(POS_FACEUP) : 앞면 표시 상태로 필드를 벗어남
+	-- Duel.GetCurrentPhase()~=PHASE_DAMAGE : 데미지 스텝 제외
+	return rp==1-tp and c:IsPreviousControler(tp) and c:IsPreviousPosition(POS_FACEUP) and Duel.GetCurrentPhase()~=PHASE_DAMAGE
 end
 function s.tfil2(c)
 	return (c:IsCode(24094653) or c:IsCode(48130397)) and c:CheckActivateEffect(true,true,false)~=nil

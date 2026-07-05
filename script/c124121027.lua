@@ -1,4 +1,4 @@
---셰터드 섀도우 블랙 이글
+--섀터드 섀도우 BLACK EAGLE (오류 수정본)
 local s,id=GetID()
 function s.initial_effect(c)
 	c:EnableReviveLimit()
@@ -58,9 +58,11 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ConfirmCards(1-tp,g)
 	end
 end
+-- ②번 효과 발동 조건 (호환성 보강 버전)
 function s.con2(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	return rp~=tp and c:IsPreviousPosition(POS_FACEUP) and c:IsReason(REASON_EFFECT) and c:IsSummonType(SUMMON_TYPE_FUSION) and Duel.GetCurrentPhase()~=PHASE_DAMAGE 
+	-- aux 함수 대신 엔진 표준 페이즈 체크 함수를 사용하여 에러를 차단합니다.
+	return rp==1-tp and c:IsPreviousControler(tp) and c:IsPreviousPosition(POS_FACEUP) and Duel.GetCurrentPhase()~=PHASE_DAMAGE
 end
 function s.tfil2(c)
 	return (c:IsCode(24094653) or c:IsCode(48130397)) and c:CheckActivateEffect(true,true,false)~=nil
