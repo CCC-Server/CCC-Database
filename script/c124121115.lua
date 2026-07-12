@@ -66,7 +66,8 @@ function s.op1(e,tp,eg,ep,ev,re,r,rp)
 		tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,e,tp
 	)
 	if #g>0 and Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)>0
-		and c:IsRelateToEffect(e) and c:IsAbleToHand()
+		and c:IsRelateToEffect(e) and c:IsAbleToHand() 
+		and c:IsSummonType(SUMMON_TYPE_NORMAL) -- 일반 소환되어 있을 경우 체크 추가
 		and Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,2)) then
 
 		Duel.BreakEffect()
