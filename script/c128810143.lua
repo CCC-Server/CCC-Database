@@ -86,10 +86,23 @@ end
 
 --② 5개 이상 면역 처리: 이 카드를 대상으로 하는 효과만 통과
 function s.immval(e,re)
-	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
-		and re:IsActiveType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP)
-		and not re:IsHasProperty(EFFECT_FLAG_CARD_TARGET)
-		or (re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) and not re:GetTarget():IsContains(e:GetHandler()))
+	-- 자신의 효과에는 면역되지 않음
+	if re:GetOwnerPlayer()==e:GetHandlerPlayer() then
+		return false
+	end
+
+	-- 몬스터/마법/함정 효과만 검사
+	if not re:IsActiveType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP) then
+		return false
+	end
+
+	-- 대상 지정 효과에는 면역되지 않음
+	if re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then
+		return false
+	end
+
+	-- 그 외 효과에는 면역
+	return true
 end
 
 --② 7개 이상: 파괴 + LP 절반

@@ -47,9 +47,10 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --② 대상: 자신 필드의 빛/어둠 속성 엑시즈 1장 + 자신 묘지의 "헤블론" 몬스터 1장
-function s.xyzfilter(c,e)
-	return c:IsFaceup() and c:IsType(TYPE_XYZ) and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
-		and not c:IsImmuneToEffect(e)
+function s.xyzfilter(c)
+	return c:IsFaceup()
+		and c:IsType(TYPE_XYZ)
+		and (c:IsAttribute(ATTRIBUTE_LIGHT) or c:IsAttribute(ATTRIBUTE_DARK))
 end
 function s.matfilter(c)
 	return c:IsSetCard(0xc06) and c:IsType(TYPE_MONSTER)
