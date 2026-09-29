@@ -91,22 +91,24 @@ function s.statval(e,c)
 end
 
 --================================================
--- ③ 상대 메인 페이즈에 몬스터 효과 발동
+-- ③ 상대 메인 페이즈에 상대가 몬스터 효과 발동
+-- 그 몬스터를 이 카드의 엑시즈 소재로 한다.
+-- 그 후 상대는 1장 드로우
 --================================================
 
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	-- 상대가 발동한 효과여야 함
 	if rp==tp then return false end
 
-	-- 상대 메인 페이즈인지 확인
-	if Duel.GetCurrentPhase()~=PHASE_MAIN1
-		and Duel.GetCurrentPhase()~=PHASE_MAIN2 then
+	-- 상대 메인 페이즈
+	local ph=Duel.GetCurrentPhase()
+	if ph~=PHASE_MAIN1 and ph~=PHASE_MAIN2 then
 		return false
 	end
 
 	-- 몬스터 효과인지 확인
-	local rc=re:GetHandler()
-	return rc:IsType(TYPE_MONSTER)
+	local tc=re:GetHandler()
+	return tc and tc:IsType(TYPE_MONSTER)
 end
 
 -- 엑시즈 소재 4개 제거
@@ -125,7 +127,6 @@ end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 
-	-- 상대가 1장 드로우한다는 처리
 	Duel.SetTargetPlayer(1-tp)
 	Duel.SetTargetParam(1)
 	Duel.SetOperationInfo(
@@ -137,9 +138,9 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=re:GetHandler()
 
-	-- 발동한 몬스터를 이 카드의 엑시즈 소재로 한다.
-	if tc:IsRelateToEffect(re) then
-		Duel.Overlay(c,Group.FromCards(tc))
+	-- 발동한 몬스터를 엑시즈 소재로 한다.
+	if tc and tc:IsLocation(LOCATION_ONFIELD) then
+		Duel.Overlay(c,tc)
 	end
 
 	-- 그 후 상대는 덱에서 1장 드로우

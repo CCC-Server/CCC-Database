@@ -113,7 +113,8 @@ function s.defval(e,c)
 end
 
 -- ========================================
--- ③: 마법/함정 효과 발동 무효
+-- ③: 상대가 마법/함정 카드의 효과를 발동했을 때
+-- 그 카드를 이 카드의 엑시즈 소재로 한다.
 -- ========================================
 
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
@@ -121,8 +122,8 @@ function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	if rp==tp then return false end
 
 	-- 마법/함정 카드의 효과인지 확인
-	local rc=re:GetHandler()
-	return rc:IsType(TYPE_SPELL+TYPE_TRAP)
+	local tc=re:GetHandler()
+	return tc:IsType(TYPE_SPELL+TYPE_TRAP)
 end
 
 -- 엑시즈 소재 3개 제거
@@ -140,12 +141,14 @@ function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
-	-- 발동 무효
+	local c=e:GetHandler()
+	local tc=re:GetHandler()
+
+	-- 발동한 마법/함정의 발동을 무효
 	if Duel.NegateActivation(ev) then
-		-- 발동한 마법/함정 카드를 이 카드의 엑시즈 소재로 함
-		local tc=re:GetHandler()
-		if tc:IsRelateToEffect(re) then
-			Duel.Overlay(e:GetHandler(),Group.FromCards(tc))
+		-- 발동한 카드를 이 카드의 엑시즈 소재로 한다.
+		if tc and tc:IsLocation(LOCATION_ONFIELD) then
+			Duel.Overlay(c,tc)
 		end
 	end
 end
