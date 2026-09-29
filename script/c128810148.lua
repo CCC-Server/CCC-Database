@@ -61,13 +61,13 @@ end
 -- ========================================
 
 function s.ovfilter(c)
-	return c:IsFaceup() and c:IsCode(CARD_LUKE)
+	return c:IsFaceup() and c:IsCode(128810143)
 end
 
 function s.ovcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
-	return Duel.GetLocationCountFromEx(tp,tp,LOCATION_MZONE)>0
+	return Duel.GetLocationCountFromEx(tp,tp,LOCATION_MZONE,c)>0
 		and Duel.IsExistingMatchingCard(s.ovfilter,tp,LOCATION_MZONE,0,1,nil)
 end
 
