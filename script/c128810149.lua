@@ -68,10 +68,9 @@ end
 function s.ovcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
-	return Duel.GetLocationCountFromEx(tp,tp,LOCATION_MZONE,c)>0
-		and Duel.IsExistingMatchingCard(
-			s.ovfilter,tp,LOCATION_MZONE,0,1,nil
-		)
+	return Duel.IsExistingMatchingCard(
+		s.ovfilter,tp,LOCATION_MZONE,0,1,nil
+	)
 end
 
 function s.ovop(e,tp,eg,ep,ev,re,r,rp,c)
