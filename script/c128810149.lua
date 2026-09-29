@@ -1,148 +1,87 @@
 --제 9사도-건설자 루크 엑스 루체 칼리고
 local s,id=GetID()
 function s.initial_effect(c)
-	--엑시즈 소환 절차: 레벨 12 몬스터 × 2
-	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsLevel,13),5)
+	-- 엑시즈 소환: 레벨 13 몬스터 x5 / 자신 필드의 "제 9사도-건설자 루크" 위에 겹쳐서도 가능
 	c:EnableReviveLimit()
-	-- 룰상 "헤블론" 카드로도 취급
+	Xyz.AddProcedure(c,nil,13,5,s.ovfilter,aux.Stringid(id,0))
+
+	-- 룰상 "헤블론" 카드로도 취급한다
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetCode(EFFECT_ADD_SETCODE)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e0:SetCode(EFFECT_ADD_CODE)
 	e0:SetValue(0xc06)
 	c:RegisterEffect(e0)
 
-	-- "제 9사도-건설자 루크" 위에 겹쳐 엑시즈 소환
+	-- ①: 자신 필드의 카드는 상대의 효과의 대상이 되지 않는다
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_SPSUMMON_PROC)
-	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e1:SetRange(LOCATION_EXTRA)
-	e1:SetCondition(s.ovcon)
-	e1:SetOperation(s.ovop)
+	e1:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetTargetRange(LOCATION_ONFIELD,0)
+	e1:SetValue(aux.tgoval)
 	c:RegisterEffect(e1)
 
-	-- ①: 자신 필드의 카드를 상대는 효과의 대상으로 할 수 없음
+	-- ②: 엑시즈 소재 1개당 공/수 500 상승
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_CANNOT_BE_EFFECT_TARGET)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetCode(EFFECT_UPDATE_ATTACK)
+	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e2:SetRange(LOCATION_MZONE)
-	e2:SetTargetRange(LOCATION_ONFIELD,0)
-	e2:SetValue(aux.tgoval)
+	e2:SetValue(s.atkval)
 	c:RegisterEffect(e2)
-
-	-- ②: 공격력 / 수비력 = 엑시즈 소재 × 500
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_SINGLE)
-	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCode(EFFECT_UPDATE_ATTACK)
-	e3:SetValue(s.statval)
+	local e3=e2:Clone()
+	e3:SetCode(EFFECT_UPDATE_DEFENSE)
 	c:RegisterEffect(e3)
 
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_UPDATE_DEFENSE)
+	-- ③: 상대 몬스터 효과 발동시, 소재 4개 제거 -> 그 몬스터를 소재로 하고 상대 드로우
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,1))
+	e4:SetCategory(CATEGORY_DRAW)
+	e4:SetType(EFFECT_TYPE_QUICK_O)
+	e4:SetCode(EVENT_CHAINING)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetCondition(s.xyzcon)
+	e4:SetCost(s.xyzcost)
+	e4:SetTarget(s.xyztg)
+	e4:SetOperation(s.xyzop)
 	c:RegisterEffect(e4)
-
-	-- ③: 상대 메인 페이즈에 상대 몬스터 효과 발동 시
-	local e5=Effect.CreateEffect(c)
-	e5:SetCategory(CATEGORY_DRAW)
-	e5:SetType(EFFECT_TYPE_QUICK_O)
-	e5:SetCode(EVENT_CHAINING)
-	e5:SetRange(LOCATION_MZONE)
-	e5:SetCountLimit(1,id+1)
-	e5:SetCondition(s.negcon)
-	e5:SetCost(s.negcost)
-	e5:SetTarget(s.negtg)
-	e5:SetOperation(s.negop)
-	c:RegisterEffect(e5)
 end
 
---================================================
--- 엑시즈 소환
---================================================
-
-function s.ovfilter(c)
+-- 대체 엑시즈 소재: 자신 필드의 앞면 "제 9사도-건설자 루크"
+function s.ovfilter(c,tp,xyzc)
 	return c:IsFaceup() and c:IsCode(128810143)
 end
 
-function s.ovcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.IsExistingMatchingCard(
-		s.ovfilter,tp,LOCATION_MZONE,0,1,nil
-	)
-end
-
-function s.ovop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=Duel.SelectMatchingCard(
-		tp,s.ovfilter,tp,LOCATION_MZONE,0,1,1,nil
-	)
-	if #g>0 then
-		Duel.Overlay(c,g)
-	end
-end
-
---================================================
--- ② 공격력 / 수비력 상승
---================================================
-
-function s.statval(e,c)
+-- ②
+function s.atkval(e,c)
 	return c:GetOverlayCount()*500
 end
 
---================================================
--- ③ 상대 메인 페이즈에 상대가 몬스터 효과 발동
--- 그 몬스터를 이 카드의 엑시즈 소재로 한다.
--- 그 후 상대는 1장 드로우
---================================================
-
-function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	-- 상대가 발동한 효과여야 함
-	if rp==tp then return false end
-
-	-- 상대 메인 페이즈
-	local ph=Duel.GetCurrentPhase()
-	if ph~=PHASE_MAIN1 and ph~=PHASE_MAIN2 then
-		return false
-	end
-
-	-- 몬스터 효과인지 확인
-	local tc=re:GetHandler()
-	return tc and tc:IsType(TYPE_MONSTER)
+-- ③
+function s.xyzcon(e,tp,eg,ep,ev,re,r,rp)
+	return rp==1-tp and re:IsActiveType(TYPE_MONSTER)
 end
-
--- 엑시즈 소재 4개 제거
-function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return e:GetHandler():CheckRemoveOverlayCard(
-			tp,4,REASON_COST
-		)
-	end
-
-	e:GetHandler():RemoveOverlayCard(
-		tp,4,4,REASON_COST
-	)
-end
-
-function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-
-	Duel.SetTargetPlayer(1-tp)
-	Duel.SetTargetParam(1)
-	Duel.SetOperationInfo(
-		0,CATEGORY_DRAW,nil,0,1-tp,1
-	)
-end
-
-function s.negop(e,tp,eg,ep,ev,re,r,rp)
+function s.xyzcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	local tc=re:GetHandler()
-
-	-- 발동한 몬스터를 엑시즈 소재로 한다.
-	if tc and tc:IsLocation(LOCATION_ONFIELD) then
-		Duel.Overlay(c,tc)
+	if chk==0 then return c:CheckRemoveOverlayCard(tp,4,REASON_COST) end
+	c:RemoveOverlayCard(tp,4,4,REASON_COST)
+end
+function s.xyztg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local rc=re:GetHandler()
+	if chk==0 then return rc:IsCanBeXyzMaterial(e:GetHandler(),tp,REASON_EFFECT)
+		and Duel.IsPlayerCanDraw(1-tp,1) end
+	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,1-tp,1)
+end
+function s.xyzop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local rc=re:GetHandler()
+	if not c:IsRelateToEffect(e) or c:IsFacedown() then return end
+	if not rc:IsRelateToEffect(re) or rc:IsImmuneToEffect(e) then return end
+	rc:CancelToGrave()
+	Duel.Overlay(c,rc,true)
+	if rc:IsLocation(LOCATION_OVERLAY) then
+		Duel.BreakEffect()
+		Duel.Draw(1-tp,1,REASON_EFFECT)
 	end
-
-	-- 그 후 상대는 덱에서 1장 드로우
-	Duel.Draw(1-tp,1,REASON_EFFECT)
 end

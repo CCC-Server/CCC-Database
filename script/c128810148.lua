@@ -1,154 +1,97 @@
 --제 9사도-건설자 루크 렉스 루미니스
 local s,id=GetID()
 function s.initial_effect(c)
-	--엑시즈 소환 절차: 레벨 12 몬스터 × 2
-	Xyz.AddProcedure(c,aux.FilterBoolFunction(Card.IsLevel,13),5)
+	-- 엑시즈 소환: 레벨 13 몬스터 x5 / 자신 필드의 "제 9사도-건설자 루크" 위에 겹쳐서도 가능
 	c:EnableReviveLimit()
-	--룰상 "헤블론" 카드로 취급
+	Xyz.AddProcedure(c,nil,13,5,s.ovfilter,aux.Stringid(id,0))
+
+	-- 룰상 "헤블론" 카드로도 취급한다
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
-	e0:SetCode(EFFECT_ADD_SETCODE)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+	e0:SetCode(EFFECT_ADD_CODE)
 	e0:SetValue(0xc06)
 	c:RegisterEffect(e0)
 
-	-- 엑스트라 덱에서 "제 9사도-건설자 루크" 위에 겹쳐 엑시즈 소환
+	-- ①: 이 카드를 대상으로 하는 효과 이외의, 상대가 발동한 효과를 받지 않는다
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_SPSUMMON_PROC)
-	e1:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e1:SetRange(LOCATION_EXTRA)
-	e1:SetCondition(s.ovcon)
-	e1:SetOperation(s.ovop)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e1:SetRange(LOCATION_MZONE)
+	e1:SetCode(EFFECT_IMMUNE_EFFECT)
+	e1:SetValue(s.immval)
 	c:RegisterEffect(e1)
 
-	-- ①: 자신을 대상으로 하는 효과 이외의 상대 효과를 받지 않음
+	-- ②: 엑시즈 소재 1개당 공/수 500 상승
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetCode(EFFECT_IMMUNE_EFFECT)
-	e2:SetValue(s.immval)
+	e2:SetCode(EFFECT_UPDATE_ATTACK)
+	e2:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
+	e2:SetRange(LOCATION_MZONE)
+	e2:SetValue(s.atkval)
 	c:RegisterEffect(e2)
-
-	-- ②: 엑시즈 소재의 수 × 500만큼 공격력/수비력 상승
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_SINGLE)
-	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e3:SetRange(LOCATION_MZONE)
-	e3:SetCode(EFFECT_UPDATE_ATTACK)
-	e3:SetValue(s.atkval)
+	local e3=e2:Clone()
+	e3:SetCode(EFFECT_UPDATE_DEFENSE)
 	c:RegisterEffect(e3)
 
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_UPDATE_DEFENSE)
-	e4:SetValue(s.defval)
+	-- ③: 상대 마/함 발동시, 소재 3개 제거 -> 발동 무효 + 그 카드를 소재로 한다 (동일 체인 1번까지)
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,1))
+	e4:SetCategory(CATEGORY_NEGATE)
+	e4:SetType(EFFECT_TYPE_QUICK_O)
+	e4:SetCode(EVENT_CHAINING)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetCondition(s.negcon)
+	e4:SetCost(s.negcost)
+	e4:SetTarget(s.negtg)
+	e4:SetOperation(s.negop)
 	c:RegisterEffect(e4)
-
-	-- ③: 상대가 마법/함정 카드의 효과를 발동했을 때
-	local e5=Effect.CreateEffect(c)
-	e5:SetCategory(CATEGORY_NEGATE)
-	e5:SetType(EFFECT_TYPE_QUICK_O)
-	e5:SetCode(EVENT_CHAINING)
-	e5:SetRange(LOCATION_MZONE)
-	e5:SetCountLimit(1,id+1,EFFECT_COUNT_CODE_CHAIN)
-	e5:SetCondition(s.negcon)
-	e5:SetCost(s.negcost)
-	e5:SetTarget(s.negtg)
-	e5:SetOperation(s.negop)
-	c:RegisterEffect(e5)
 end
 
--- ========================================
--- 엑시즈 소환 조건
--- ========================================
-
-function s.ovfilter(c)
+-- 대체 엑시즈 소재: 자신 필드의 앞면 "제 9사도-건설자 루크"
+function s.ovfilter(c,tp,xyzc)
 	return c:IsFaceup() and c:IsCode(128810143)
 end
 
-function s.ovcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.IsExistingMatchingCard(
-		s.ovfilter,tp,LOCATION_MZONE,0,1,nil
-	)
-end
-
-function s.ovop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=Duel.SelectMatchingCard(tp,s.ovfilter,tp,LOCATION_MZONE,0,1,1,nil)
-	if #g>0 then
-		Duel.Overlay(c,g)
-	end
-end
-
--- ========================================
--- ①: 상대가 발동한 효과에 대한 내성
--- 자신을 대상으로 하는 효과는 제외
--- ========================================
-
+-- ①: 상대가 발동한 효과는 받지 않는다. 단, 이 카드를 대상으로 하는 효과는 받는다.
 function s.immval(e,re)
-	local tp=e:GetHandlerPlayer()
-
-	-- 상대가 발동한 효과만 내성을 적용
-	if re:GetOwnerPlayer()~=1-tp then
-		return false
-	end
-
-	-- 이 카드를 대상으로 하는 효과는 내성을 적용하지 않음
+	local c=e:GetHandler()
+	if re:GetOwnerPlayer()~=1-e:GetHandlerPlayer() or not re:IsActivated() then return false end
 	if re:IsHasProperty(EFFECT_FLAG_CARD_TARGET) then
-		return false
+		local tg=Duel.GetChainInfo(0,CHAININFO_TARGET_CARDS)
+		if tg and tg:IsContains(c) then return false end
 	end
-
 	return true
 end
 
--- ========================================
--- ②: 엑시즈 소재의 수 × 500
--- ========================================
-
+-- ②
 function s.atkval(e,c)
 	return c:GetOverlayCount()*500
 end
 
-function s.defval(e,c)
-	return c:GetOverlayCount()*500
-end
-
--- ========================================
--- ③: 상대가 마법/함정 카드의 효과를 발동했을 때
--- 그 카드를 이 카드의 엑시즈 소재로 한다.
--- ========================================
-
+-- ③
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	-- 상대가 발동한 효과인지 확인
-	if rp==tp then return false end
-
-	-- 마법/함정 카드의 효과인지 확인
-	local tc=re:GetHandler()
-	return tc:IsType(TYPE_SPELL+TYPE_TRAP)
+	return rp==1-tp and re:IsActiveType(TYPE_SPELL+TYPE_TRAP) and Duel.IsChainNegatable(ev)
 end
-
--- 엑시즈 소재 3개 제거
 function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
 	if chk==0 then
-		return e:GetHandler():CheckRemoveOverlayCard(tp,3,REASON_COST)
+		return c:GetFlagEffect(id)==0 and c:CheckRemoveOverlayCard(tp,3,REASON_COST)
 	end
-
-	e:GetHandler():RemoveOverlayCard(tp,3,3,REASON_COST)
+	c:RemoveOverlayCard(tp,3,3,REASON_COST)
+	-- 동일한 체인 위에서는 1번까지
+	c:RegisterFlagEffect(id,RESET_EVENT+RESETS_STANDARD+RESET_CHAIN,0,1)
 end
-
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
 	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
 end
-
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local tc=re:GetHandler()
-
-	-- 발동한 마법/함정의 발동을 무효
-	if Duel.NegateActivation(ev) then
-		-- 발동한 카드를 이 카드의 엑시즈 소재로 한다.
-		if tc and tc:IsLocation(LOCATION_ONFIELD) then
-			Duel.Overlay(c,tc)
-		end
+	local rc=re:GetHandler()
+	if Duel.NegateActivation(ev) and c:IsRelateToEffect(e) and c:IsFaceup()
+		and rc:IsRelateToEffect(re) then
+		rc:CancelToGrave()
+		Duel.Overlay(c,rc,true)
 	end
 end
