@@ -1,14 +1,16 @@
 --셀레스티얼 타이탄 크리에이션
 local s,id=GetID()
 function s.initial_effect(c)
-	-- 1. 발동(카드 놓기) 그 자체를 정의
-    local e1=Effect.CreateEffect(c)
-    e1:SetType(EFFECT_TYPE_ACTIVATE) -- 발동 타입
-    e1:SetCode(EVENT_FREE_CHAIN)     -- 타이밍 제약 없음
-    c:RegisterEffect(e1)
+	-- 카드의 발동
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	c:RegisterEffect(e1)
 
-	-- E1: 필드에서 벗어났을 경우 서치
+	-- ①: 앞면 "셀레스티얼 타이탄" 펜듈럼 몬스터가 필드에서 벗어났을 경우 서치
 	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,0))
+	e2:SetCategory(CATEGORY_TOHAND)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetCode(EVENT_LEAVE_FIELD)
 	e2:SetRange(LOCATION_SZONE)
@@ -19,8 +21,10 @@ function s.initial_effect(c)
 	e2:SetOperation(s.thop)
 	c:RegisterEffect(e2)
 
-	-- E2: 묘지로 보내졌을 경우 특수 소환
+	-- ②: 필드에서 묘지로 보내졌을 경우 특수 소환
 	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_TO_GRAVE)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
@@ -43,7 +47,7 @@ function s.ctfilter(c,tp)
 		and c:IsType(TYPE_PENDULUM)
 end
 
--- E1 조건
+-- ① 조건
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.ctfilter,1,nil,tp)
 end
@@ -55,7 +59,7 @@ function s.thfilter(c)
 		and c:IsAbleToHand()
 end
 
--- E1 대상
+-- ① 대상
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK|LOCATION_EXTRA,0,1,nil)
@@ -63,7 +67,7 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK|LOCATION_EXTRA)
 end
 
--- E1 실행
+-- ① 실행
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK|LOCATION_EXTRA,0,1,1,nil)
@@ -73,32 +77,40 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
--- E2 조건
+-- ② 조건: 필드에서 묘지로 보내졌을 경우
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsPreviousLocation(LOCATION_ONFIELD)
+	local c=e:GetHandler()
+	return c:IsPreviousLocation(LOCATION_ONFIELD) and c:IsLocation(LOCATION_GRAVE)
 end
 
 -- 특수 소환 필터
-function s.spfilter(c,e,tp)
-	return c:IsSetCard(0xc02) and c:IsType(TYPE_PENDULUM)
-		and (c:IsLocation(LOCATION_DECK) or (c:IsLocation(LOCATION_EXTRA) and c:IsFaceup()))
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+-- 덱의 몬스터는 메인 몬스터 존의 빈 칸이, 엑스트라 덱(앞면)의 몬스터는
+-- 엑스트라 덱 몬스터가 놓일 수 있는 존(GetLocationCountFromEx)이 필요하다.
+function s.spfilter(c,e,tp,ft)
+	if not (c:IsSetCard(0xc02) and c:IsType(TYPE_PENDULUM)
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false)) then return false end
+	if c:IsLocation(LOCATION_DECK) then
+		return ft>0
+	elseif c:IsLocation(LOCATION_EXTRA) then
+		return c:IsFaceup() and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+	end
+	return false
 end
 
--- E2 대상
+-- ② 대상
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	if chk==0 then
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-			and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_EXTRA,0,1,nil,e,tp)
+		return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_EXTRA,0,1,nil,e,tp,ft)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK|LOCATION_EXTRA)
 end
 
--- E2 실행
+-- ② 실행
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK|LOCATION_EXTRA,0,1,1,nil,e,tp)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK|LOCATION_EXTRA,0,1,1,nil,e,tp,ft)
 	if #g>0 then
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
