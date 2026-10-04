@@ -26,7 +26,7 @@ function s.initial_effect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e3:SetCode(EVENT_RELEASE)
 	e3:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
-	e3:SetCategory(CATEGORY_DISABLE+CATEGORY_TOHAND)
+	e3:SetCategory(CATEGORY_DISABLE+CATEGORY_ATKCHANGE+CATEGORY_TOHAND)
 	e3:SetCountLimit(1,{id,1})
 	e3:SetCondition(s.relcon)
 	e3:SetTarget(s.tar3)
@@ -79,9 +79,10 @@ end
 -- ② 효과 선택지
 --------------------------------
 
--- 공격 표시 + 무효화 가능 몬스터
+-- 공격 표시 몬스터 (선택 범위는 "클라우솔라스의 네크로즈"와 동일:
+-- 공격력 0이면서 이미 효과가 무효화된 몬스터만 제외)
 function s.tfil31(c)
-	return c:IsNegatableMonster() and c:IsAttackPos()
+	return c:IsFaceup() and c:IsAttackPos() and not (c:GetAttack()==0 and c:IsDisabled())
 end
 
 -- 상대 묘지/제외 몬스터
@@ -102,7 +103,7 @@ function s.tar3(e,tp,eg,ep,ev,re,r,rp,chk)
 	e:SetLabel(op)
 
 	if op==1 then
-		e:SetCategory(CATEGORY_DISABLE)
+		e:SetCategory(CATEGORY_DISABLE+CATEGORY_ATKCHANGE)
 		Duel.SetOperationInfo(0,CATEGORY_DISABLE,nil,1,0,LOCATION_MZONE)
 	else
 		e:SetCategory(CATEGORY_TOHAND)
@@ -120,7 +121,16 @@ function s.op3(e,tp,eg,ep,ev,re,r,rp)
 		if #g>0 then
 			Duel.HintSelection(g)
 			local tc=g:GetFirst()
-			tc:NegateEffects(e:GetHandler(),RESET_PHASE|PHASE_END)
+			local c=e:GetHandler()
+			-- 턴 종료시까지 공격력 2배
+			local e1=Effect.CreateEffect(c)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_SET_ATTACK_FINAL)
+			e1:SetValue(tc:GetAttack()*2)
+			e1:SetReset(RESETS_STANDARD_PHASE_END)
+			tc:RegisterEffect(e1)
+			-- 턴 종료시까지 효과 무효
+			tc:NegateEffects(c,RESET_PHASE|PHASE_END)
 		end
 
 	elseif op==2 then
