@@ -29,7 +29,7 @@ function s.initial_effect(c)
 	e3:SetCode(EVENT_SUMMON_SUCCESS)
 	e3:SetRange(LOCATION_GRAVE)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e3:SetCategory(CATEGORY_SUMMON)
 	e3:SetCountLimit(1,{id,1})
 	e3:SetTarget(s.tar3)
 	e3:SetOperation(s.op3)
@@ -87,25 +87,19 @@ function s.op2(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
-function s.tfil3(c,e,tp)
-	return c:IsCanBeSpecialSummoned(e,0,tp,false,false) and c:IsCode(124121114,124121115)
+function s.tfil3(c)
+	return c:IsCode(124121114,124121115) and c:IsSummonable(true,nil)
 end
 function s.tar3(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.tfil3,tp,LOCATION_HAND,0,1,nil,e,tp)
-			and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		return Duel.IsExistingMatchingCard(s.tfil3,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND)
+	Duel.SetOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND|LOCATION_MZONE)
 end
 function s.op3(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then
-		return
-	end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.tfil3,tp,LOCATION_HAND,0,1,1,nil,e,tp)
-	if #g>0 then
-		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+	local tc=Duel.SelectMatchingCard(tp,s.tfil3,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+	if tc then
+		Duel.Summon(tp,tc,true,nil)
 	end
 end
