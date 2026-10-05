@@ -1,114 +1,95 @@
--- 칸티고 트레비아
+--샴밧드의 마도서
 local s,id=GetID()
 function s.initial_effect(c)
-	-- ①: 레벨 5 이상의 몬스터를 일반 / 특수 소환했을 경우에 덱/엑덱에서 튜너 특수 소환
+	--Activate
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_ACTIVATE)
+	e0:SetCode(EVENT_FREE_CHAIN)
+	c:RegisterEffect(e0)
+	--①: 덱에서 "샴밧드의 마도서" 이외의 "마도서" 마법 카드 2장을 세트(같은 이름은 1장까지)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e1:SetCode(EVENT_SUMMON_SUCCESS)
-	e1:SetProperty(EFFECT_FLAG_DELAY)
-	e1:SetRange(LOCATION_HAND)
-	e1:SetCountLimit(1,id)
-	e1:SetCondition(s.spcon)
-	e1:SetCost(s.cost1)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
+	e1:SetCategory(CATEGORY_SET)
+	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetRange(LOCATION_SZONE)
+	e1:SetCountLimit(1,{id,0})
+	e1:SetTarget(s.settg)
+	e1:SetOperation(s.setop)
 	c:RegisterEffect(e1)
-	local e1b=e1:Clone()
-	e1b:SetCode(EVENT_SPSUMMON_SUCCESS)
-	c:RegisterEffect(e1b)
-
-	-- ②: 패에서 공개 중일 때 특수 소환 (룰 소환)
+	--②: 상대가 발동한 몬스터 효과의 처리시에, 패 / 필드의 "마도서" 일반 / 속공 마법 1장을 묘지로 보내고 그 효과를 무효
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_SPSUMMON_PROC)
-	e2:SetProperty(EFFECT_FLAG_UNCOPYABLE)
-	e2:SetRange(LOCATION_HAND)
-	e2:SetCondition(s.spcon_rule)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e2:SetCode(EVENT_CHAIN_SOLVING)
+	e2:SetRange(LOCATION_SZONE)
+	e2:SetCondition(s.negcon)
+	e2:SetOperation(s.negop)
 	c:RegisterEffect(e2)
-	
-	-- ②: 패에서 공개 중일 때 전투 상대 몬스터 효과 무효화
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_DISABLE)
-	e3:SetRange(LOCATION_HAND)
-	e3:SetTargetRange(0,LOCATION_MZONE)
-	e3:SetCondition(s.pubcon)
-	e3:SetTarget(s.distg)
-	c:RegisterEffect(e3)
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_DISABLE_EFFECT)
-	c:RegisterEffect(e4)
 end
-
--- [① 조건 필터] 자신이 소환한 레벨 5 이상의 몬스터
-function s.cfilter(c,tp)
-	return c:IsFaceup() and c:IsLevelAbove(5) and c:IsControler(tp)
+s.listed_series={SET_SPELLBOOK}
+s.listed_names={id}
+--①
+function s.setfilter(c)
+	return c:IsSetCard(SET_SPELLBOOK) and c:IsSpell() and not c:IsCode(id) and c:IsSSetable(true)
 end
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.cfilter,1,nil,tp)
+--같은 이름 1장까지 + 필드 마법은 필드 존(1장까지), 그 외는 마법 & 함정 존의 빈칸 수까지
+function s.rescon(ft)
+	return function(sg,e,tp,mg)
+		local fc=sg:FilterCount(Card.IsType,nil,TYPE_FIELD)
+		local c1=sg:GetClassCount(Card.GetCode)
+		local c2=#sg
+		return c1==c2 and fc<=1 and c2-fc<=ft,c1~=c2 or fc>1 or c2-fc>ft
+	end
 end
-
--- [① 코스트] 패의 이 카드를 턴 종료시까지 공개
-function s.cost1(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
+		local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
+		return aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon(ft),0)
+	end
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	if chk==0 then return not c:IsPublic() end
+	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
+	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
+	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon(ft),1,tp,HINTMSG_SET)
+	if #sg>0 and Duel.SSet(tp,sg)>0 then
+		--이 턴에, 이 효과로 세트한 카드는 필드에서 벗어났을 경우에 제외된다
+		for tc in sg:Iter() do
+			if tc:IsLocation(LOCATION_ONFIELD) then s.redirect(c,tc) end
+		end
+	end
+	--이 턴에, 이 카드는 필드에서 벗어났을 경우에 제외된다
+	if c:IsRelateToEffect(e) and c:IsOnField() then s.redirect(c,c) end
+end
+function s.redirect(c,tc)
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(3300)
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_PUBLIC)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
-	c:RegisterEffect(e1)
+	e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetValue(LOCATION_REMOVED)
+	e1:SetReset(RESET_EVENT|RESETS_REDIRECT|RESET_PHASE|PHASE_END)
+	tc:RegisterEffect(e1)
 end
-
--- [① 특수 소환 필터] 전사족 / 레벨 5 / 튜너 (동명 제한 삭제)
-function s.spfilter(c,e,tp)
-	if not (c:IsRace(RACE_WARRIOR) and c:IsLevel(5) and c:IsType(TYPE_TUNER)) then return false end
-	if c:IsLocation(LOCATION_EXTRA) then
-		return Duel.GetLocationCountFromEx(tp,tp,nil,c)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-	else
-		return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+--②
+function s.tgfilter(c)
+	return c:IsSetCard(SET_SPELLBOOK) and (c:IsNormalSpell() or c:IsQuickPlaySpell()) and c:IsAbleToGrave()
+end
+function s.negcon(e,tp,eg,ep,ev,re,r,rp)
+	return rp==1-tp and re:IsMonsterEffect() and Duel.IsChainDisablable(ev)
+		and not Duel.HasFlagEffect(tp,id)
+		and Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_HAND|LOCATION_ONFIELD,0,1,nil)
+end
+function s.negop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,2)) then return end
+	Duel.Hint(HINT_CARD,0,id)
+	--1턴에 1번 (카드명 기준)
+	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_HAND|LOCATION_ONFIELD,0,1,1,nil)
+	if #g>0 and Duel.SendtoGrave(g,REASON_EFFECT)>0 and g:GetFirst():IsLocation(LOCATION_GRAVE) then
+		Duel.NegateEffect(ev)
 	end
-end
-
--- [① 타겟 지정]
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then 
-		return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK+LOCATION_EXTRA,0,1,nil,e,tp) 
-	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_EXTRA)
-end
-
--- [① 효과 처리]
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK+LOCATION_EXTRA,0,1,1,nil,e,tp)
-	local tc=g:GetFirst()
-	if tc and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 then
-		-- 여기서 핵심: 튜너 속성을 지우지 않고 '튜너 이외'로도 취급 가능하게 만드는 효과 부여
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetDescription(aux.Stringid(id,2))
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CLIENT_HINT)
-		e1:SetCode(EFFECT_NONTUNER) -- 튜너 이외의 몬스터로 취급 가능하게 함
-		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-		tc:RegisterEffect(e1)
-	end
-end
-
--- [② 공통: 패 공개 중 조건]
-function s.pubcon(e) return e:GetHandler():IsPublic() end
-
--- [② 특수 소환 조건]
-function s.spcon_rule(e,c)
-	if c==nil then return true end
-	return e:GetHandler():IsPublic() and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
-end
-
--- [② 전투 무효화 타겟]
-function s.distg(e,c)
-	local tp=e:GetHandlerPlayer()
-	local bc=c:GetBattleTarget()
-	return bc and bc:IsControler(tp) and bc:IsFaceup() and (bc:IsLevel(5) or bc:IsLevel(10))
 end
