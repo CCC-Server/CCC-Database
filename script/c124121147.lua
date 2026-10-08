@@ -4,7 +4,6 @@ function s.initial_effect(c)
 	--②: 필드의 마법 카드 / 몬스터 카드를 대상으로 하고, 그에 대응하는 효과를 발동
 	--(이 카드명의 이하의 효과는 각각 1턴에 1번밖에 사용할 수 없다 → "현람한 현현"처럼 플레이어 플래그로 관리)
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetCode(EVENT_FREE_CHAIN)
@@ -14,7 +13,6 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 	--이 카드는 패에서 공개되어 있는 한 상대 턴에도 발동할 수 있다
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetType(EFFECT_TYPE_SINGLE)
 	e2:SetCode(EFFECT_QP_ACT_IN_NTPHAND)
 	e2:SetCondition(s.handcon)
@@ -46,7 +44,7 @@ function s.pubop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_CARD,0,id)
 	--턴 종료시까지 공개 ("브레이크 오브 더 월드" 참조)
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,3))
+	e1:SetDescription(aux.Stringid(id,2))
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_CLIENT_HINT)
 	e1:SetCode(EFFECT_PUBLIC)
@@ -84,8 +82,8 @@ function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		and Duel.IsExistingMatchingCard(s.thfilter2,tp,LOCATION_DECK,0,1,nil)
 	if chk==0 then return b1 or b2 end
 	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,4)},
-		{b2,aux.Stringid(id,5)})
+		{b1,aux.Stringid(id,0)},
+		{b2,aux.Stringid(id,1)})
 	e:SetLabel(op)
 	e:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DISABLE)
 	local g
@@ -113,7 +111,7 @@ function s.effop(e,tp,eg,ep,ev,re,r,rp)
 	--그 후, 대상 카드의 효과를 무효로 할 수 있다
 	local tc=Duel.GetFirstTarget()
 	if tc and tc:IsRelateToEffect(e) and tc:IsFaceup() and tc:IsNegatable()
-		and Duel.SelectYesNo(tp,aux.Stringid(id,6)) then
+		and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
 		Duel.BreakEffect()
 		tc:NegateEffects(c,nil,true)
 	end
