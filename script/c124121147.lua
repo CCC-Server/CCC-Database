@@ -17,7 +17,7 @@ function s.initial_effect(c)
 	e2:SetCode(EFFECT_QP_ACT_IN_NTPHAND)
 	e2:SetCondition(s.handcon)
 	c:RegisterEffect(e2)
-	--①: 자신 / 상대가 발동한 마법 카드의 효과 처리시에, 패의 이 카드를 턴 종료시까지 공개할 수 있다
+	--①: 상대 턴에 발동한 마법 카드의 효과 처리시에, 패의 이 카드를 턴 종료시까지 공개할 수 있다
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,2))
 	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
@@ -35,7 +35,8 @@ function s.handcon(e)
 end
 --①
 function s.pubcon(e,tp,eg,ep,ev,re,r,rp)
-	return re:IsHasType(EFFECT_TYPE_ACTIVATE) and re:IsActiveType(TYPE_SPELL)
+	--상대 턴에 발동한 마법 카드 (발동한 플레이어는 자신 / 상대 불문)
+	return Duel.IsTurnPlayer(1-tp) and re:IsHasType(EFFECT_TYPE_ACTIVATE) and re:IsActiveType(TYPE_SPELL)
 		and not e:GetHandler():IsPublic()
 end
 function s.pubop(e,tp,eg,ep,ev,re,r,rp)
@@ -64,7 +65,7 @@ function s.thfilter1(c)
 	return c:IsSetCard(SET_SPELLBOOK) and not c:IsCode(id) and c:IsAbleToHand()
 end
 function s.thfilter2(c)
-	return c:IsAttribute(ATTRIBUTE_LIGHT|ATTRIBUTE_DARK) and c:IsRace(RACE_SPELLCASTER)
+	return c:IsMonster() and c:IsAttribute(ATTRIBUTE_LIGHT|ATTRIBUTE_DARK) and c:IsRace(RACE_SPELLCASTER)
 		and c:IsLevelAbove(5) and c:IsAbleToHand()
 end
 function s.efftg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
