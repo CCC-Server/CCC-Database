@@ -1,30 +1,40 @@
 --마도서기 쥬논
 local s,id=GetID()
 function s.initial_effect(c)
-	--①: 패에서 특수 소환하고, 패 / 묘지의 "마도서" 마법 카드를 3장까지 세트
+	--①: 이 카드를 패에서 특수 소환하고, 패 / 묘지의 "마도서" 마법 카드를 3장까지 세트
 	local e1=Effect.CreateEffect(c)
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_SET)
 	e1:SetType(EFFECT_TYPE_QUICK_O)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetRange(LOCATION_HAND)
-	e1:SetCountLimit(1,id)
+	e1:SetCountLimit(1,{id,0})
 	e1:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
-	--②: 마법 카드가 발동했을 때, 필드의 앞면 표시 카드 1장의 효과를 무효
+	--②: 이 카드를 특수 소환했을 경우, 덱에서 "마도서" 지속 / 필드 마법 카드 1장을 발동
 	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_DISABLE)
-	e2:SetType(EFFECT_TYPE_QUICK_O)
-	e2:SetRange(LOCATION_MZONE)
-	e2:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e2:SetCode(EVENT_CHAINING)
-	e2:SetCondition(s.discon)
-	e2:SetCost(s.discost)
-	e2:SetTarget(s.distg)
-	e2:SetOperation(s.disop)
+	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_DELAY)
+	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e2:SetCountLimit(1,{id,1})
+	e2:SetTarget(s.acttg)
+	e2:SetOperation(s.actop)
 	c:RegisterEffect(e2)
+	--③: 마법 카드가 발동했을 때, 필드의 앞면 표시 카드 1장의 효과를 무효
+	local e3=Effect.CreateEffect(c)
+	e3:SetCategory(CATEGORY_DISABLE)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetRange(LOCATION_MZONE)
+	e3:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e3:SetCode(EVENT_CHAINING)
+	e3:SetCondition(s.discon)
+	e3:SetCost(s.discost)
+	e3:SetTarget(s.distg)
+	e3:SetOperation(s.disop)
+	c:RegisterEffect(e3)
 end
+s.listed_series={0x106e}
 --①
 function s.setfilter(c)
 	return c:IsSpell() and c:IsSetCard(0x106e) and c:IsSSetable(true)
@@ -47,27 +57,40 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if #g==0 then return end
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,3,s.rescon,1,tp,HINTMSG_SET)
 	if #sg==0 then return end
-	Duel.BreakEffect()
-	--서로 확인한다
-	local confirmg,hintg=sg:Split(Card.IsLocation,nil,LOCATION_HAND)
-	if #confirmg>0 then Duel.ConfirmCards(1-tp,confirmg) end
+	local hintg=sg:Filter(Card.IsLocation,nil,LOCATION_GRAVE)
 	if #hintg>0 then Duel.HintSelection(hintg) end
 	--자신 필드에 세트
-	if Duel.SSet(tp,sg)==0 then return end
-	if #confirmg>0 then Duel.ShuffleHand(tp) end
-	--세트한 속공 마법 카드는 세트한 턴에도 발동할 수 있다
-	for sc in sg:Iter() do
-		if sc:IsQuickPlaySpell() and sc:IsLocation(LOCATION_SZONE) and sc:IsFacedown() then
-			local e1=Effect.CreateEffect(c)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
-			e1:SetCode(EFFECT_QP_ACT_IN_SET_TURN)
-			e1:SetReset(RESETS_STANDARD_PHASE_END)
-			sc:RegisterEffect(e1)
-		end
+	Duel.SSet(tp,sg)
+end
+--② ("성광의 몽마경" ②의 발동 처리 참조)
+function s.actfilter(c,tp)
+	if not (c:IsSetCard(0x106e) and (c:IsContinuousSpell() or c:IsFieldSpell())) then return false end
+	local te=c:GetActivateEffect()
+	if not te or not te:IsActivatable(tp,true,true) then return false end
+	return c:IsFieldSpell() or Duel.GetLocationCount(tp,LOCATION_SZONE)>0
+end
+function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.actfilter,tp,LOCATION_DECK,0,1,nil,tp) end
+	if not Duel.CheckPhaseActivity() then Duel.RegisterFlagEffect(tp,CARD_MAGICAL_MIDBREAKER,RESET_CHAIN,0,1) end
+end
+function s.actop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
+	local tc=Duel.SelectMatchingCard(tp,s.actfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
+	if not tc then return end
+	if tc:IsFieldSpell() then
+		--필드 마법 : "성광의 몽마경"과 같은 방식
+		Duel.ActivateFieldSpell(tc,e,tp,eg,ep,ev,re,r,rp)
+	else
+		--지속 마법 : 마법 & 함정 존에 앞면 표시로 놓고 발동 처리
+		if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
+		local te=tc:GetActivateEffect()
+		Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
+		local cost=te:GetCost()
+		if cost then cost(te,tp,eg,ep,ev,re,r,rp,1) end
+		Duel.RaiseEvent(tc,4179255,te,0,tp,tp,Duel.GetCurrentChain())
 	end
 end
---②
+--③
 function s.discon(e,tp,eg,ep,ev,re,r,rp)
 	return not e:GetHandler():IsStatus(STATUS_BATTLE_DESTROYED)
 		and re:IsActiveType(TYPE_SPELL) and re:IsHasType(EFFECT_TYPE_ACTIVATE)

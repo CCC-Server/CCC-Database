@@ -6,90 +6,119 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--①: 덱에서 "샴밧드의 마도서" 이외의 "마도서" 마법 카드 2장을 세트(같은 이름은 1장까지)
+	--①-a: 이 카드를 발동했을 경우 (발동이 처리된 후, 별개의 체인으로 유발)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SET)
-	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_DELAY)
+	e1:SetCode(EVENT_CHAIN_SOLVED)
 	e1:SetRange(LOCATION_SZONE)
 	e1:SetCountLimit(1,{id,0})
-	e1:SetTarget(s.settg)
-	e1:SetOperation(s.setop)
+	e1:SetCondition(s.thcon1)
+	e1:SetTarget(s.thtg)
+	e1:SetOperation(s.thop)
 	c:RegisterEffect(e1)
-	--②: 상대가 발동한 몬스터 효과의 처리시에, 패 / 필드의 "마도서" 일반 / 속공 마법 1장을 묘지로 보내고 그 효과를 무효
-	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e2:SetCode(EVENT_CHAIN_SOLVING)
-	e2:SetRange(LOCATION_SZONE)
-	e2:SetCondition(s.negcon)
-	e2:SetOperation(s.negop)
+	--①-b: 자신 / 상대가 다른 마법 카드를 발동했을 경우
+	local e2=e1:Clone()
+	e2:SetCode(EVENT_CHAINING)
+	e2:SetCondition(s.thcon2)
 	c:RegisterEffect(e2)
+	--①-c: 카드의 효과로 마법 카드가 발동된 경우 ("마도서기 쥬논" ② 등, 체인을 형성하지 않는 발동)
+	--Duel.ActivateFieldSpell 및 수동 발동 처리가 일으키는 이벤트(4179255)를 감지
+	--이 카드 자신이 효과로 발동된 경우와, 다른 마법 카드가 효과로 발동된 경우 모두 포함
+	local e4=e1:Clone()
+	e4:SetCode(4179255)
+	e4:SetCondition(s.thcon3)
+	c:RegisterEffect(e4)
+	--②: 상대가 엑스트라 덱에서 몬스터를 특수 소환했을 경우
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_REMOVE)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetCountLimit(1,{id,1})
+	e3:SetCondition(s.rmcon)
+	e3:SetTarget(s.rmtg)
+	e3:SetOperation(s.rmop)
+	c:RegisterEffect(e3)
 end
 s.listed_series={SET_SPELLBOOK}
 s.listed_names={id}
 --①
-function s.setfilter(c)
-	return c:IsSetCard(SET_SPELLBOOK) and c:IsSpell() and not c:IsCode(id) and c:IsSSetable(true)
+--이 카드 자신의 발동(카드의 발동)이 처리되었을 경우
+function s.thcon1(e,tp,eg,ep,ev,re,r,rp)
+	return re and re:GetHandler()==e:GetHandler() and re:IsHasType(EFFECT_TYPE_ACTIVATE)
 end
---같은 이름 1장까지 + 필드 마법은 필드 존(1장까지), 그 외는 마법 & 함정 존의 빈칸 수까지
-function s.rescon(ft)
-	return function(sg,e,tp,mg)
-		local fc=sg:FilterCount(Card.IsType,nil,TYPE_FIELD)
-		local c1=sg:GetClassCount(Card.GetCode)
-		local c2=#sg
-		return c1==c2 and fc<=1 and c2-fc<=ft,c1~=c2 or fc>1 or c2-fc>ft
-	end
+--이 카드 이외의 마법 카드가 발동했을 경우 (자신 / 상대 불문)
+function s.thcon2(e,tp,eg,ep,ev,re,r,rp)
+	return re:IsHasType(EFFECT_TYPE_ACTIVATE) and re:IsSpellEffect() and re:GetHandler()~=e:GetHandler()
 end
-function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
-		local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
-		return aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon(ft),0)
-	end
+--효과로 마법 카드가 발동되었을 경우 (이 카드 자신 포함)
+function s.thcon3(e,tp,eg,ep,ev,re,r,rp)
+	local tc=eg:GetFirst()
+	return tc and tc:IsSpell() and re and re:IsHasType(EFFECT_TYPE_ACTIVATE)
 end
-function s.setop(e,tp,eg,ep,ev,re,r,rp)
+function s.thfilter(c)
+	return c:IsSetCard(SET_SPELLBOOK) and not c:IsCode(id) and c:IsAbleToHand()
+end
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
-	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
-	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon(ft),1,tp,HINTMSG_SET)
-	if #sg>0 and Duel.SSet(tp,sg)>0 then
-		--이 턴에, 이 효과로 세트한 카드는 필드에서 벗어났을 경우에 제외된다
-		for tc in sg:Iter() do
-			if tc:IsLocation(LOCATION_ONFIELD) then s.redirect(c,tc) end
-		end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.SendtoHand(g,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,g)
 	end
-	--이 턴에, 이 카드는 필드에서 벗어났을 경우에 제외된다
-	if c:IsRelateToEffect(e) and c:IsOnField() then s.redirect(c,c) end
-end
-function s.redirect(c,tc)
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(3300)
-	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CLIENT_HINT)
-	e1:SetValue(LOCATION_REMOVED)
-	e1:SetReset(RESET_EVENT|RESETS_REDIRECT|RESET_PHASE|PHASE_END)
-	tc:RegisterEffect(e1)
+	--다음 턴 종료시까지, 이 카드는 필드에서 벗어났을 경우에 제외된다
+	if c:IsRelateToEffect(e) and c:IsOnField() then
+		local e1=Effect.CreateEffect(c)
+		e1:SetDescription(3300)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_LEAVE_FIELD_REDIRECT)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_CLIENT_HINT)
+		e1:SetValue(LOCATION_REMOVED)
+		e1:SetReset(RESET_EVENT|RESETS_REDIRECT|RESET_PHASE|PHASE_END,2)
+		c:RegisterEffect(e1)
+	end
 end
 --②
-function s.tgfilter(c)
-	return c:IsSetCard(SET_SPELLBOOK) and (c:IsNormalSpell() or c:IsQuickPlaySpell()) and c:IsAbleToGrave()
+function s.rmconfilter(c,tp)
+	return c:IsSummonPlayer(1-tp) and c:IsSummonLocation(LOCATION_EXTRA)
 end
-function s.negcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==1-tp and re:IsMonsterEffect() and Duel.IsChainDisablable(ev)
-		and not Duel.HasFlagEffect(tp,id)
-		and Duel.IsExistingMatchingCard(s.tgfilter,tp,LOCATION_HAND|LOCATION_ONFIELD,0,1,nil)
+function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.rmconfilter,1,nil,tp)
 end
-function s.negop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if not Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,2)) then return end
-	Duel.Hint(HINT_CARD,0,id)
-	--1턴에 1번 (카드명 기준)
-	Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectMatchingCard(tp,s.tgfilter,tp,LOCATION_HAND|LOCATION_ONFIELD,0,1,1,nil)
-	if #g>0 and Duel.SendtoGrave(g,REASON_EFFECT)>0 and g:GetFirst():IsLocation(LOCATION_GRAVE) then
-		Duel.NegateEffect(ev)
+function s.costfilter(c)
+	return c:IsSetCard(SET_SPELLBOOK) and c:IsSpell() and (c:IsFaceup() or not c:IsOnField()) and c:IsAbleToRemove()
+end
+function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local g=eg:Filter(s.rmconfilter,nil,tp)
+	if chk==0 then return g:IsExists(Card.IsAbleToRemove,1,nil)
+		and Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE,0,3,nil) end
+	--"그 몬스터"를 추적하기 위해 관련 카드로 지정 (대상을 취하는 효과는 아님)
+	Duel.SetTargetCard(g)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,#g,0,0)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,3,tp,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE)
+end
+function s.rmop(e,tp,eg,ep,ev,re,r,rp)
+	--자신의 패 / 필드(앞면 표시) / 묘지에서 "마도서" 마법 카드를 3장 제외
+	local cg=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.costfilter),tp,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE,0,nil)
+	if #cg<3 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local sg=cg:Select(tp,3,3,nil)
+	local fg=sg:Filter(Card.IsLocation,nil,LOCATION_ONFIELD|LOCATION_GRAVE)
+	if #fg>0 then Duel.HintSelection(fg) end
+	if Duel.Remove(sg,POS_FACEUP,REASON_EFFECT)<3 then return end
+	--그 몬스터를 제외한다
+	local tg=Duel.GetTargetCards(e):Filter(Card.IsLocation,nil,LOCATION_MZONE)
+	if #tg>0 then
+		Duel.Remove(tg,POS_FACEUP,REASON_EFFECT)
 	end
 end
