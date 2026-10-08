@@ -60,10 +60,9 @@ function s.thcon3(e,tp,eg,ep,ev,re,r,rp)
 	local tc=eg:GetFirst()
 	return tc and tc:IsSpell() and re and re:IsHasType(EFFECT_TYPE_ACTIVATE)
 end
---"샴밧드의 마도서" 이외의 "마도서" 마법 카드 (패에 넣거나 세트할 수 있는 것)
+--"샴밧드의 마도서" 이외의 "마도서" 마법 카드 ("천배룡 파이도라" 참조)
 function s.thfilter(c)
-	return c:IsSetCard(SET_SPELLBOOK) and c:IsSpell() and not c:IsCode(id)
-		and (c:IsAbleToHand() or c:IsSSetable())
+	return c:IsSpell() and c:IsSetCard(SET_SPELLBOOK) and not c:IsCode(id) and (c:IsAbleToHand() or c:IsSSetable())
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
@@ -71,14 +70,17 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	--덱에서 1장을 고르고, 패에 넣거나 자신 필드에 세트한다
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_OPERATECARD)
+	--덱에서 "마도서" 마법 카드 1장을 고르고, 패에 넣거나 자신 필드에 세트한다
+	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
 	local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil):GetFirst()
 	if tc then
 		aux.ToHandOrElse(tc,tp,
-			function(sc) return sc:IsSSetable() end,
-			function(sc) Duel.SSet(tp,sc) end,
-			1153)
+			Card.IsSSetable,
+			function(sc)
+				Duel.SSet(tp,tc)
+			end,
+			aux.Stringid(id,3)
+		)
 	end
 	--다음 턴 종료시까지, 이 카드는 필드에서 벗어났을 경우에 제외된다
 	if c:IsRelateToEffect(e) and c:IsOnField() then
