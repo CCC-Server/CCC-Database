@@ -29,6 +29,15 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
+	--글로벌: "스크랩" 싱크로 몬스터의 기동 효과 / 퀵 버전 발동 기록 (1턴에 1번 공유용)
+	aux.GlobalCheck(s,function()
+		s.used={}
+		local ge=Effect.GlobalEffect()
+		ge:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+		ge:SetCode(EVENT_CHAINING)
+		ge:SetOperation(s.chainop)
+		Duel.RegisterEffect(ge,0)
+	end)
 end
 s.listed_series={0x24}
 s.listed_names={CARD_SCRAP_WYVERN}
@@ -79,10 +88,9 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if #g>0 then
 		Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 	end
-	--이 듀얼 중에 적용 (중복 등록 방지)
-	if Duel.GetFlagEffect(tp,id)>0 then return end
-	Duel.RegisterFlagEffect(tp,id,0,0,1)
-	--클라이언트 힌트 표시용
+	--이 듀얼 중에 적용 (이미 적용 중이면 중복 등록하지 않음)
+	if Duel.IsPlayerAffectedByEffect(tp,id) then return end
+	--적용 표시 겸 클라이언트 힌트 (리셋 없음 = 듀얼 종료까지 유지)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,2))
 	e1:SetType(EFFECT_TYPE_FIELD)
@@ -90,13 +98,44 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
 	e1:SetTargetRange(1,0)
 	Duel.RegisterEffect(e1,tp)
-	--원래의 카드명에 "스크랩"을 포함하는 자신 필드의 싱크로 몬스터를 감시해서
-	--그 몬스터의 기동 효과를 "상대 턴에 발동할 수 있는 퀵 효과"로 복제해 준다
+	--퀵 버전이 붙은 몬스터의 원래 기동 효과는 발동할 수 없다 (아르스=마그나의 aux.NOT(citrinitascon)에 해당)
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e2:SetCode(EVENT_ADJUST)
-	e2:SetOperation(s.adjop)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_CANNOT_ACTIVATE)
+	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e2:SetTargetRange(1,0)
+	e2:SetValue(s.aclimit)
 	Duel.RegisterEffect(e2,tp)
+	--원래의 카드명에 "스크랩"을 포함하는 자신 필드의 싱크로 몬스터를 감시해서 퀵 버전을 붙인다
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e3:SetCode(EVENT_ADJUST)
+	e3:SetOperation(s.adjop)
+	Duel.RegisterEffect(e3,tp)
+end
+function s.aclimit(e,re,tp)
+	local rc=re:GetHandler()
+	return re:IsHasType(EFFECT_TYPE_IGNITION) and rc:IsLocation(LOCATION_MZONE)
+		and rc:GetFlagEffect(id)>0
+end
+
+--발동 기록: 카드 + 처리 함수 단위로, 같은 턴 / 같은 필드 존재 중에만 유효
+--(카드가 필드를 떠났다 돌아오면 FieldID가 바뀌어 기록이 초기화된다 = 일반 턴제와 같은 동작)
+function s.getrec(c)
+	local t=s.used[c]
+	local fid,turn=c:GetFieldID(),Duel.GetTurnCount()
+	if not t or t.fid~=fid or t.turn~=turn then
+		t={fid=fid,turn=turn,ops={}}
+		s.used[c]=t
+	end
+	return t
+end
+function s.chainop(e,tp,eg,ep,ev,re,r,rp)
+	local rc=re:GetHandler()
+	if not (rc:IsLocation(LOCATION_MZONE) and rc:IsOriginalSetCard(0x24) and rc:IsOriginalType(TYPE_SYNCHRO)) then return end
+	if not (re:IsHasType(EFFECT_TYPE_IGNITION) or re:IsHasType(EFFECT_TYPE_QUICK_O)) then return end
+	local op=re:GetOperation()
+	if op then s.getrec(rc).ops[op]=true end
 end
 
 function s.scrapsyfilter(c)
@@ -106,35 +145,51 @@ end
 function s.adjop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.scrapsyfilter,tp,LOCATION_MZONE,0,nil)
 	for tc in g:Iter() do
+		--필드를 떠나거나 뒷면이 되면 플래그가 지워지고, 다시 나오면 새로 붙는다
 		tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1)
 		s.addquick(tc,tp)
 	end
 end
---대상 몬스터의 initial_effect를 다시 실행하되, 기동 효과만 골라
---"상대 턴에만 발동할 수 있는 퀵 효과" 복제본으로 등록한다 (나머지 효과는 등록하지 않음)
+--대상 몬스터의 initial_effect를 다시 실행해서 기동 효과의 부품(조건/코스트/대상/처리)만 가져와
+--자신 턴 / 상대 턴 모두 발동할 수 있는 퀵 효과를 만든다.
+--원래 효과의 카운트 리밋은 쓰지 않고, "1턴에 1번"은 발동 기록(s.used)으로 관리한다.
+--퀵 버전 적용 전에 원래 기동 효과를 이미 쓴 턴이라면 그 턴엔 퀵 버전도 쓸 수 없다.
 function s.addquick(tc,tp)
 	local mt=tc:GetMetatable()
 	if not (mt and mt.initial_effect) then return end
 	local reg=Card.RegisterEffect
+	local list={}
 	Card.RegisterEffect=function(card,eff,...)
 		if card==tc and eff:IsHasType(EFFECT_TYPE_IGNITION) then
-			local qe=eff:Clone()
-			qe:SetType(EFFECT_TYPE_QUICK_O)
-			qe:SetCode(EVENT_FREE_CHAIN)
-			qe:SetHintTiming(0,TIMINGS_CHECK_MONSTER_E)
-			local con=eff:GetCondition()
-			qe:SetCondition(function(e,tp2,...)
-				local h=e:GetHandler()
-				return h:IsControler(tp) and Duel.IsTurnPlayer(1-tp)
-					and Duel.GetFlagEffect(tp,id)>0
-					and (not con or con(e,tp2,...))
-			end)
-			qe:SetReset(RESET_EVENT|RESETS_STANDARD)
-			return reg(card,qe,...)
+			table.insert(list,eff)
 		end
-		return 0
+		return 0 --실제 등록은 하지 않음
 	end
 	local ok,err=pcall(mt.initial_effect,tc)
 	Card.RegisterEffect=reg
-	if not ok then Debug.Message(err) end
+	if not ok then Debug.Message(err) return end
+	for _,eff in ipairs(list) do
+		local con,op=eff:GetCondition(),eff:GetOperation()
+		local qe=Effect.CreateEffect(tc)
+		qe:SetDescription(eff:GetDescription())
+		qe:SetCategory(eff:GetCategory())
+		qe:SetProperty(eff:GetProperty())
+		qe:SetType(EFFECT_TYPE_QUICK_O)
+		qe:SetCode(EVENT_FREE_CHAIN)
+		qe:SetRange(LOCATION_MZONE)
+		qe:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
+		qe:SetLabel(eff:GetLabel())
+		qe:SetLabelObject(eff:GetLabelObject())
+		qe:SetCondition(function(e,ctp,...)
+			local h=e:GetHandler()
+			return h:IsControler(tp) and Duel.IsPlayerAffectedByEffect(tp,id)
+				and not s.getrec(h).ops[op]
+				and (not con or con(e,ctp,...))
+		end)
+		qe:SetCost(eff:GetCost())
+		qe:SetTarget(eff:GetTarget())
+		qe:SetOperation(op)
+		qe:SetReset(RESET_EVENT|RESETS_STANDARD)
+		reg(tc,qe)
+	end
 end
