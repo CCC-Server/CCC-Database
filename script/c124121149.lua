@@ -29,15 +29,6 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sptg)
 	e2:SetOperation(s.spop)
 	c:RegisterEffect(e2)
-	--글로벌: "스크랩" 싱크로 몬스터의 기동 효과 / 퀵 버전 발동 기록 (1턴에 1번 공유용)
-	aux.GlobalCheck(s,function()
-		s.used={}
-		local ge=Effect.GlobalEffect()
-		ge:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-		ge:SetCode(EVENT_CHAINING)
-		ge:SetOperation(s.chainop)
-		Duel.RegisterEffect(ge,0)
-	end)
 end
 s.listed_series={0x24}
 s.listed_names={CARD_SCRAP_WYVERN}
@@ -98,44 +89,13 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
 	e1:SetTargetRange(1,0)
 	Duel.RegisterEffect(e1,tp)
-	--퀵 버전이 붙은 몬스터의 원래 기동 효과는 발동할 수 없다 (아르스=마그나의 aux.NOT(citrinitascon)에 해당)
+	--원래의 카드명에 "스크랩"을 포함하는 자신 필드의 싱크로 몬스터를 감시해서
+	--그 몬스터의 기동 효과를 "자신 / 상대 턴에 발동할 수 있는 퀵 효과"로 추가해 준다
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_CANNOT_ACTIVATE)
-	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e2:SetTargetRange(1,0)
-	e2:SetValue(s.aclimit)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e2:SetCode(EVENT_ADJUST)
+	e2:SetOperation(s.adjop)
 	Duel.RegisterEffect(e2,tp)
-	--원래의 카드명에 "스크랩"을 포함하는 자신 필드의 싱크로 몬스터를 감시해서 퀵 버전을 붙인다
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e3:SetCode(EVENT_ADJUST)
-	e3:SetOperation(s.adjop)
-	Duel.RegisterEffect(e3,tp)
-end
-function s.aclimit(e,re,tp)
-	local rc=re:GetHandler()
-	return re:IsHasType(EFFECT_TYPE_IGNITION) and rc:IsLocation(LOCATION_MZONE)
-		and rc:GetFlagEffect(id)>0
-end
-
---발동 기록: 카드 + 처리 함수 단위로, 같은 턴 / 같은 필드 존재 중에만 유효
---(카드가 필드를 떠났다 돌아오면 FieldID가 바뀌어 기록이 초기화된다 = 일반 턴제와 같은 동작)
-function s.getrec(c)
-	local t=s.used[c]
-	local fid,turn=c:GetFieldID(),Duel.GetTurnCount()
-	if not t or t.fid~=fid or t.turn~=turn then
-		t={fid=fid,turn=turn,ops={}}
-		s.used[c]=t
-	end
-	return t
-end
-function s.chainop(e,tp,eg,ep,ev,re,r,rp)
-	local rc=re:GetHandler()
-	if not (rc:IsLocation(LOCATION_MZONE) and rc:IsOriginalSetCard(0x24) and rc:IsOriginalType(TYPE_SYNCHRO)) then return end
-	if not (re:IsHasType(EFFECT_TYPE_IGNITION) or re:IsHasType(EFFECT_TYPE_QUICK_O)) then return end
-	local op=re:GetOperation()
-	if op then s.getrec(rc).ops[op]=true end
 end
 
 function s.scrapsyfilter(c)
@@ -150,10 +110,11 @@ function s.adjop(e,tp,eg,ep,ev,re,r,rp)
 		s.addquick(tc,tp)
 	end
 end
---대상 몬스터의 initial_effect를 다시 실행해서 기동 효과의 부품(조건/코스트/대상/처리)만 가져와
---자신 턴 / 상대 턴 모두 발동할 수 있는 퀵 효과를 만든다.
---원래 효과의 카운트 리밋은 쓰지 않고, "1턴에 1번"은 발동 기록(s.used)으로 관리한다.
---퀵 버전 적용 전에 원래 기동 효과를 이미 쓴 턴이라면 그 턴엔 퀵 버전도 쓸 수 없다.
+--대상 몬스터의 initial_effect를 다시 실행해서 기동 효과의 "부품"(대상/코스트/처리 등)만 가져오고,
+--그걸로 새 퀵 효과를 만든다. 원래 효과의 카운트 리밋은 복사하지 않고,
+--"1턴에 1번"은 카드에 붙이는 플래그(매 턴 엔드 페이즈에 리셋)로 따로 관리한다.
+--퀵 버전은 자신 턴 / 상대 턴 모두 발동할 수 있다.
+local quick_count=0
 function s.addquick(tc,tp)
 	local mt=tc:GetMetatable()
 	if not (mt and mt.initial_effect) then return end
@@ -169,7 +130,9 @@ function s.addquick(tc,tp)
 	Card.RegisterEffect=reg
 	if not ok then Debug.Message(err) return end
 	for _,eff in ipairs(list) do
-		local con,op=eff:GetCondition(),eff:GetOperation()
+		quick_count=quick_count+1
+		local flag=id+quick_count --효과마다 별도의 "1턴에 1번" 플래그
+		local con,cost=eff:GetCondition(),eff:GetCost()
 		local qe=Effect.CreateEffect(tc)
 		qe:SetDescription(eff:GetDescription())
 		qe:SetCategory(eff:GetCategory())
@@ -183,12 +146,17 @@ function s.addquick(tc,tp)
 		qe:SetCondition(function(e,ctp,...)
 			local h=e:GetHandler()
 			return h:IsControler(tp) and Duel.IsPlayerAffectedByEffect(tp,id)
-				and not s.getrec(h).ops[op]
+				and h:GetFlagEffect(flag)==0
 				and (not con or con(e,ctp,...))
 		end)
-		qe:SetCost(eff:GetCost())
+		qe:SetCost(function(e,ctp,eg,ep,ev,re,r,rp,chk)
+			if chk==0 then return not cost or cost(e,ctp,eg,ep,ev,re,r,rp,0) end
+			--발동한 시점에 "이 턴 사용함" 표시 (무효가 되어도 사용한 것으로 취급)
+			e:GetHandler():RegisterFlagEffect(flag,RESET_EVENT|RESETS_STANDARD|RESET_PHASE|PHASE_END,0,1)
+			if cost then cost(e,ctp,eg,ep,ev,re,r,rp,chk) end
+		end)
 		qe:SetTarget(eff:GetTarget())
-		qe:SetOperation(op)
+		qe:SetOperation(eff:GetOperation())
 		qe:SetReset(RESET_EVENT|RESETS_STANDARD)
 		reg(tc,qe)
 	end
