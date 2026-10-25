@@ -1,7 +1,7 @@
 --스크랩 드론
 local s,id=GetID()
 function s.initial_effect(c)
-	--①: 패에서, 자신 / 상대 메인 페이즈에 덱의 "스크랩" 몬스터를 묘지로 보내고 발동
+	--①: 패에 존재할 경우, 자신 / 상대 메인 페이즈에 발동
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DESTROY)
@@ -11,7 +11,6 @@ function s.initial_effect(c)
 	e1:SetHintTiming(0,TIMING_MAIN_END+TIMINGS_CHECK_MONSTER)
 	e1:SetCountLimit(1,id)
 	e1:SetCondition(s.spcon)
-	e1:SetCost(s.spcost)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -40,16 +39,6 @@ s.listed_series={0x24} -- "스크랩" 카드군 코드
 --① 조건: 메인 페이즈
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.IsMainPhase()
-end
---① 코스트: 덱에서 "스크랩" 몬스터 1장을 묘지로
-function s.costfilter(c)
-	return c:IsSetCard(0x24) and c:IsMonster() and c:IsAbleToGraveAsCost()
-end
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.costfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
-	local g=Duel.SelectMatchingCard(tp,s.costfilter,tp,LOCATION_DECK,0,1,1,nil)
-	Duel.SendtoGrave(g,REASON_COST)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
@@ -81,8 +70,9 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	local rc=re:GetHandler()
 	return rc~=c and rc:IsSetCard(0x24)
 end
+--"스크랩 드론" 이외의 "스크랩" 카드
 function s.thfilter(c)
-	return c:IsSetCard(0x24) and c:IsAbleToHand()
+	return c:IsSetCard(0x24) and not c:IsCode(id) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,1,nil) end
