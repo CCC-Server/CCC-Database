@@ -50,8 +50,7 @@ end
 function s.target(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	local b1=Duel.IsExistingMatchingCard(s.spfilter1,tp,LOCATION_DECK,0,1,nil,e,tp)
-	local b2=aux.MustMaterialCheck(nil,tp,EFFECT_MUST_BE_SMATERIAL)
-		and Duel.IsExistingMatchingCard(s.spfilter2,tp,LOCATION_EXTRA,0,1,nil,e,tp)
+	local b2=Duel.IsExistingMatchingCard(s.spfilter2,tp,LOCATION_EXTRA,0,1,nil,e,tp)
 	local b3=Duel.IsExistingMatchingCard(s.tdfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil)
 		and Duel.IsExistingMatchingCard(s.negfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,c)
 	if chk==0 then return b1 or b2 or b3 end
@@ -101,7 +100,6 @@ end
 
 --●엑스트라 덱에서 "스크랩" 싱크로 몬스터 1장을 싱크로 소환으로 취급하고 특수 소환한다
 function s.op2(e,tp)
-	if not aux.MustMaterialCheck(nil,tp,EFFECT_MUST_BE_SMATERIAL) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=Duel.SelectMatchingCard(tp,s.spfilter2,tp,LOCATION_EXTRA,0,1,1,nil,e,tp):GetFirst()
 	if tc and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP)>0 then
