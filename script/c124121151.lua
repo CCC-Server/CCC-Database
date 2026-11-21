@@ -19,7 +19,7 @@ function s.initial_effect(c)
 	e2:SetCode(EVENT_FREE_CHAIN)
 	e2:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMING_END_PHASE)
 	e2:SetRange(LOCATION_GRAVE)
-	e2:SetCountLimit(1,id)
+	e2:SetCountLimit(1,id,EFFECT_COUNT_CODE_DUEL) --듀얼 중에 1번
 	e2:SetCost(Cost.SelfBanish)
 	e2:SetTarget(s.thtg)
 	e2:SetOperation(s.thop)
